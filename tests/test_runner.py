@@ -86,3 +86,22 @@ class TestRun:
             for e in range(1, max_epoch + 1)
         ]
         assert mock_handler.mock_calls == expected_calls
+
+
+def test_stop():
+    mock_bfhandler = Mock()
+    mock_efhandler = Mock()
+    batches = range(10)
+    runner = make_runner()
+
+    def bshandler(state):
+        if state['batch'] == 3:
+            runner.stop()
+
+    runner.append_handler(Event.BATCH_STARTED, bshandler)
+    runner.append_handler(Event.BATCH_FINISHED, mock_bfhandler)
+    runner.append_handler(Event.EPOCH_FINISHED, mock_efhandler)
+    runner.run(Mock(), batches)
+
+    assert mock_bfhandler.call_count == 4
+    assert mock_efhandler.called
