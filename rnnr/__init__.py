@@ -2,7 +2,11 @@ __version__ = '0.0.0'
 
 from collections import defaultdict
 from enum import Enum, auto
-from typing import Callable, Dict, Iterable, List
+from typing import Callable, Dict, Generic, Iterable, List, TypeVar
+
+BatchT = TypeVar('BatchT')
+OutputT = TypeVar('OutputT')
+Handler = Callable[[dict], None]
 
 
 class Event(Enum):
@@ -12,16 +16,20 @@ class Event(Enum):
     EPOCH_FINISHED = auto()
 
 
-class Runner:
+class Runner(Generic[BatchT, OutputT]):
     def __init__(self) -> None:
-        self._handlers: Dict[Event, List[Callable]] = defaultdict(list)
+        self._handlers: Dict[Event, List[Handler]] = defaultdict(list)
 
-    def append_handler(self, event: Event, handler: Callable) -> None:
+    def append_handler(self, event: Event, handler: Handler) -> None:
         self._handlers[event].append(handler)
 
-    # Cannot use generics for batch_fn type because it accepts keyword arguments
-    def run(self, batch_fn: Callable, batches: Iterable, max_epoch: int = 1) -> None:
-        state = {
+    def run(
+            self,
+            batch_fn: Callable[[BatchT], OutputT],
+            batches: Iterable[BatchT],
+            max_epoch: int = 1,
+    ) -> None:
+        state: dict = {
             'epoch': None,
             'max_epoch': max_epoch,
             'batches': batches,
@@ -42,6 +50,6 @@ class Runner:
             state['batch'] = None
             self._emit(Event.EPOCH_FINISHED, state)
 
-    def _emit(self, event: Event, *args, **kwargs) -> None:
+    def _emit(self, event: Event, state: dict) -> None:
         for handler in self._handlers[event]:
-            handler(*args, **kwargs)
+            handler(state)
