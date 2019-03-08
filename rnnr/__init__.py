@@ -2,7 +2,9 @@ __version__ = '0.0.0'
 
 from collections import defaultdict
 from enum import Enum, auto
-from typing import Callable, Dict, Generic, Iterable, List, TypeVar
+from typing import Callable, Dict, Generic, Iterable, List, Optional, Type, TypeVar
+
+from tqdm import tqdm
 
 BatchT = TypeVar('BatchT')
 OutputT = TypeVar('OutputT')
@@ -64,3 +66,35 @@ class Runner(Generic[BatchT, OutputT]):
 
     def stop(self) -> None:
         self._running = False
+
+
+def attach_pbar_on(
+        runner: Runner,
+        update_size: Optional[Callable[[dict], int]] = None,
+        stats: Optional[Callable[[dict], dict]] = None,
+        tqdm_cls: Optional[Type[tqdm]] = None,
+        **kwargs,
+) -> None:
+    if update_size is None:
+        update_size = lambda _: 1
+    if stats is None:
+        stats = lambda state: {'output': state['output']}
+    if tqdm_cls is None:  # pragma: no cover
+        tqdm_cls = tqdm
+
+    pbar = None
+
+    def create_pbar(state):
+        nonlocal pbar
+        pbar = tqdm_cls(state['batches'], **kwargs)
+
+    def update_pbar(state):
+        pbar.set_postfix(**stats(state))
+        pbar.update(update_size(state))
+
+    def close_pbar(state):
+        pbar.close()
+
+    runner.append_handler(Event.EPOCH_STARTED, create_pbar)
+    runner.append_handler(Event.BATCH_FINISHED, update_pbar)
+    runner.append_handler(Event.EPOCH_FINISHED, close_pbar)
