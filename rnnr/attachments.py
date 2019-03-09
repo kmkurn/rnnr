@@ -20,6 +20,8 @@ class ProgressBar(Attachment):
             stats: Optional[Callable[[dict], dict]] = None,
             **kwargs,
     ) -> None:
+        if tqdm_cls is None:  # pragma: no cover
+            tqdm_cls = tqdm
         if update_size is None:
             update_size = lambda _: 1
         if stats is None:
