@@ -1,11 +1,18 @@
 from typing import Callable, Optional, Type
+import abc
 
 from tqdm import tqdm
 
 from . import Event, Runner
 
 
-class ProgressBar:
+class Attachment(abc.ABC):
+    @abc.abstractmethod
+    def attach_on(self, runner: Runner) -> None:
+        pass
+
+
+class ProgressBar(Attachment):
     def __init__(
             self,
             tqdm_cls: Optional[Type[tqdm]] = None,
