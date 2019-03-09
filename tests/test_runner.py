@@ -30,6 +30,8 @@ class TestRun:
         expected_calls = [call(b) for _ in range(1, max_epoch + 1) for b in batches]
         assert mock_fn.mock_calls == expected_calls
 
+
+class TestAppendHandler:
     def test_epoch_started_handler(self):
         mock_handler = DeepcopyMock()
         batches, max_epoch = range(10), 5
