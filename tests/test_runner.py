@@ -97,12 +97,12 @@ def test_stop():
     mock_bfhandler = Mock()
     mock_efhandler = Mock()
     batches = range(10)
-    runner = make_runner()
 
     def bshandler(state):
         if state['batch'] == 3:
             runner.stop()
 
+    runner = make_runner()
     runner.append_handler(Event.BATCH_STARTED, bshandler)
     runner.append_handler(Event.BATCH_FINISHED, mock_bfhandler)
     runner.append_handler(Event.EPOCH_FINISHED, mock_efhandler)
