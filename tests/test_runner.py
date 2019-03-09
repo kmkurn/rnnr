@@ -31,62 +31,66 @@ class TestRun:
 
 
 class TestAppendHandler:
-    def test_epoch_started_handler(self):
+    def test_epoch_started(self):
         mock_handler = DeepcopyMock()
         batches, max_epoch = range(10), 5
+
         runner = make_runner()
         runner.append_handler(Event.EPOCH_STARTED, mock_handler)
         runner.run(Mock(), batches, max_epoch=max_epoch)
-        expected_calls = [
+
+        assert mock_handler.mock_calls == [
             call(dict(batches=batches, epoch=e, max_epoch=max_epoch, batch=None, output=None))
             for e in range(1, max_epoch + 1)
         ]
-        assert mock_handler.mock_calls == expected_calls
 
-    def test_batch_started_handler(self):
+    def test_batch_started(self):
         mock_handler = DeepcopyMock()
         batches, max_epoch = range(10), 5
+
         runner = make_runner()
         runner.append_handler(Event.BATCH_STARTED, mock_handler)
         runner.run(Mock(), batches, max_epoch=max_epoch)
-        expected_calls = [
+
+        assert mock_handler.mock_calls == [
             call(dict(batches=batches, epoch=e, max_epoch=max_epoch, batch=b, output=None))
             for e in range(1, max_epoch + 1)
             for b in batches
         ]
-        assert mock_handler.mock_calls == expected_calls
 
-    def test_batch_finished_handler(self):
+    def test_batch_finished(self):
         mock_handler = DeepcopyMock()
-        mock_fn = Mock(return_value=200)
+        mock_fn = Mock(wraps=lambda b: b ** 2)
         batches, max_epoch = range(10), 5
+
         runner = make_runner()
         runner.append_handler(Event.BATCH_FINISHED, mock_handler)
         runner.run(mock_fn, batches, max_epoch=max_epoch)
-        expected_calls = [
+
+        assert mock_handler.mock_calls == [
             call(
                 dict(
                     batches=batches,
                     epoch=e,
                     max_epoch=max_epoch,
                     batch=b,
-                    output=mock_fn.return_value))
+                    output=mock_fn(b)))
             for e in range(1, max_epoch + 1)
             for b in batches
         ]
-        assert mock_handler.mock_calls == expected_calls
 
-    def test_epoch_finished_handler(self):
+    def test_epoch_finished(self):
         mock_handler = DeepcopyMock()
         batches, max_epoch = range(10), 5
+
         runner = make_runner()
         runner.append_handler(Event.EPOCH_FINISHED, mock_handler)
         runner.run(Mock(), batches, max_epoch=max_epoch)
-        expected_calls = [
+
+        assert mock_handler.mock_calls == [
             call(dict(batches=batches, epoch=e, max_epoch=max_epoch, batch=None, output=None))
             for e in range(1, max_epoch + 1)
         ]
-        assert mock_handler.mock_calls == expected_calls
 
 
 def test_stop():
