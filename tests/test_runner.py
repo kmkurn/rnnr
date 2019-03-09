@@ -27,8 +27,7 @@ class TestRun:
         batches, max_epoch = range(10), 5
         runner = make_runner()
         runner.run(mock_fn, batches, max_epoch=max_epoch)
-        expected_calls = [call(b) for _ in range(1, max_epoch + 1) for b in batches]
-        assert mock_fn.mock_calls == expected_calls
+        assert mock_fn.mock_calls == [call(b) for _ in range(max_epoch) for b in batches]
 
 
 class TestAppendHandler:
