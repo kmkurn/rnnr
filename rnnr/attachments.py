@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Type
+from typing import Any, Callable, Optional, Type
 import abc
 
 from tqdm import tqdm
@@ -47,3 +47,38 @@ class ProgressBar(Attachment):
 
     def _close_pbar(self, state: dict) -> None:
         self._pbar.close()
+
+
+class MeanAggregator(Attachment):
+    def __init__(
+            self,
+            name: str = 'mean',
+            get_value: Optional[Callable[[dict], Any]] = None,
+            get_size: Optional[Callable[[dict], int]] = None,
+    ) -> None:
+        if get_value is None:
+            get_value = lambda state: state['output']
+        if get_size is None:
+            get_size = lambda _: 1
+
+        self.name = name
+        self._get_value = get_value
+        self._get_size = get_size
+        self._total = 0
+        self._size = 0
+
+    def attach_on(self, runner: Runner) -> None:
+        runner.append_handler(Event.EPOCH_STARTED, self._reset)
+        runner.append_handler(Event.BATCH_FINISHED, self._update)
+        runner.append_handler(Event.EPOCH_FINISHED, self._compute)
+
+    def _reset(self, state: dict) -> None:
+        self._total = 0
+        self._size = 0
+
+    def _update(self, state: dict) -> None:
+        self._total += self._get_value(state)
+        self._size += self._get_size(state)
+
+    def _compute(self, state: dict) -> None:
+        state[self.name] = self._total / self._size
