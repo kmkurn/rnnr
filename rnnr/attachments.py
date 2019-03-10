@@ -16,20 +16,20 @@ class ProgressBar(Attachment):
     def __init__(
             self,
             tqdm_cls: Optional[Type[tqdm]] = None,
-            update_size: Optional[Callable[[dict], int]] = None,
-            stats: Optional[Callable[[dict], dict]] = None,
+            get_size: Optional[Callable[[dict], int]] = None,
+            get_stats: Optional[Callable[[dict], dict]] = None,
             **kwargs,
     ) -> None:
         if tqdm_cls is None:  # pragma: no cover
             tqdm_cls = tqdm
-        if update_size is None:
-            update_size = lambda _: 1
-        if stats is None:
-            stats = lambda state: {'output': state['output']}
+        if get_size is None:
+            get_size = lambda _: 1
+        if get_stats is None:
+            get_stats = lambda state: {'output': state['output']}
 
         self._tqdm_cls = tqdm_cls
-        self._update_size = update_size
-        self._stats = stats
+        self._get_size = get_size
+        self._get_stats = get_stats
         self._kwargs = kwargs
         self._pbar: tqdm
 
@@ -42,8 +42,8 @@ class ProgressBar(Attachment):
         self._pbar = self._tqdm_cls(state['batches'], **self._kwargs)
 
     def _update_pbar(self, state: dict) -> None:
-        self._pbar.set_postfix(**self._stats(state))
-        self._pbar.update(self._update_size(state))
+        self._pbar.set_postfix(**self._get_stats(state))
+        self._pbar.update(self._get_size(state))
 
     def _close_pbar(self, state: dict) -> None:
         self._pbar.close()

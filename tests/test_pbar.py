@@ -21,23 +21,23 @@ def test_attach_on(runner):
     mock_tqdm_cls.return_value.close.assert_called_once_with()
 
 
-def test_custom_update_size(runner):
+def test_get_size(runner):
     batches = [list('foo'), list('quux')]
     mock_tqdm_cls = MagicMock(spec=tqdm)
 
-    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, update_size=lambda s: len(s['batch']))
+    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, get_size=lambda s: len(s['batch']))
     pbar.attach_on(runner)
     runner.run(Mock(), batches)
 
     assert mock_tqdm_cls.return_value.update.mock_calls == [call(len(b)) for b in batches]
 
 
-def test_display_stats(runner):
+def test_get_stats(runner):
     batches = range(10)
     batch_fn = lambda x: x**2
     mock_tqdm_cls = MagicMock(spec=tqdm)
 
-    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, stats=lambda s: {'loss': s['output']})
+    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, get_stats=lambda s: {'loss': s['output']})
     pbar.attach_on(runner)
     runner.run(batch_fn, batches)
 
