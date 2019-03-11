@@ -54,30 +54,30 @@ def test_custom_name(runner):
     runner.run(batch_fn, batches)
 
 
-def test_get_value(runner):
+def test_value_fn(runner):
     batches = range(10)
     batch_fn = lambda b: (b**2, b**3)
-    get_value = lambda state: state['output'][1]
+    value_fn = lambda state: state['output'][1]
 
     def efhandler(state):
         assert state[agg.name] == pytest.approx(stat.mean(b**3 for b in batches))
 
-    agg = MeanAggregator(get_value=get_value)
+    agg = MeanAggregator(value_fn=value_fn)
     agg.attach_on(runner)
     runner.append_handler(Event.EPOCH_FINISHED, efhandler)
     runner.run(batch_fn, batches)
 
 
-def test_get_size(runner):
+def test_size_fn(runner):
     batches = range(5)
     sizes = [3, 4, 9, 10, 2]
     batch_fn = lambda b: b
-    get_size = lambda state: sizes[state['batch']]
+    size_fn = lambda state: sizes[state['batch']]
 
     def efhandler(state):
         assert state[agg.name] == pytest.approx(sum(batch_fn(b) for b in batches) / sum(sizes))
 
-    agg = MeanAggregator(get_size=get_size)
+    agg = MeanAggregator(size_fn=size_fn)
     agg.attach_on(runner)
     runner.append_handler(Event.EPOCH_FINISHED, efhandler)
     runner.run(batch_fn, batches)

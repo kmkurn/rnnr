@@ -31,6 +31,7 @@ class ProgressBar(Attachment):
         self._size_fn = size_fn
         self._stats_fn = stats_fn
         self._kwargs = kwargs
+
         self._pbar: tqdm
 
     def attach_on(self, runner: Runner) -> None:
@@ -53,17 +54,18 @@ class MeanAggregator(Attachment):
     def __init__(
             self,
             name: str = 'mean',
-            get_value: Optional[Callable[[dict], Any]] = None,
-            get_size: Optional[Callable[[dict], int]] = None,
+            value_fn: Optional[Callable[[dict], Any]] = None,
+            size_fn: Optional[Callable[[dict], int]] = None,
     ) -> None:
-        if get_value is None:
-            get_value = lambda state: state['output']
-        if get_size is None:
-            get_size = lambda _: 1
+        if value_fn is None:
+            value_fn = lambda state: state['output']
+        if size_fn is None:
+            size_fn = lambda _: 1
 
         self.name = name
-        self._get_value = get_value
-        self._get_size = get_size
+        self._value_fn = value_fn
+        self._size_fn = size_fn
+
         self._total = 0
         self._size = 0
 
@@ -77,8 +79,8 @@ class MeanAggregator(Attachment):
         self._size = 0
 
     def _update(self, state: dict) -> None:
-        self._total += self._get_value(state)
-        self._size += self._get_size(state)
+        self._total += self._value_fn(state)
+        self._size += self._size_fn(state)
 
     def _compute(self, state: dict) -> None:
         state[self.name] = self._total / self._size
