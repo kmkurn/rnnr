@@ -5,6 +5,7 @@ from rnnr import Event
 from rnnr.handlers import Checkpointer
 
 
+# TODO test by calling ckptr manually
 def test_ok(tmp_path, runner):
     objs = {'model.pkl': {'foo': 'bar'}, 'opt.pkl': {'baz': 'quux'}}
     max_epoch = 5
