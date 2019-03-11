@@ -9,6 +9,17 @@ from . import Runner  # avoid circular import
 
 
 class EarlyStopper(Handler):
+    """A handler for early stopping.
+
+    Args:
+        runner: Runner to stop early.
+        patience: Number of times to wait for the loss to improve before stopping.
+        loss_fn: Callback to get the loss value from the runner's ``state`` on which this
+            handler is appended. The default is to get ``state['output']`` as the loss.
+        eps: An improvement is considered only when the loss value decreases by at least
+            this amount.
+    """
+
     def __init__(
             self,
             runner: Runner,
