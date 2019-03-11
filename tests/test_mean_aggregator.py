@@ -6,7 +6,7 @@ from rnnr import Event
 from rnnr.attachments import MeanAggregator
 
 
-def test_attach_on(runner):
+def test_ok(runner):
     batches = range(5)
     values = [12, 7, 8, 44, -13]
     batch_fn = lambda b: values[b]

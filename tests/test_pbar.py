@@ -5,7 +5,7 @@ from tqdm import tqdm
 from rnnr.attachments import ProgressBar
 
 
-def test_attach_on(runner):
+def test_ok(runner):
     batches = range(10)
     batch_fn = lambda x: x**2
     mock_tqdm_cls = MagicMock(spec=tqdm)
