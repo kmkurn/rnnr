@@ -15,7 +15,7 @@ class EarlyStopper(Handler):
         runner: Runner to stop early.
         patience: Number of times to wait for the loss to improve before stopping.
         loss_fn: Callback to get the loss value from the runner's ``state`` on which this
-            handler is appended. The default is to get ``state['output']`` as the loss.
+            handler is appended. The default is to get ``state['loss']`` as the loss.
         eps: An improvement is considered only when the loss value decreases by at least
             this amount.
     """
@@ -28,7 +28,7 @@ class EarlyStopper(Handler):
             eps: float = 1e-4,
     ) -> None:
         if loss_fn is None:
-            loss_fn = lambda state: state['output']
+            loss_fn = lambda state: state['loss']
 
         self._runner = runner
         self._patience = patience
