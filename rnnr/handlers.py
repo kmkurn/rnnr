@@ -3,7 +3,9 @@ from typing import Any, Callable, Optional
 from pathlib import Path
 import pickle
 
-from . import Runner
+Handler = Callable[[dict], None]
+
+from . import Runner  # avoid circular import
 
 
 class EarlyStopper:

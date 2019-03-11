@@ -6,7 +6,6 @@ from typing import Callable, Dict, Generic, Iterable, List, TypeVar
 
 BatchT = TypeVar('BatchT')
 OutputT = TypeVar('OutputT')
-Handler = Callable[[dict], None]
 
 
 class Event(Enum):
@@ -18,10 +17,10 @@ class Event(Enum):
 
 class Runner(Generic[BatchT, OutputT]):
     def __init__(self) -> None:
-        self._handlers: Dict[Event, List[Handler]] = defaultdict(list)
+        self._handlers: Dict[Event, List['Handler']] = defaultdict(list)
         self._running = False
 
-    def append_handler(self, event: Event, handler: Handler) -> None:
+    def append_handler(self, event: Event, handler: 'Handler') -> None:
         self._handlers[event].append(handler)
 
     def run(
@@ -64,3 +63,6 @@ class Runner(Generic[BatchT, OutputT]):
 
     def stop(self) -> None:
         self._running = False
+
+
+from .handlers import Handler  # avoid circular import
