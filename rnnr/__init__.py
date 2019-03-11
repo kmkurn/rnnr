@@ -23,6 +23,13 @@ class Runner(Generic[BatchT, OutputT]):
     def append_handler(self, event: Event, handler: 'Handler') -> None:
         self._handlers[event].append(handler)
 
+    def on(self, event: Event) -> Callable[['Handler'], 'Handler']:
+        def decorator(handler: 'Handler') -> 'Handler':
+            self.append_handler(event, handler)
+            return handler
+
+        return decorator
+
     def run(
             self,
             batch_fn: Callable[[BatchT], OutputT],

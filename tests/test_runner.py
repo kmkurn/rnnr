@@ -1,4 +1,4 @@
-from unittest.mock import Mock, call
+from unittest.mock import Mock, call, patch
 import copy
 
 from rnnr import Event
@@ -94,3 +94,13 @@ def test_stop(runner):
 
     assert mock_bfhandler.call_count == 4
     assert mock_efhandler.called
+
+
+def test_on_decorator(runner):
+    with patch.object(runner, 'append_handler', autospec=True) as mock_append_handler:
+
+        @runner.on(Event.BATCH_STARTED)
+        def handler(state):
+            pass
+
+        mock_append_handler.assert_called_once_with(Event.BATCH_STARTED, handler)
