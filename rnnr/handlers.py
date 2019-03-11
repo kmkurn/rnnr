@@ -13,29 +13,29 @@ class EarlyStopper(Handler):
             self,
             runner: Runner,
             patience: int = 5,
-            value_fn: Optional[Callable[[dict], float]] = None,
+            loss_fn: Optional[Callable[[dict], float]] = None,
             eps: float = 1e-4,
     ) -> None:
-        if value_fn is None:
-            value_fn = lambda state: state['output']
+        if loss_fn is None:
+            loss_fn = lambda state: state['output']
 
         self._runner = runner
         self._patience = patience
-        self._value_fn = value_fn
+        self._loss_fn = loss_fn
         self._eps = eps
 
-        self._num_bad_value = 0
-        self._min_value = float('inf')
+        self._num_bad_loss = 0
+        self._min_loss = float('inf')
 
     def __call__(self, state: dict) -> None:
-        value = self._value_fn(state)
-        if value >= self._min_value + self._eps:
-            self._num_bad_value += 1
+        loss = self._loss_fn(state)
+        if loss <= self._min_loss - self._eps:
+            self._min_loss = loss
+            self._num_bad_loss = 0
         else:
-            self._min_value = min(self._min_value, value)
-            self._num_bad_value = 0
+            self._num_bad_loss += 1
 
-        if self._num_bad_value >= self._patience:
+        if self._num_bad_loss >= self._patience:
             self._runner.stop()
 
 
