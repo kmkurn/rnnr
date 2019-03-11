@@ -8,7 +8,7 @@ Handler = Callable[[dict], None]
 from . import Runner  # avoid circular import
 
 
-class EarlyStopper:
+class EarlyStopper(Handler):
     def __init__(
             self,
             runner: Runner,
@@ -39,7 +39,7 @@ class EarlyStopper:
             self._runner.stop()
 
 
-class Checkpointer:
+class Checkpointer(Handler):
     def __init__(
             self,
             save_dir: Path,
