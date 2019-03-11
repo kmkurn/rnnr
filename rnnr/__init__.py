@@ -16,11 +16,19 @@ class Event(Enum):
 
 
 class Runner(Generic[BatchT, OutputT]):
+    """A neural network runner."""
+
     def __init__(self) -> None:
         self._handlers: Dict[Event, List['Handler']] = defaultdict(list)
         self._running = False
 
     def append_handler(self, event: Event, handler: 'Handler') -> None:
+        """Append a handler for the given event.
+
+        Args:
+            event: Event to handle.
+            handler: Handler for the event.
+        """
         self._handlers[event].append(handler)
 
     def on(self, event: Event) -> Callable[['Handler'], 'Handler']:
@@ -36,6 +44,13 @@ class Runner(Generic[BatchT, OutputT]):
             batches: Iterable[BatchT],
             max_epoch: int = 1,
     ) -> None:
+        """Run on the given batches for a number of epochs.
+
+        Args:
+            batch_fn: Function to call for each batch.
+            batches: Batches to iterate over in an epoch.
+            max_epoch: Maximum number of epochs to run.
+        """
         self._running = True
         state: dict = {
             'epoch': None,
@@ -69,6 +84,7 @@ class Runner(Generic[BatchT, OutputT]):
             handler(state)
 
     def stop(self) -> None:
+        """Stop the runner immediately after the current batch is finished."""
         self._running = False
 
 
