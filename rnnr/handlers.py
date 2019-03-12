@@ -11,6 +11,9 @@ from . import Runner  # avoid circular import
 class EarlyStopper(Handler):
     """A handler for early stopping.
 
+    This handler keeps track the number of times the loss value does not improve. If this
+    number is greater than the given patience, this handler stops the given runner.
+
     Args:
         runner: Runner to stop early.
         patience: Number of times to wait for the loss to improve before stopping.
@@ -46,7 +49,7 @@ class EarlyStopper(Handler):
         else:
             self._num_bad_loss += 1
 
-        if self._num_bad_loss >= self._patience:
+        if self._num_bad_loss > self._patience:
             self._runner.stop()
 
 
