@@ -82,6 +82,29 @@ class EarlyStopper(Handler):
 
 
 class Checkpointer(Handler):
+    """A handler for checkpointing.
+
+    Checkpointing here means saving some objects (e.g., models) periodically during a run.
+
+    Args:
+        save_dir: Save checkpoints in this directory.
+        objs: Dictionary whose keys are filenames and the values are the objects to checkpoint.
+            The filenames in this dictionary's keys are prepended with the number of times
+            this handler is called to get the actual saved files' names. This allows the
+            actual filenames contain the e.g. epoch number if this handler is invoked at the
+            end of each epoch.
+        max_saved: Maximum number of checkpoints saved.
+        loss_fn: If given, this should return the loss value of the given runner's state dict.
+            Checkpoints are saved only when the returned loss is smaller than the minimum loss
+            observed so far. The default of ``None`` means checkpoints are saved whenever this
+            handler is called.
+        save_fn: Function to invoke to save the checkpoints. If given, this must be a callable
+            accepting two arguments: the path to save to and the object to save. The default
+            is to save the object using `pickle`.
+        eps: The loss value must be smaller at least by this value to be considered as an
+            improvement. Only used if ``loss_fn`` is given.
+    """
+
     def __init__(
             self,
             save_dir: Path,
