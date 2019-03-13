@@ -14,6 +14,33 @@ class EarlyStopper(Handler):
     This handler keeps track the number of times the loss value does not improve. If this
     number is greater than the given patience, this handler stops the given runner.
 
+    Example:
+
+        >>> valid_losses = [0.1, 0.2, 0.3]  # simulate validation batch losses
+        >>> dummy_batches = range(10)
+        >>> dummy_batch_fn = lambda x: x
+        >>>
+        >>> from rnnr import Event, Runner
+        >>> from rnnr.attachments import MeanAggregator
+        >>> from rnnr.handlers import EarlyStopper
+        >>>
+        >>> trainer, evaluator = Runner(), Runner()
+        >>> @trainer.on(Event.EPOCH_STARTED)
+        ... def print_epoch(state):
+        ...     print('Epoch', state['epoch'], 'started')
+        ...
+        >>> @trainer.on(Event.EPOCH_FINISHED)
+        ... def eval_on_valid(state):
+        ...     evaluator.run(lambda loss: loss, valid_losses)
+        ...
+        >>> MeanAggregator(name='loss').attach_on(evaluator)
+        >>> evaluator.append_handler(Event.EPOCH_FINISHED, EarlyStopper(trainer, patience=2))
+        >>> trainer.run(dummy_batch_fn, dummy_batches, max_epoch=7)
+        Epoch 1 started
+        Epoch 2 started
+        Epoch 3 started
+        Epoch 4 started
+
     Args:
         runner: Runner to stop early.
         patience: Number of times to wait for the loss to improve before stopping.
