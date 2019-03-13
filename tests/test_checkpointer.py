@@ -89,7 +89,7 @@ def test_save_fn(tmp_path):
         ckptr({})
 
     assert mock_save_fn.mock_calls == [
-        call(tmp_path / f'{i+1}_{name}', objs_values[name][i])
+        call(objs_values[name][i], tmp_path / f'{i+1}_{name}')
         for i in range(num_calls)
         for name in objs
     ]

@@ -99,7 +99,7 @@ class Checkpointer(Handler):
             observed so far. The default of ``None`` means checkpoints are saved whenever this
             handler is called.
         save_fn: Function to invoke to save the checkpoints. If given, this must be a callable
-            accepting two arguments: the path to save to and the object to save. The default
+            accepting two arguments: an object to save and a path to save it to. The default
             is to save the object using `pickle`.
         eps: The loss value must be smaller at least by this value to be considered as an
             improvement. Only used if ``loss_fn`` is given.
@@ -111,7 +111,7 @@ class Checkpointer(Handler):
             objs: dict,
             max_saved: int = 1,
             loss_fn: Optional[Callable[[dict], float]] = None,
-            save_fn: Optional[Callable[[Path, Any], None]] = None,
+            save_fn: Optional[Callable[[Any, Path], None]] = None,
             eps: float = 1e-4,
     ) -> None:
         if save_fn is None:
@@ -129,7 +129,7 @@ class Checkpointer(Handler):
         self._min_loss = float('inf')
 
     @staticmethod
-    def _default_save_fn(path: Path, obj: Any) -> None:
+    def _default_save_fn(obj: Any, path: Path) -> None:
         with open(path, 'wb') as f:
             pickle.dump(obj, f)
 
@@ -164,7 +164,7 @@ class Checkpointer(Handler):
         self._deque.append(self._num_calls)
         for name, obj in self._objs.items():
             path = self._save_dir / f'{self._num_calls}_{name}'
-            self._save_fn(path, obj)
+            self._save_fn(obj, path)
 
     def _delete(self) -> None:
         num = self._deque.popleft()
