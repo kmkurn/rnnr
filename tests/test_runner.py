@@ -25,6 +25,16 @@ class TestRun:
 
 
 class TestAppendHandler:
+    def test_started(self, runner):
+        mock_handler = DeepcopyMock()
+        batches, max_epoch = range(10), 5
+
+        runner.append_handler(Event.STARTED, mock_handler)
+        runner.run(Mock(), batches, max_epoch=max_epoch)
+
+        mock_handler.assert_called_once_with(
+            dict(max_epoch=max_epoch, batches=batches, epoch=None, batch=None, output=None))
+
     def test_epoch_started(self, runner):
         mock_handler = DeepcopyMock()
         batches, max_epoch = range(10), 5
@@ -76,6 +86,16 @@ class TestAppendHandler:
             call(dict(batches=batches, epoch=e, max_epoch=max_epoch, batch=None, output=None))
             for e in range(1, max_epoch + 1)
         ]
+
+    def test_finished(self, runner):
+        mock_handler = DeepcopyMock()
+        batches, max_epoch = range(10), 5
+
+        runner.append_handler(Event.FINISHED, mock_handler)
+        runner.run(Mock(), batches, max_epoch=max_epoch)
+
+        mock_handler.assert_called_once_with(
+            dict(max_epoch=max_epoch, batches=batches, epoch=None, batch=None, output=None))
 
 
 class TestStop:

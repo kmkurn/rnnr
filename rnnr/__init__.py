@@ -9,10 +9,12 @@ OutputT = TypeVar('OutputT')
 
 
 class Event(Enum):
+    STARTED = auto()
     EPOCH_STARTED = auto()
     BATCH_STARTED = auto()
     BATCH_FINISHED = auto()
     EPOCH_FINISHED = auto()
+    FINISHED = auto()
 
 
 class Runner(Generic[BatchT, OutputT]):
@@ -60,6 +62,7 @@ class Runner(Generic[BatchT, OutputT]):
             'output': None,
         }
 
+        self._emit(Event.STARTED, state)
         for epoch in range(1, max_epoch + 1):
             if not self._running:
                 break
@@ -79,6 +82,8 @@ class Runner(Generic[BatchT, OutputT]):
 
             state['batch'] = None
             self._emit(Event.EPOCH_FINISHED, state)
+        state['epoch'] = None
+        self._emit(Event.FINISHED, state)
 
     def _emit(self, event: Event, state: dict) -> None:
         for handler in self._handlers[event]:
