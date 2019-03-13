@@ -18,7 +18,33 @@ class Event(Enum):
 
 
 class Runner(Generic[BatchT, OutputT]):
-    """A neural network runner."""
+    """A neural network runner.
+
+    A runner provides a thin abstraction of iterating over batches for several epochs,
+    which is typically done in neural network training. To customize the behavior during
+    a run, a runner provides a way to listen to events emitted during such run. There are
+    six events that may be emitted during a run:
+
+    * `Event.STARTED` - emitted once at the start of the run.
+    * `Event.EPOCH_STARTED` - emitted at the start of each epoch.
+    * `Event.BATCH_STARTED` - emitted at the start of each batch.
+    * `Event.BATCH_FINISHED` - emitted when a batch is finished.
+    * `Event.EPOCH_FINISHED` - emitted when an epoch is finished.
+    * `Event.FINISHED` - emitted once when the run is finished.
+
+    To listen to an event, call `Runner.append_handler` and provide the event handler.
+    A handler is a callable that accepts a `dict` and returns nothing. The `dict` is
+    the state of the run. By default, the state contains:
+
+    * ``batches`` - iterable of batches which constitutes an epoch.
+    * ``max_epoch`` - maximum number of epochs to run.
+    * ``epoch`` - current number of epoch. Not available to handlers of `Event.STARTED`
+        and `Event.FINISHED`.
+    * ``batch`` - current batch retrieved from ``state['batches']``. Only available to
+        handlers of `Event.BATCH_STARTED` and `Event.BATCH_FINISHED`.
+    * ``output`` - output of processing the current batch. Only available to handlers of
+        `Event.BATCH_FINISHED`.
+    """
 
     def __init__(self) -> None:
         self._handlers: Dict[Event, List['Handler']] = defaultdict(list)
@@ -84,7 +110,11 @@ class Runner(Generic[BatchT, OutputT]):
             handler(state)
 
     def stop(self) -> None:
-        """Stop the runner immediately after the current batch is finished."""
+        """Stop the runner immediately after the current batch is finished.
+
+        Note that the appropriate handlers for ``Event.*_FINISHED`` events are still called
+        before the run truly stops.
+        """
         self._running = False
 
 
