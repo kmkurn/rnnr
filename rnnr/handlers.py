@@ -8,6 +8,7 @@ Handler = Callable[[dict], None]
 from . import Runner  # avoid circular import
 
 
+# TODO add logging
 class EarlyStopper(Handler):
     """A handler for early stopping.
 
