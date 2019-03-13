@@ -61,23 +61,24 @@ class Runner(Generic[BatchT, OutputT]):
         }
 
         for epoch in range(1, max_epoch + 1):
+            if not self._running:
+                break
+
             state['epoch'] = epoch
             self._emit(Event.EPOCH_STARTED, state)
 
             for batch in batches:
+                if not self._running:
+                    break
                 state['batch'] = batch
                 self._emit(Event.BATCH_STARTED, state)
                 output = batch_fn(batch)
                 state['output'] = output
                 self._emit(Event.BATCH_FINISHED, state)
                 state['output'] = None
-                if not self._running:
-                    break
 
             state['batch'] = None
             self._emit(Event.EPOCH_FINISHED, state)
-            if not self._running:
-                break
 
     def _emit(self, event: Event, state: dict) -> None:
         for handler in self._handlers[event]:

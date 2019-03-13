@@ -78,22 +78,46 @@ class TestAppendHandler:
         ]
 
 
-def test_stop(runner):
-    mock_bfhandler = Mock()
-    mock_efhandler = Mock()
-    batches = range(10)
+class TestStop:
+    def test_on_batch_started(self, runner):
+        mock_eshandler = Mock()
+        mock_bfhandler = Mock()
+        mock_efhandler = Mock()
+        batches = range(10)
 
-    def bshandler(state):
-        if state['batch'] == 3:
-            runner.stop()
+        def bshandler(state):
+            if state['batch'] == 3:
+                runner.stop()
 
-    runner.append_handler(Event.BATCH_STARTED, bshandler)
-    runner.append_handler(Event.BATCH_FINISHED, mock_bfhandler)
-    runner.append_handler(Event.EPOCH_FINISHED, mock_efhandler)
-    runner.run(Mock(), batches)
+        runner.append_handler(Event.EPOCH_STARTED, mock_eshandler)
+        runner.append_handler(Event.BATCH_STARTED, bshandler)
+        runner.append_handler(Event.BATCH_FINISHED, mock_bfhandler)
+        runner.append_handler(Event.EPOCH_FINISHED, mock_efhandler)
+        runner.run(Mock(), batches, max_epoch=2)
 
-    assert mock_bfhandler.call_count == 4
-    assert mock_efhandler.called
+        assert mock_eshandler.call_count == 1
+        assert mock_bfhandler.call_count == 4
+        assert mock_efhandler.call_count == 1
+
+    def test_on_epoch_started(self, runner):
+        mock_bshandler = Mock()
+        mock_bfhandler = Mock()
+        mock_efhandler = Mock()
+        batches = range(10)
+
+        def eshandler(state):
+            if state['epoch'] == 1:
+                runner.stop()
+
+        runner.append_handler(Event.EPOCH_STARTED, eshandler)
+        runner.append_handler(Event.BATCH_STARTED, mock_bshandler)
+        runner.append_handler(Event.BATCH_FINISHED, mock_bfhandler)
+        runner.append_handler(Event.EPOCH_FINISHED, mock_efhandler)
+        runner.run(Mock(), batches, max_epoch=7)
+
+        assert mock_bshandler.call_count == 0
+        assert mock_bfhandler.call_count == 0
+        assert mock_efhandler.call_count == 1
 
 
 def test_on_decorator(runner):
