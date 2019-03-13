@@ -54,13 +54,7 @@ class Runner(Generic[BatchT, OutputT]):
             max_epoch: Maximum number of epochs to run.
         """
         self._running = True
-        state: dict = {
-            'epoch': None,
-            'max_epoch': max_epoch,
-            'batches': batches,
-            'batch': None,
-            'output': None,
-        }
+        state: dict = {'max_epoch': max_epoch, 'batches': batches}
 
         self._emit(Event.STARTED, state)
         for epoch in range(1, max_epoch + 1):
@@ -78,11 +72,11 @@ class Runner(Generic[BatchT, OutputT]):
                 output = batch_fn(batch)
                 state['output'] = output
                 self._emit(Event.BATCH_FINISHED, state)
-                state['output'] = None
+                state.pop('output')
 
-            state['batch'] = None
+            state.pop('batch', None)
             self._emit(Event.EPOCH_FINISHED, state)
-        state['epoch'] = None
+        state.pop('epoch', None)
         self._emit(Event.FINISHED, state)
 
     def _emit(self, event: Event, state: dict) -> None:

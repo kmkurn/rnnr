@@ -32,8 +32,7 @@ class TestAppendHandler:
         runner.append_handler(Event.STARTED, mock_handler)
         runner.run(Mock(), batches, max_epoch=max_epoch)
 
-        mock_handler.assert_called_once_with(
-            dict(max_epoch=max_epoch, batches=batches, epoch=None, batch=None, output=None))
+        mock_handler.assert_called_once_with(dict(max_epoch=max_epoch, batches=batches))
 
     def test_epoch_started(self, runner):
         mock_handler = DeepcopyMock()
@@ -43,7 +42,7 @@ class TestAppendHandler:
         runner.run(Mock(), batches, max_epoch=max_epoch)
 
         assert mock_handler.mock_calls == [
-            call(dict(batches=batches, epoch=e, max_epoch=max_epoch, batch=None, output=None))
+            call(dict(batches=batches, epoch=e, max_epoch=max_epoch))
             for e in range(1, max_epoch + 1)
         ]
 
@@ -55,7 +54,7 @@ class TestAppendHandler:
         runner.run(Mock(), batches, max_epoch=max_epoch)
 
         assert mock_handler.mock_calls == [
-            call(dict(batches=batches, epoch=e, max_epoch=max_epoch, batch=b, output=None))
+            call(dict(batches=batches, epoch=e, max_epoch=max_epoch, batch=b))
             for e in range(1, max_epoch + 1)
             for b in batches
         ]
@@ -83,7 +82,7 @@ class TestAppendHandler:
         runner.run(Mock(), batches, max_epoch=max_epoch)
 
         assert mock_handler.mock_calls == [
-            call(dict(batches=batches, epoch=e, max_epoch=max_epoch, batch=None, output=None))
+            call(dict(batches=batches, epoch=e, max_epoch=max_epoch))
             for e in range(1, max_epoch + 1)
         ]
 
@@ -94,8 +93,7 @@ class TestAppendHandler:
         runner.append_handler(Event.FINISHED, mock_handler)
         runner.run(Mock(), batches, max_epoch=max_epoch)
 
-        mock_handler.assert_called_once_with(
-            dict(max_epoch=max_epoch, batches=batches, epoch=None, batch=None, output=None))
+        mock_handler.assert_called_once_with(dict(max_epoch=max_epoch, batches=batches))
 
 
 class TestStop:
