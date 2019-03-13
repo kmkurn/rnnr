@@ -17,6 +17,7 @@ class Event(Enum):
     FINISHED = auto()
 
 
+# TODO add logging
 class Runner(Generic[BatchT, OutputT]):
     """A neural network runner.
 
