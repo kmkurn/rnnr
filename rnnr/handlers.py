@@ -34,7 +34,7 @@ class EarlyStopper(Handler):
         ...     evaluator.run(lambda loss: loss, valid_losses)
         ...
         >>> MeanAggregator(name='loss').attach_on(evaluator)
-        >>> evaluator.append_handler(Event.EPOCH_FINISHED, EarlyStopper(trainer, patience=2))
+        >>> evaluator.append_handler(Event.FINISHED, EarlyStopper(trainer, patience=2))
         >>> trainer.run(dummy_batch_fn, dummy_batches, max_epoch=7)
         Epoch 1 started
         Epoch 2 started
