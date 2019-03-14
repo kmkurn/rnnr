@@ -3,7 +3,8 @@ import abc
 
 from tqdm import tqdm
 
-from . import Event, Runner
+from .event import Event
+from .runner import Runner
 
 
 class Attachment(abc.ABC):

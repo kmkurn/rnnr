@@ -4,10 +4,9 @@ from pathlib import Path
 import logging
 import pickle
 
+from .runner import Runner
+
 Handler = Callable[[dict], None]
-
-from . import Runner  # avoid circular import
-
 logger = logging.getLogger(__name__)
 
 
