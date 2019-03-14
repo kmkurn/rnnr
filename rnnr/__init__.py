@@ -1,9 +1,13 @@
 __version__ = '0.0.0'
 
 from collections import defaultdict
+from datetime import timedelta
 from enum import Enum, auto
 from typing import Callable, Dict, Generic, Iterable, List, TypeVar
+import logging
+import time
 
+logger = logging.getLogger(__name__)
 BatchT = TypeVar('BatchT')
 OutputT = TypeVar('OutputT')
 
@@ -17,7 +21,6 @@ class Event(Enum):
     FINISHED = auto()
 
 
-# TODO add logging
 class Runner(Generic[BatchT, OutputT]):
     """A neural network runner.
 
@@ -50,6 +53,10 @@ class Runner(Generic[BatchT, OutputT]):
     def __init__(self) -> None:
         self._handlers: Dict[Event, List['Handler']] = defaultdict(list)
         self._running = False
+        self._epoch_start_time = 0.
+
+        self.append_handler(Event.EPOCH_STARTED, self._print_start_epoch)
+        self.append_handler(Event.EPOCH_FINISHED, self._print_finish_epoch)
 
     def append_handler(self, event: Event, handler: 'Handler') -> None:
         """Append a handler for the given event.
@@ -59,6 +66,16 @@ class Runner(Generic[BatchT, OutputT]):
             handler: Handler for the event.
         """
         self._handlers[event].append(handler)
+
+    def _print_start_epoch(self, state: dict) -> None:
+        if state['max_epoch'] > 1:
+            self._epoch_start_time = time.time()
+            logger.info('Starting epoch %d/%d', state['epoch'], state['max_epoch'])
+
+    def _print_finish_epoch(self, state: dict) -> None:
+        if state['max_epoch'] > 1:
+            elapsed = timedelta(seconds=time.time() - self._epoch_start_time)
+            logger.info('Epoch %d/%d done in %s', state['epoch'], state['max_epoch'], elapsed)
 
     def on(self, event: Event) -> Callable[['Handler'], 'Handler']:
         def decorator(handler: 'Handler') -> 'Handler':
