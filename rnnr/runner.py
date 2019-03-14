@@ -34,11 +34,11 @@ class Runner(Generic[BatchT, OutputT]):
     * ``batches`` - iterable of batches which constitutes an epoch.
     * ``max_epoch`` - maximum number of epochs to run.
     * ``epoch`` - current number of epoch. Not available to handlers of `Event.STARTED`
-        and `Event.FINISHED`.
+      and `Event.FINISHED`.
     * ``batch`` - current batch retrieved from ``state['batches']``. Only available to
-        handlers of `Event.BATCH_STARTED` and `Event.BATCH_FINISHED`.
+      handlers of `Event.BATCH_STARTED` and `Event.BATCH_FINISHED`.
     * ``output`` - output of processing the current batch. Only available to handlers of
-        `Event.BATCH_FINISHED`.
+      `Event.BATCH_FINISHED`.
     """
 
     def __init__(self) -> None:
