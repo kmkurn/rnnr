@@ -8,8 +8,15 @@ from .runner import Runner
 
 
 class Attachment(abc.ABC):
+    """An abstract base class for an attachment."""
+
     @abc.abstractmethod
     def attach_on(self, runner: Runner) -> None:
+        """Attach to the given runner.
+
+        Args:
+            runner: Runner to attach to.
+        """
         pass
 
 
@@ -61,11 +68,6 @@ class ProgressBar(Attachment):
         self._pbar: tqdm
 
     def attach_on(self, runner: Runner) -> None:
-        """Attach this progress bar to the given runner.
-
-        Args:
-            runner: Runner to attach this progress bar to.
-        """
         runner.append_handler(Event.EPOCH_STARTED, self._create)
         runner.append_handler(Event.BATCH_FINISHED, self._update)
         runner.append_handler(Event.EPOCH_FINISHED, self._close)
@@ -134,11 +136,6 @@ class MeanAggregator(Attachment):
         self._size = 0
 
     def attach_on(self, runner: Runner) -> None:
-        """Attach this aggregator to the given runner.
-
-        Args:
-            runner: Runner to attach this aggregator to.
-        """
         runner.append_handler(Event.EPOCH_STARTED, self._reset)
         runner.append_handler(Event.BATCH_FINISHED, self._update)
         runner.append_handler(Event.EPOCH_FINISHED, self._compute)

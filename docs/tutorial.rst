@@ -70,6 +70,15 @@ start of each epoch respectively. It is also possible to provide a handler using
 For more information on what events are available and what ``state`` stores, see `Runner`.
 Some useful handlers can be found in :ref:`Handlers`.
 
+Handlers that work together: an attachment
+------------------------------------------
+
+An attachment is a collection of handlers that work together to provide some functionality.
+For example, to compute a mean over batch statistics, we need to append handlers to many
+events, and these handlers work together to obtain the mean value. In **rnnr**, this concept
+is realized by the `~attachments.Attachment` abstract base class. We can create our own
+attachments, but some useful attachments are provided. See :ref:`Attachments` for more.
+
 
 .. _PyTorch: https://pytorch.org
 .. _DataLoader: https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader

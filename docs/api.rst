@@ -15,8 +15,12 @@ Handlers
 
 .. autoclass:: rnnr.handlers.Checkpointer
 
+.. _Attachments:
+
 Attachments
 -----------
+
+.. autoclass:: rnnr.attachments.Attachment
 
 .. autoclass:: rnnr.attachments.ProgressBar
 
