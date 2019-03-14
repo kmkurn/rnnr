@@ -6,11 +6,10 @@ import pickle
 
 from .runner import Runner
 
-Handler = Callable[[dict], None]
 logger = logging.getLogger(__name__)
 
 
-class EarlyStopper(Handler):
+class EarlyStopper:
     """A handler for early stopping.
 
     This handler keeps track the number of times the loss value does not improve. If this
@@ -83,7 +82,7 @@ class EarlyStopper(Handler):
             self._runner.stop()
 
 
-class Checkpointer(Handler):
+class Checkpointer:
     """A handler for checkpointing.
 
     Checkpointing here means saving some objects (e.g., models) periodically during a run.

@@ -8,6 +8,7 @@ from rnnr.event import Event
 
 BatchT = TypeVar('BatchT')
 OutputT = TypeVar('OutputT')
+Handler = Callable[[dict], None]
 logger = logging.getLogger(__name__)
 
 
@@ -41,14 +42,14 @@ class Runner(Generic[BatchT, OutputT]):
     """
 
     def __init__(self) -> None:
-        self._handlers: Dict[Event, List['Handler']] = defaultdict(list)
+        self._handlers: Dict[Event, List[Handler]] = defaultdict(list)
         self._running = False
         self._epoch_start_time = 0.
 
         self.append_handler(Event.EPOCH_STARTED, self._print_start_epoch)
         self.append_handler(Event.EPOCH_FINISHED, self._print_finish_epoch)
 
-    def append_handler(self, event: Event, handler: 'Handler') -> None:
+    def append_handler(self, event: Event, handler: Handler) -> None:
         """Append a handler for the given event.
 
         Args:
@@ -67,8 +68,8 @@ class Runner(Generic[BatchT, OutputT]):
             elapsed = timedelta(seconds=time.time() - self._epoch_start_time)
             logger.info('Epoch %d/%d done in %s', state['epoch'], state['max_epoch'], elapsed)
 
-    def on(self, event: Event) -> Callable[['Handler'], 'Handler']:
-        def decorator(handler: 'Handler') -> 'Handler':
+    def on(self, event: Event) -> Callable[[Handler], Handler]:
+        def decorator(handler: Handler) -> Handler:
             self.append_handler(event, handler)
             return handler
 
@@ -124,6 +125,3 @@ class Runner(Generic[BatchT, OutputT]):
         before the run truly stops.
         """
         self._running = False
-
-
-from .handlers import Handler  # avoid circular import
