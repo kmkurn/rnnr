@@ -1,6 +1,11 @@
 API reference
 =============
 
+Event
+-----
+
+.. autoclass:: rnnr.Event
+
 Runner
 ------
 

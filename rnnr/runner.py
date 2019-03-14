@@ -17,16 +17,7 @@ class Runner(Generic[BatchT, OutputT]):
 
     A runner provides a thin abstraction of iterating over batches for several epochs,
     which is typically done in neural network training. To customize the behavior during
-    a run, a runner provides a way to listen to events emitted during such run. There are
-    six events that may be emitted during a run:
-
-    * `Event.STARTED` - emitted once at the start of the run.
-    * `Event.EPOCH_STARTED` - emitted at the start of each epoch.
-    * `Event.BATCH_STARTED` - emitted at the start of each batch.
-    * `Event.BATCH_FINISHED` - emitted when a batch is finished.
-    * `Event.EPOCH_FINISHED` - emitted when an epoch is finished.
-    * `Event.FINISHED` - emitted once when the run is finished.
-
+    a run, a runner provides a way to listen to events emitted during such run.
     To listen to an event, call `Runner.append_handler` and provide the event handler.
     A handler is a callable that accepts a `dict` and returns nothing. The `dict` is
     the state of the run. By default, the state contains:

@@ -67,8 +67,8 @@ start of each epoch respectively. It is also possible to provide a handler using
 
    trainer.append_handler(Event.EPOCH_FINISHED, print_epoch_finished)
 
-For more information on what events are available and what ``state`` stores, see `Runner`.
-Some useful handlers can be found in :ref:`Handlers`.
+See `Runner` for more details. For more information on what events are available, see `Event`
+instead. Please check :ref:`Handlers` for some useful handlers.
 
 Handlers that work together: an attachment
 ------------------------------------------
