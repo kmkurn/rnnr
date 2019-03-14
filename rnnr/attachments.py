@@ -81,6 +81,39 @@ class ProgressBar(Attachment):
 
 
 class MeanAggregator(Attachment):
+    """An attachment to compute a mean over batch statistics.
+
+    This attachment gets the value from each batch and compute their mean at the end of
+    every epoch.
+
+    Example:
+
+        >>> from rnnr import Event, Runner
+        >>> from rnnr.attachments import MeanAggregator
+        >>> runner = Runner()
+        >>> agg = MeanAggregator()
+        >>> agg.attach_on(runner)
+        >>> @runner.on(Event.EPOCH_FINISHED)
+        ... def print_mean(state):
+        ...     print('Mean:', state[agg.name])
+        ...
+        >>> runner.run(lambda x: x, range(5), max_epoch=3)
+        Mean: 2.0
+        Mean: 2.0
+        Mean: 2.0
+
+    Args:
+        name: Name of this aggregator. This name is used as the key in the runner's state
+            dictionary.
+        value_fn: Function to get the value of a batch. If given, it should accept the
+            runner's state dictionary at the end of a batch and return a value. The default
+            is to get ``state['output']`` as the value.
+        size_fn: Function to get the size of a batch. If given, it should accept the runner's
+            state dictionary at the end of a batch and return the batch size. The default is
+            to always return 1 as the batch size. The sum of all these batch sizes is the
+            divisor when computing the mean.
+    """
+
     def __init__(
             self,
             name: str = 'mean',
@@ -100,6 +133,11 @@ class MeanAggregator(Attachment):
         self._size = 0
 
     def attach_on(self, runner: Runner) -> None:
+        """Attach this aggregator to the given runner.
+
+        Args:
+            runner: Runner to attach this aggregator to.
+        """
         runner.append_handler(Event.EPOCH_STARTED, self._reset)
         runner.append_handler(Event.BATCH_FINISHED, self._update)
         runner.append_handler(Event.EPOCH_FINISHED, self._compute)
