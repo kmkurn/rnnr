@@ -1,14 +1,16 @@
 from collections import deque
 from typing import Any, Callable, Optional
 from pathlib import Path
+import logging
 import pickle
 
 Handler = Callable[[dict], None]
 
 from . import Runner  # avoid circular import
 
+logger = logging.getLogger(__name__)
 
-# TODO add logging
+
 class EarlyStopper(Handler):
     """A handler for early stopping.
 
@@ -78,6 +80,7 @@ class EarlyStopper(Handler):
             self._num_bad_loss += 1
 
         if self._num_bad_loss > self._patience:
+            logger.info('Patience exceeded, stopping early')
             self._runner.stop()
 
 
@@ -174,6 +177,7 @@ class Checkpointer(Handler):
 
         loss = self._loss_fn(state)
         if loss <= self._min_loss - self._eps:
+            logger.info('Found new best loss of %f', loss)
             self._min_loss = loss
             return True
 
@@ -186,6 +190,7 @@ class Checkpointer(Handler):
         self._deque.append(self._num_calls)
         for name, obj in self._objs.items():
             path = self._save_dir / f'{self._num_calls}_{name}'
+            logger.info('Saving to %s', path)
             self._save_fn(obj, path)
 
     def _delete(self) -> None:
