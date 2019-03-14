@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Deque, Optional
 from pathlib import Path
 import logging
 import pickle
@@ -149,7 +149,7 @@ class Checkpointer(Handler):
         self._eps = eps
 
         self._num_calls = 0
-        self._deque = deque()
+        self._deque: Deque[int] = deque()
         self._min_loss = float('inf')
 
     @staticmethod
