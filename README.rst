@@ -3,6 +3,34 @@ rnnr
 
 *rnnr: neural network runner*
 
+.. image:: https://img.shields.io/pypi/pyversions/rnnr.svg?style=flat
+   :target: https://img.shields.io/pypi/pyversions/rnnr.svg?style=flat
+   :alt: Python versions
+
+.. image:: https://img.shields.io/pypi/v/rnnr.svg?style=flat
+   :target: https://pypi.org/project/rnnr
+   :alt: PyPI project
+
+.. image:: https://img.shields.io/travis/kmkurn/rnnr.svg?style=flat
+   :target: https://travis-ci.org/kmkurn/rnnr
+   :alt: Build status
+
+.. image:: https://img.shields.io/readthedocs/rnnr.svg?style=flat
+   :target: https://rnnr.readthedocs.io
+   :alt: Documentation status
+
+.. image:: https://img.shields.io/coveralls/github/kmkurn/rnnr.svg?style=flat
+   :target: https://coveralls.io/github/kmkurn/rnnr
+   :alt: Code coverage
+
+.. image:: https://img.shields.io/pypi/l/rnnr.svg?style=flat
+   :target: http://www.apache.org/licenses/LICENSE-2.0
+   :alt: License
+
+.. image:: https://cdn.rawgit.com/syl20bnr/spacemacs/442d025779da2f62fc86c2082703697714db6514/assets/spacemacs-badge.svg
+   :target: http://spacemacs.org
+   :alt: Built with Spacemacs
+
 **rnnr** helps you to run your neural network models, for either training or evaluation.
 It is heavily inspired by Ignite_ and torchnet_, but hopefully simpler and more applicable
 to libraries other than PyTorch_.
