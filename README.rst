@@ -10,7 +10,7 @@ to libraries other than PyTorch_.
 Documentation
 =============
 
-TODO: setup documentation
+https://rnnr.readthedocs.io
 
 Contributing
 ============
