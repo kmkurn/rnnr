@@ -10,6 +10,7 @@ Runner
 ------
 
 .. autoclass:: rnnr.Runner
+   :members:
 
 .. _Handlers:
 
@@ -26,7 +27,11 @@ Attachments
 -----------
 
 .. autoclass:: rnnr.attachments.Attachment
+   :members:
+   :show-inheritance:
 
 .. autoclass:: rnnr.attachments.ProgressBar
+   :show-inheritance:
 
 .. autoclass:: rnnr.attachments.MeanAggregator
+   :show-inheritance:

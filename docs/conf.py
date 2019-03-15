@@ -171,11 +171,6 @@ epub_exclude_files = ['search.html']
 
 # -- Extension configuration -------------------------------------------------
 
-autodoc_default_options = {
-    'members': None,
-    'show-inheritance': None,
-}
-
 intersphinx_mapping = {
     'https://docs.python.org/3.6/': None,
 }
