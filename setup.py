@@ -12,7 +12,7 @@ version = re.search(
 setup(
     name='rnnr',
     version=version,
-    description='Runner for neural network training or evaluation',
+    description='rnnr: neural network runner',
     long_description=readme,
     url='https://github.com/kmkurn/rnnr',
     author='Kemal Kurniawan',
@@ -28,5 +28,8 @@ setup(
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
     ],
     packages=find_packages(),
+    install_requires=[
+        'tqdm ~=4.31.1',
+    ],
     python_requires='>=3.6, <4',
 )
