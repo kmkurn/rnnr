@@ -71,8 +71,6 @@ class ProgressBar(Attachment):
             tqdm_cls = tqdm
         if size_fn is None:
             size_fn = lambda _: 1
-        if stats_fn is None:
-            stats_fn = lambda state: {'output': state['output']}
 
         self._tqdm_cls = tqdm_cls
         self._size_fn = size_fn
@@ -90,7 +88,8 @@ class ProgressBar(Attachment):
         self._pbar = self._tqdm_cls(state['batches'], **self._kwargs)
 
     def _update(self, state: dict) -> None:
-        self._pbar.set_postfix(**self._stats_fn(state))
+        if self._stats_fn is not None:
+            self._pbar.set_postfix(**self._stats_fn(state))
         self._pbar.update(self._size_fn(state))
 
     def _close(self, state: dict) -> None:

@@ -14,9 +14,7 @@ def test_ok(runner):
     runner.run(batch_fn, batches)
 
     mock_tqdm_cls.assert_called_once_with(batches)
-    assert mock_tqdm_cls.return_value.set_postfix.mock_calls == [
-        call(output=batch_fn(b)) for b in batches
-    ]
+    assert not mock_tqdm_cls.return_value.set_postfix.called
     assert mock_tqdm_cls.return_value.update.mock_calls == [call(1) for b in batches]
     mock_tqdm_cls.return_value.close.assert_called_once_with()
 
