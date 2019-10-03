@@ -196,7 +196,7 @@ class Checkpointer:
         return False
 
     def _should_delete(self) -> bool:
-        return len(self._deque) > self._max_saved
+        return self._num_saved > self._max_saved
 
     def _save(self) -> None:
         self._deque.append(self._num_calls)
