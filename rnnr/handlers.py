@@ -50,7 +50,7 @@ class EarlyStopper:
         ...
         >>> MeanAggregator(name='loss').attach_on(evaluator)
         >>> evaluator.append_handler(Event.FINISHED, EarlyStopper(trainer, patience=2))
-        >>> trainer.run(dummy_batch_fn, dummy_batches, max_epoch=7)
+        >>> _ = trainer.run(dummy_batch_fn, dummy_batches, max_epoch=7)
         Epoch 1 started
         Epoch 2 started
         Epoch 3 started
@@ -114,7 +114,7 @@ class Checkpointer:
         >>> objs = {'model.pkl': 'MODEL', 'optimizer.pkl': 'OPTIMIZER'}
         >>> runner = Runner()
         >>> runner.append_handler(Event.EPOCH_FINISHED, Checkpointer(tmp_dir, objs, max_saved=3))
-        >>> runner.run(dummy_batch_fn, dummy_batches, max_epoch=7)
+        >>> _ = runner.run(dummy_batch_fn, dummy_batches, max_epoch=7)
         >>> pprint(sorted(list(tmp_dir.glob('*.pkl'))))
         [PosixPath('/tmp/5_model.pkl'),
          PosixPath('/tmp/5_optimizer.pkl'),

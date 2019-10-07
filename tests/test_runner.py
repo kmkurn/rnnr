@@ -14,8 +14,10 @@ class TestRun:
     def test_ok(self, runner):
         mock_fn = Mock()
         batches = range(10)
-        runner.run(mock_fn, batches)
+        state = runner.run(mock_fn, batches)
         assert mock_fn.mock_calls == [call(b) for b in batches]
+        assert state['batches'] == batches
+        assert state['max_epoch'] == 1
 
     def test_more_than_one_epoch(self, runner):
         mock_fn = Mock()

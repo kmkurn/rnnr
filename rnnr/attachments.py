@@ -45,7 +45,7 @@ class ProgressBar(Attachment):
         >>> from rnnr.attachments import ProgressBar
         >>> runner = Runner()
         >>> ProgressBar().attach_on(runner)
-        >>> runner.run(lambda x: x, range(10), max_epoch=10)
+        >>> _ = runner.run(lambda x: x, range(10), max_epoch=10)
 
     Args:
         size_fn: Function to get the size of a batch to update the progress bar with.
@@ -107,16 +107,9 @@ class MeanAggregator(Attachment):
         >>> from rnnr import Event, Runner
         >>> from rnnr.attachments import MeanAggregator
         >>> runner = Runner()
-        >>> agg = MeanAggregator()
-        >>> agg.attach_on(runner)
-        >>> @runner.on(Event.EPOCH_FINISHED)
-        ... def print_mean(state):
-        ...     print('Mean:', state[agg.name])
-        ...
-        >>> runner.run(lambda x: x, range(5), max_epoch=3)
-        Mean: 2.0
-        Mean: 2.0
-        Mean: 2.0
+        >>> MeanAggregator().attach_on(runner)
+        >>> runner.run(lambda x: x, [1, 2, 3])
+        {'max_epoch': 1, 'batches': [1, 2, 3], 'mean': 2.0}
 
     Args:
         name: Name of this aggregator. This name is used as the key in the runner's state

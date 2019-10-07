@@ -85,13 +85,16 @@ class Runner(Generic[BatchT, OutputT]):
             batch_fn: Callable[[BatchT], OutputT],
             batches: Iterable[BatchT],
             max_epoch: int = 1,
-    ) -> None:
+    ) -> dict:
         """Run on the given batches for a number of epochs.
 
         Args:
             batch_fn: Function to call for each batch.
             batches: Batches to iterate over in an epoch.
             max_epoch: Maximum number of epochs to run.
+
+        Returns:
+            State of the run at the end.
         """
         self._running = True
         state: dict = {'max_epoch': max_epoch, 'batches': batches}
@@ -118,6 +121,7 @@ class Runner(Generic[BatchT, OutputT]):
             self._emit(Event.EPOCH_FINISHED, state)
         state.pop('epoch', None)
         self._emit(Event.FINISHED, state)
+        return state
 
     def _emit(self, event: Event, state: dict) -> None:
         for handler in self._handlers[event]:
