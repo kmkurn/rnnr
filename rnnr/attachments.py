@@ -44,15 +44,15 @@ class ProgressBar(Attachment):
         >>> from rnnr.attachments import ProgressBar
         >>> runner = Runner()
         >>> ProgressBar().attach_on(runner)
-        >>> _ = runner.run(lambda x: x, range(10), max_epoch=10)
+        >>> _ = runner.run(lambda _: None, range(10), max_epoch=10)
 
     Args:
-        size_fn: Function to get the size of a batch to update the progress bar with.
-            If not given, the default is to always return 1 as the size of a batch.
-        stats_fn: Function to get the statistics dictionary to be displayed along with the
-            progress bar. If given, it should accept a runner's state dictionary and return
-            another dictionary whose keys are the names of the statistics and the values are
-            the statistics values.
+        size_key: Key to get the size of a batch from the runner's state to update the
+            progress bar with. If not given, the default is to always set 1 as the size of
+            a batch.
+        stats_key: Key to get the statistics dictionary from the runner's state to be
+            displayed along with the progress bar. The statistics dictionary has the names
+            of the statistics as keys and the statistics as values.
         **kwargs: Keyword arguments to be passed to `tqdm`_ class.
 
 
@@ -60,19 +60,17 @@ class ProgressBar(Attachment):
     """
     def __init__(
             self,
-            size_fn: Optional[Callable[[dict], int]] = None,
-            stats_fn: Optional[Callable[[dict], dict]] = None,
+            size_key: str = 'size',
+            stats_key: Optional[str] = None,
             tqdm_cls: Optional[Type[tqdm]] = None,
             **kwargs,
     ) -> None:
         if tqdm_cls is None:  # pragma: no cover
             tqdm_cls = tqdm
-        if size_fn is None:
-            size_fn = lambda _: 1
 
         self._tqdm_cls = tqdm_cls
-        self._size_fn = size_fn
-        self._stats_fn = stats_fn
+        self._size_key = size_key
+        self._stats_key = stats_key
         self._kwargs = kwargs
 
         self._pbar: tqdm
@@ -86,9 +84,9 @@ class ProgressBar(Attachment):
         self._pbar = self._tqdm_cls(state['batches'], **self._kwargs)
 
     def _update(self, state: dict) -> None:
-        if self._stats_fn is not None:
-            self._pbar.set_postfix(**self._stats_fn(state))
-        self._pbar.update(self._size_fn(state))
+        if self._stats_key is not None:
+            self._pbar.set_postfix(**state[self._stats_key])
+        self._pbar.update(state.get(self._size_key, 1))
 
     def _close(self, state: dict) -> None:
         self._pbar.close()
