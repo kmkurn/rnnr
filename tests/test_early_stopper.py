@@ -34,13 +34,13 @@ def test_custom_patience(runner):
                 assert not mock_stop.called
 
 
-def test_loss_fn(runner):
+def test_loss_key(runner):
     values = [5, 4, 3, 4, 5, 6, 7]
-    es = EarlyStopper(runner, patience=2, loss_fn=lambda state: state['loss'][0])
+    es = EarlyStopper(runner, patience=2, loss_key='foo')
 
     with patch.object(runner, 'stop', autospec=True) as mock_stop:
         for i, v in enumerate(values):
-            es({'loss': (v, v**2)})
+            es({'foo': v})
             if i == len(values) - 2:
                 mock_stop.assert_called_once_with()
             elif i == len(values) - 1:

@@ -33,7 +33,7 @@ class EarlyStopper:
 
         >>> valid_losses = [0.1, 0.2, 0.3]  # simulate validation batch losses
         >>> dummy_batches = range(10)
-        >>> dummy_batch_fn = lambda s: s['batch']
+        >>> dummy_batch_fn = lambda _: None
         >>>
         >>> from rnnr import Event, Runner
         >>> from rnnr.attachments import MeanAggregator
@@ -46,7 +46,9 @@ class EarlyStopper:
         ...
         >>> @trainer.on(Event.EPOCH_FINISHED)
         ... def eval_on_valid(state):
-        ...     evaluator.run(lambda s: s['batch'], valid_losses)
+        ...     def eval_fn(state):
+        ...         state['output'] = state['batch']
+        ...     evaluator.run(eval_fn, valid_losses)
         ...
         >>> MeanAggregator(name='loss').attach_on(evaluator)
         >>> evaluator.append_handler(Event.FINISHED, EarlyStopper(trainer, patience=2))
@@ -59,8 +61,8 @@ class EarlyStopper:
     Args:
         runner: Runner to stop early.
         patience: Number of times to wait for the loss to improve before stopping.
-        loss_fn: Callback to get the loss value from the runner's ``state`` on which this
-            handler is appended. The default is to get ``state['loss']`` as the loss.
+        loss_key: Key to get the loss value from the runner's state on which this
+            handler is appended.
         eps: An improvement is considered only when the loss value decreases by at least
             this amount.
     """
@@ -68,22 +70,19 @@ class EarlyStopper:
             self,
             runner: Runner,
             patience: int = 5,
-            loss_fn: Optional[Callable[[dict], float]] = None,
+            loss_key: str = 'loss',
             eps: float = 1e-4,
     ) -> None:
-        if loss_fn is None:
-            loss_fn = lambda state: state['loss']
-
         self._runner = runner
         self._patience = patience
-        self._loss_fn = loss_fn
+        self._loss_key = loss_key
         self._eps = eps
 
         self._num_bad_loss = 0
         self._min_loss = float('inf')
 
     def __call__(self, state: dict) -> None:
-        loss = self._loss_fn(state)
+        loss = state[self._loss_key]
         if loss <= self._min_loss - self._eps:
             self._min_loss = loss
             self._num_bad_loss = 0
