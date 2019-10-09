@@ -129,10 +129,9 @@ class Checkpointer:
             actual filenames contain the e.g. epoch number if this handler is invoked at the
             end of each epoch.
         max_saved: Maximum number of checkpoints saved.
-        loss_fn: If given, this should return the loss value of the given runner's state dict.
-            Checkpoints are saved only when the returned loss is smaller than the minimum loss
-            observed so far. The default of ``None`` means checkpoints are saved whenever this
-            handler is called.
+        loss_key: Key to get the loss value from the runner's state. Checkpoints are saved only
+            when the returned loss is smaller than the minimum loss observed so far. The default
+            of ``None`` means checkpoints are saved whenever this handler is called.
         save_fn: Function to invoke to save the checkpoints. If given, this must be a callable
             accepting two arguments: an object to save and a path to save it to. The default
             is to save the object using `pickle`.
@@ -144,7 +143,7 @@ class Checkpointer:
             save_dir: Path,
             objs: dict,
             max_saved: int = 1,
-            loss_fn: Optional[Callable[[dict], float]] = None,
+            loss_key: Optional[str] = None,
             save_fn: Optional[Callable[[Any, Path], None]] = None,
             eps: float = 1e-4,
     ) -> None:
@@ -154,7 +153,7 @@ class Checkpointer:
         self._save_dir = save_dir
         self._objs = objs
         self._max_saved = max_saved
-        self._loss_fn = loss_fn
+        self._loss_key = loss_key
         self._save_fn = save_fn
         self._eps = eps
 
@@ -181,10 +180,10 @@ class Checkpointer:
         return len(self._deque)
 
     def _should_save(self, state: dict) -> bool:
-        if self._loss_fn is None:
+        if self._loss_key is None:
             return True
 
-        loss = self._loss_fn(state)
+        loss = state[self._loss_key]
         if loss <= self._min_loss - self._eps:
             logger.info('Found new best loss of %f', loss)
             self._min_loss = loss
