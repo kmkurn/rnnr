@@ -111,10 +111,8 @@ class Runner(Generic[BatchT, OutputT]):
                     break
                 state['batch'] = batch
                 self._emit(Event.BATCH_STARTED, state)
-                output = batch_fn(state)
-                state['output'] = output
+                batch_fn(state)
                 self._emit(Event.BATCH_FINISHED, state)
-                state.pop('output')
 
             state.pop('batch', None)
             self._emit(Event.EPOCH_FINISHED, state)

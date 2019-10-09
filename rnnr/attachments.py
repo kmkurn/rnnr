@@ -104,34 +104,29 @@ class MeanAggregator(Attachment):
         >>> from rnnr.attachments import MeanAggregator
         >>> runner = Runner()
         >>> MeanAggregator().attach_on(runner)
-        >>> runner.run(lambda s: s['batch'], [1, 2, 3])
+        >>> def batch_fn(state):
+        ...     state['output'] = state['batch']
+        ...
+        >>> runner.run(batch_fn, [1, 2, 3])
         {'max_epoch': 1, 'batches': [1, 2, 3], 'mean': 2.0}
 
     Args:
         name: Name of this aggregator. This name is used as the key in the runner's state
             dictionary.
-        value_fn: Function to get the value of a batch. If given, it should accept the
-            runner's state dictionary at the end of a batch and return a value. The default
-            is to get ``state['output']`` as the value.
-        size_fn: Function to get the size of a batch. If given, it should accept the runner's
-            state dictionary at the end of a batch and return the batch size. The default is
-            to always return 1 as the batch size. The sum of all these batch sizes is the
+        value_key: Key to get the value of a batch from the runner's state.
+        size_key: Key to get the size of a batch from the runner's state. If the state has
+            no such key, the size defaults to 1. The sum of all these batch sizes is the
             divisor when computing the mean.
     """
     def __init__(
             self,
             name: str = 'mean',
-            value_fn: Optional[Callable[[dict], Any]] = None,
-            size_fn: Optional[Callable[[dict], int]] = None,
+            value_key: str = 'output',
+            size_key: str = 'size',
     ) -> None:
-        if value_fn is None:
-            value_fn = lambda state: state['output']
-        if size_fn is None:
-            size_fn = lambda _: 1
-
         self.name = name
-        self._value_fn = value_fn
-        self._size_fn = size_fn
+        self._value_key = value_key
+        self._size_key = size_key
 
         self._total = 0
         self._size = 0
@@ -146,8 +141,8 @@ class MeanAggregator(Attachment):
         self._size = 0
 
     def _update(self, state: dict) -> None:
-        self._total += self._value_fn(state)
-        self._size += self._size_fn(state)
+        self._total += state[self._value_key]
+        self._size += state.get(self._size_key, 1)
 
     def _compute(self, state: dict) -> None:
         state[self.name] = self._total / self._size
