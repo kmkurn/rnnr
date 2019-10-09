@@ -14,19 +14,17 @@
 
 from collections import defaultdict
 from datetime import timedelta
-from typing import Callable, Dict, Generic, Iterable, List, TypeVar
+from typing import Any, Callable, Dict, Iterable, List
 import time
 import logging
 
 from rnnr.event import Event
 
-BatchT = TypeVar('BatchT')
-OutputT = TypeVar('OutputT')
 Handler = Callable[[dict], None]
 logger = logging.getLogger(__name__)
 
 
-class Runner(Generic[BatchT, OutputT]):
+class Runner:
     """A neural network runner.
 
     A runner provides a thin abstraction of iterating over batches for several epochs,
@@ -42,8 +40,6 @@ class Runner(Generic[BatchT, OutputT]):
       and `Event.FINISHED`.
     * ``batch`` - current batch retrieved from ``state['batches']``. Only available to
       handlers of `Event.BATCH_STARTED` and `Event.BATCH_FINISHED`.
-    * ``output`` - output of processing the current batch. Only available to handlers of
-      `Event.BATCH_FINISHED`.
     """
     def __init__(self) -> None:
         self._handlers: Dict[Event, List[Handler]] = defaultdict(list)
@@ -81,14 +77,15 @@ class Runner(Generic[BatchT, OutputT]):
 
     def run(
             self,
-            batch_fn: Callable[[BatchT], OutputT],
-            batches: Iterable[BatchT],
+            batch_fn: Callable[[dict], None],
+            batches: Iterable[Any],
             max_epoch: int = 1,
     ) -> dict:
         """Run on the given batches for a number of epochs.
 
         Args:
-            batch_fn: Function to call for each batch.
+            batch_fn: Function to call for each batch. This function should accept
+                the state dict and may write to the state as well.
             batches: Batches to iterate over in an epoch.
             max_epoch: Maximum number of epochs to run.
 
