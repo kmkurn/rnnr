@@ -45,7 +45,6 @@ class Runner(Generic[BatchT, OutputT]):
     * ``output`` - output of processing the current batch. Only available to handlers of
       `Event.BATCH_FINISHED`.
     """
-
     def __init__(self) -> None:
         self._handlers: Dict[Event, List[Handler]] = defaultdict(list)
         self._running = False
@@ -112,7 +111,7 @@ class Runner(Generic[BatchT, OutputT]):
                     break
                 state['batch'] = batch
                 self._emit(Event.BATCH_STARTED, state)
-                output = batch_fn(batch)
+                output = batch_fn(state)
                 state['output'] = output
                 self._emit(Event.BATCH_FINISHED, state)
                 state.pop('output')

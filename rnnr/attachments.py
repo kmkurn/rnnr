@@ -23,7 +23,6 @@ from .runner import Runner
 
 class Attachment(abc.ABC):
     """An abstract base class for an attachment."""
-
     @abc.abstractmethod
     def attach_on(self, runner: Runner) -> None:
         """Attach to the given runner.
@@ -59,7 +58,6 @@ class ProgressBar(Attachment):
 
     .. _tqdm: https://github.com/tqdm/tqdm
     """
-
     def __init__(
             self,
             size_fn: Optional[Callable[[dict], int]] = None,
@@ -108,7 +106,7 @@ class MeanAggregator(Attachment):
         >>> from rnnr.attachments import MeanAggregator
         >>> runner = Runner()
         >>> MeanAggregator().attach_on(runner)
-        >>> runner.run(lambda x: x, [1, 2, 3])
+        >>> runner.run(lambda s: s['batch'], [1, 2, 3])
         {'max_epoch': 1, 'batches': [1, 2, 3], 'mean': 2.0}
 
     Args:
@@ -122,7 +120,6 @@ class MeanAggregator(Attachment):
             to always return 1 as the batch size. The sum of all these batch sizes is the
             divisor when computing the mean.
     """
-
     def __init__(
             self,
             name: str = 'mean',

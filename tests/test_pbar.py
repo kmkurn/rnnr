@@ -7,7 +7,7 @@ from rnnr.attachments import ProgressBar
 
 def test_ok(runner):
     batches = range(10)
-    batch_fn = lambda x: x**2
+    batch_fn = lambda state: state['batch']**2
     mock_tqdm_cls = MagicMock(spec=tqdm)
 
     ProgressBar(tqdm_cls=mock_tqdm_cls).attach_on(runner)
@@ -32,7 +32,7 @@ def test_size_fn(runner):
 
 def test_stats_fn(runner):
     batches = range(10)
-    batch_fn = lambda x: x**2
+    batch_fn = lambda state: state['batch']**2
     mock_tqdm_cls = MagicMock(spec=tqdm)
 
     pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, stats_fn=lambda s: {'loss': s['output']})
@@ -40,7 +40,7 @@ def test_stats_fn(runner):
     runner.run(batch_fn, batches)
 
     assert mock_tqdm_cls.return_value.set_postfix.mock_calls == [
-        call(loss=batch_fn(b)) for b in batches
+        call(loss=batch_fn({'batch': b})) for b in batches
     ]
 
 

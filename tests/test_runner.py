@@ -12,18 +12,24 @@ class DeepcopyMock(Mock):
 
 class TestRun:
     def test_ok(self, runner):
-        mock_fn = Mock()
+        mock_fn = DeepcopyMock()
         batches = range(10)
         state = runner.run(mock_fn, batches)
-        assert mock_fn.mock_calls == [call(b) for b in batches]
+        assert mock_fn.mock_calls == [
+            call(dict(batches=batches, max_epoch=1, epoch=1, batch=b)) for b in batches
+        ]
         assert state['batches'] == batches
         assert state['max_epoch'] == 1
 
     def test_more_than_one_epoch(self, runner):
-        mock_fn = Mock()
+        mock_fn = DeepcopyMock()
         batches, max_epoch = range(10), 5
         runner.run(mock_fn, batches, max_epoch=max_epoch)
-        assert mock_fn.mock_calls == [call(b) for _ in range(max_epoch) for b in batches]
+        assert mock_fn.mock_calls == [
+            call(dict(batches=batches, max_epoch=max_epoch, epoch=e, batch=b))
+            for e in range(1, max_epoch + 1)
+            for b in batches
+        ]
 
 
 class TestAppendHandler:
@@ -63,7 +69,7 @@ class TestAppendHandler:
 
     def test_batch_finished(self, runner):
         mock_handler = DeepcopyMock()
-        mock_fn = Mock(wraps=lambda b: b**2)
+        mock_fn = Mock(wraps=lambda state: state['batch']**2)
         batches, max_epoch = range(10), 5
 
         runner.append_handler(Event.BATCH_FINISHED, mock_handler)
@@ -71,7 +77,12 @@ class TestAppendHandler:
 
         assert mock_handler.mock_calls == [
             call(
-                dict(batches=batches, epoch=e, max_epoch=max_epoch, batch=b, output=mock_fn(b)))
+                dict(
+                    batches=batches,
+                    epoch=e,
+                    max_epoch=max_epoch,
+                    batch=b,
+                    output=mock_fn({'batch': b})))
             for e in range(1, max_epoch + 1)
             for b in batches
         ]
