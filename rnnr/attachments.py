@@ -108,7 +108,7 @@ class MeanAggregator(Attachment):
         ...     state['output'] = state['batch']
         ...
         >>> runner.run(batch_fn, [1, 2, 3])
-        {'max_epoch': 1, 'batches': [1, 2, 3], 'mean': 2.0}
+        {'max_epoch': 1, 'batches': [1, 2, 3], 'output': 3, 'mean': 2.0}
 
     Args:
         name: Name of this aggregator. This name is used as the key in the runner's state
