@@ -20,6 +20,7 @@ def test_ok(tmp_path):
 
     for name in objs:
         path = tmp_path / f'{num_calls}_{name}'
+        assert path.exists()
         with open(path, 'rb') as f:
             assert pickle.load(f) == objs_values[name][-1]
 
@@ -42,6 +43,7 @@ def test_max_saved(tmp_path):
         assert len(list(tmp_path.glob(f'*_{name}'))) == max_saved
         for i in range(max_saved):
             path = tmp_path / f'{num_calls - i}_{name}'
+            assert path.exists()
             with open(path, 'rb') as f:
                 assert pickle.load(f) == objs_values[name][num_calls - i - 1]
 
