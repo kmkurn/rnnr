@@ -21,14 +21,14 @@ if PyTorch_ is used, we can define our ``batch_fn`` like:
 
    import torch.nn.functional as F
 
-   def batch_fn(batch):
-       x, t = batch
+   def batch_fn(state):
+       x, t = state['batch']
        y = model(x)
        loss = F.cross_entropy(y, t)
        optimizer.zero_grad()
        loss.backward()
        optimizer.step()
-       return loss.item()
+       state['output'] = loss.item()
 
 To run the trainer, simply invoke the `~Runner.run` method.
 

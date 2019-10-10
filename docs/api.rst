@@ -31,7 +31,7 @@ Attachments
    :show-inheritance:
 
 .. autoclass:: rnnr.attachments.ProgressBar
-   :show-inheritance:
 
-.. autoclass:: rnnr.attachments.MeanAggregator
-   :show-inheritance:
+.. autoclass:: rnnr.attachments.LambdaReducer
+
+.. autoclass:: rnnr.attachments.MeanReducer
