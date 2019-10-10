@@ -149,7 +149,7 @@ class LambdaReducer(Attachment):
         state[self.name] = self._result
 
 
-class MeanAggregator(Attachment):
+class MeanReducer(Attachment):
     """An attachment to compute a mean over batch statistics.
 
     This attachment gets the value from each batch and compute their mean at the end of
