@@ -95,6 +95,32 @@ class ProgressBar(Attachment):
 
 
 class LambdaReducer(Attachment):
+    """An attachment to compute a reduction over batches.
+
+    This attachment gets the value of each batch and compute a reduction over them
+    at the end of each epoch.
+
+    Example:
+
+        >>> from rnnr import Runner
+        >>> from rnnr.attachments import LambdaReducer
+        >>> runner = Runner()
+        >>> LambdaReducer('product', lambda x, y: x * y).attach_on(runner)
+        >>> def batch_fn(state):
+        ...     state['output'] = state['batch']
+        ...
+        >>> state = runner.run(batch_fn, [10, 20, 30])
+        >>> state['product']
+        6000
+
+    Args:
+        name: Name of this attachment to be used as the key in the runner's
+            state dict to store the reduction result.
+        reduce_fn: Reduction function. It should accept two batch values and
+            return their reduction result.
+        value_key: Key to get the value of a batch from the runner's state.
+    """
+
     def __init__(
             self,
             name: str,
