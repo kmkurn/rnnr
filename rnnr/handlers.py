@@ -107,13 +107,13 @@ class Checkpointer:
         >>> from rnnr import Event, Runner
         >>> from rnnr.handlers import Checkpointer
         >>>
-        >>> dummy_batches = range(3)
-        >>> dummy_batch_fn = lambda x: x
+        >>> batches = range(3)
+        >>> batch_fn = lambda _: None
         >>> tmp_dir = Path('/tmp')
         >>> objs = {'model.pkl': 'MODEL', 'optimizer.pkl': 'OPTIMIZER'}
         >>> runner = Runner()
         >>> runner.append_handler(Event.EPOCH_FINISHED, Checkpointer(tmp_dir, objs, max_saved=3))
-        >>> _ = runner.run(dummy_batch_fn, dummy_batches, max_epoch=7)
+        >>> _ = runner.run(batch_fn, batches, max_epoch=7)
         >>> pprint(sorted(list(tmp_dir.glob('*.pkl'))))
         [PosixPath('/tmp/5_model.pkl'),
          PosixPath('/tmp/5_optimizer.pkl'),
