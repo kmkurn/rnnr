@@ -157,23 +157,24 @@ class MeanReducer(LambdaReducer):
 
     Example:
 
-        >>> from rnnr import Event, Runner
-        >>> from rnnr.attachments import MeanAggregator
+        >>> from rnnr import Runner
+        >>> from rnnr.attachments import MeanReducer
         >>> runner = Runner()
-        >>> MeanAggregator().attach_on(runner)
+        >>> MeanReducer().attach_on(runner)
         >>> def batch_fn(state):
         ...     state['output'] = state['batch']
         ...
-        >>> runner.run(batch_fn, [1, 2, 3])
-        {'max_epoch': 1, 'batches': [1, 2, 3], 'output': 3, 'mean': 2.0}
+        >>> state = runner.run(batch_fn, [1, 2, 3])
+        >>> state['mean']
+        2.0
 
     Args:
-        name: Name of this aggregator. This name is used as the key in the runner's state
-            dictionary.
-        value_key: Key to get the value of a batch from the runner's state.
-        size_key: Key to get the size of a batch from the runner's state. If the state has
-            no such key, the size defaults to 1. The sum of all these batch sizes is the
-            divisor when computing the mean.
+        name: Name of this attachment to be used as the key in the runner's state
+            dict to store the mean value.
+        value_key: Key to get the value of a batch from the runner's state dict.
+        size_key: Key to get the size of a batch from the runner's state dict. If
+            the state has no such key, the size defaults to 1. The sum of all these
+            batch sizes is the divisor when computing the mean.
     """
 
     def __init__(

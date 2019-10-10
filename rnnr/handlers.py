@@ -36,7 +36,7 @@ class EarlyStopper:
         >>> dummy_batch_fn = lambda _: None
         >>>
         >>> from rnnr import Event, Runner
-        >>> from rnnr.attachments import MeanAggregator
+        >>> from rnnr.attachments import MeanReducer
         >>> from rnnr.handlers import EarlyStopper
         >>>
         >>> trainer, evaluator = Runner(), Runner()
@@ -50,7 +50,7 @@ class EarlyStopper:
         ...         state['output'] = state['batch']
         ...     evaluator.run(eval_fn, valid_losses)
         ...
-        >>> MeanAggregator(name='loss').attach_on(evaluator)
+        >>> MeanReducer(name='loss').attach_on(evaluator)
         >>> evaluator.append_handler(Event.FINISHED, EarlyStopper(trainer, patience=2))
         >>> _ = trainer.run(dummy_batch_fn, dummy_batches, max_epoch=7)
         Epoch 1 started
@@ -66,6 +66,7 @@ class EarlyStopper:
         eps: An improvement is considered only when the loss value decreases by at least
             this amount.
     """
+
     def __init__(
             self,
             runner: Runner,
@@ -138,6 +139,7 @@ class Checkpointer:
         eps: The loss value must be smaller at least by this value to be considered as an
             improvement. Only used if ``loss_fn`` is given.
     """
+
     def __init__(
             self,
             save_dir: Path,
