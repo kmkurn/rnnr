@@ -94,44 +94,6 @@ class ProgressBar(Attachment):
         self._pbar.close()
 
 
-class Reducer(Attachment):
-    """An abstract attachment to compute reduction over batches.
-
-    This attachment gets the value of each batch and reduce them. This
-    class is meant to be subclassed by others.
-
-    Args:
-        value_key: Key to get the value of a batch from the runner's
-            state.
-
-    TODO: complete docstring
-    """
-
-    def __init__(self, value_key: str = 'output') -> None:
-        self._value_key = value_key
-
-    @abc.abstractmethod
-    def reduce(self, x, y):
-        pass
-
-    def attach_on(self, runner: Runner) -> None:
-        runner.append_handler(Event.EPOCH_STARTED, self._reset)
-        runner.append_handler(Event.BATCH_FINISHED, self._update)
-        runner.append_handler(Event.EPOCH_FINISHED, self._compute)
-
-    def _reset(self, state: dict) -> None:
-        self._total = None
-
-    def _update(self, state: dict) -> None:
-        if self._total is None:
-            self._total = state[self._value_key]
-        else:
-            self._total = self.reduce(self._total, state[self._value_key])
-
-    def _compute(self, state: dict) -> None:
-        state[self.name] = self._total
-
-
 class LambdaReducer(Attachment):
     def __init__(
             self,
