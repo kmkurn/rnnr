@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Type
+from typing import Any, Callable, Optional, Type
 import abc
 
 from tqdm import tqdm
@@ -23,6 +23,7 @@ from .runner import Runner
 
 class Attachment(abc.ABC):
     """An abstract base class for an attachment."""
+
     @abc.abstractmethod
     def attach_on(self, runner: Runner) -> None:
         """Attach to the given runner.
@@ -58,6 +59,7 @@ class ProgressBar(Attachment):
 
     .. _tqdm: https://github.com/tqdm/tqdm
     """
+
     def __init__(
             self,
             size_key: str = 'size',
@@ -104,6 +106,7 @@ class Reducer(Attachment):
 
     TODO: complete docstring
     """
+
     def __init__(self, value_key: str = 'output') -> None:
         self._value_key = value_key
 
@@ -127,6 +130,35 @@ class Reducer(Attachment):
 
     def _compute(self, state: dict) -> None:
         state[self.name] = self._total
+
+
+class LambdaReducer(Attachment):
+    def __init__(
+            self,
+            name: str,
+            reduce_fn: Callable[[Any, Any], Any],
+            value_key: str = 'output',
+    ) -> None:
+        self.name = name
+        self._reduce_fn = reduce_fn
+        self._value_key = value_key
+
+    def attach_on(self, runner: Runner) -> None:
+        runner.append_handler(Event.EPOCH_STARTED, self._reset)
+        runner.append_handler(Event.BATCH_FINISHED, self._update)
+        runner.append_handler(Event.EPOCH_FINISHED, self._compute)
+
+    def _reset(self, state: dict) -> None:
+        self._result = None
+
+    def _update(self, state: dict) -> None:
+        if self._result is None:
+            self._result = state[self._value_key]
+        else:
+            self._result = self._reduce_fn(self._result, state[self._value_key])
+
+    def _compute(self, state: dict) -> None:
+        state[self.name] = self._result
 
 
 class MeanAggregator(Attachment):
@@ -155,6 +187,7 @@ class MeanAggregator(Attachment):
             no such key, the size defaults to 1. The sum of all these batch sizes is the
             divisor when computing the mean.
     """
+
     def __init__(
             self,
             name: str = 'mean',
