@@ -149,7 +149,7 @@ class LambdaReducer(Attachment):
         state[self.name] = self._result
 
 
-class MeanReducer(Attachment):
+class MeanReducer(LambdaReducer):
     """An attachment to compute a mean over batch statistics.
 
     This attachment gets the value from each batch and compute their mean at the end of
@@ -182,25 +182,18 @@ class MeanReducer(Attachment):
             value_key: str = 'output',
             size_key: str = 'size',
     ) -> None:
-        self.name = name
-        self._value_key = value_key
+        super().__init__(name, lambda x, y: x + y, value_key=value_key)
         self._size_key = size_key
-
-        self._total = 0
         self._size = 0
 
-    def attach_on(self, runner: Runner) -> None:
-        runner.append_handler(Event.EPOCH_STARTED, self._reset)
-        runner.append_handler(Event.BATCH_FINISHED, self._update)
-        runner.append_handler(Event.EPOCH_FINISHED, self._compute)
-
     def _reset(self, state: dict) -> None:
-        self._total = 0
+        super()._reset(state)
         self._size = 0
 
     def _update(self, state: dict) -> None:
-        self._total += state[self._value_key]
+        super()._update(state)
         self._size += state.get(self._size_key, 1)
 
     def _compute(self, state: dict) -> None:
-        state[self.name] = self._total / self._size
+        super()._compute(state)
+        state[self.name] /= self._size
