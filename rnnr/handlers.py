@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import deque
-from typing import Any, Callable, Deque, Optional
+from typing import Any, Callable, Deque, Iterable, Optional, Mapping
 from pathlib import Path
 import logging
 import pickle
@@ -143,7 +143,7 @@ class Checkpointer:
     def __init__(
             self,
             save_dir: Path,
-            objs: dict,
+            checkpoint_key: str = 'checkpoint',
             max_saved: int = 1,
             loss_key: Optional[str] = None,
             save_fn: Optional[Callable[[Any, Path], None]] = None,
@@ -153,7 +153,7 @@ class Checkpointer:
             save_fn = self._default_save_fn
 
         self._save_dir = save_dir
-        self._objs = objs
+        self._checkpoint_key = checkpoint_key
         self._max_saved = max_saved
         self._loss_key = loss_key
         self._save_fn = save_fn
@@ -170,10 +170,11 @@ class Checkpointer:
 
     def __call__(self, state: dict) -> None:
         self._num_calls += 1
+        ckpt = state[self._checkpoint_key]
         if self._should_save(state):
-            self._save()
+            self._save(ckpt)
         if self._should_delete():
-            self._delete()
+            self._delete(ckpt.keys())
 
         assert self._num_saved <= self._max_saved
 
@@ -196,16 +197,16 @@ class Checkpointer:
     def _should_delete(self) -> bool:
         return self._num_saved > self._max_saved
 
-    def _save(self) -> None:
+    def _save(self, ckpt: Mapping[str, Any]) -> None:
         self._deque.append(self._num_calls)
-        for name, obj in self._objs.items():
+        for name, obj in ckpt.items():
             path = self._save_dir / f'{self._num_calls}_{name}'
             logger.info('Saving to %s', path)
             self._save_fn(obj, path)
 
-    def _delete(self) -> None:
+    def _delete(self, filenames: Iterable[str]) -> None:
         num = self._deque.popleft()
-        for name in self._objs:
+        for name in filenames:
             path = self._save_dir / f'{num}_{name}'
             if path.exists():
                 path.unlink()
