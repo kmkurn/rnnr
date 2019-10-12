@@ -163,7 +163,7 @@ class Checkpointer:
         self._save_fn = save_fn
         self._eps = eps
 
-        self._num_calls = 0
+        self._n_calls = 0
         self._deque: Deque[int] = deque()
         self._min_loss = float('inf')
 
@@ -173,17 +173,17 @@ class Checkpointer:
             pickle.dump(obj, f)
 
     def __call__(self, state: dict) -> None:
-        self._num_calls += 1
+        self._n_calls += 1
         ckpt = state[self._checkpoint_key]
         if self._should_save(state):
             self._save(ckpt)
         if self._should_delete():
             self._delete(ckpt.keys())
 
-        assert self._num_saved <= self._max_saved
+        assert self._n_saved <= self._max_saved
 
     @property
-    def _num_saved(self) -> int:
+    def _n_saved(self) -> int:
         return len(self._deque)
 
     def _should_save(self, state: dict) -> bool:
@@ -199,12 +199,12 @@ class Checkpointer:
         return False
 
     def _should_delete(self) -> bool:
-        return self._num_saved > self._max_saved
+        return self._n_saved > self._max_saved
 
     def _save(self, ckpt: Mapping[str, Any]) -> None:
-        self._deque.append(self._num_calls)
+        self._deque.append(self._n_calls)
         for name, obj in ckpt.items():
-            path = self._save_dir / f'{self._num_calls}_{name}'
+            path = self._save_dir / f'{self._n_calls}_{name}'
             logger.info('Saving to %s', path)
             self._save_fn(obj, path)
 
