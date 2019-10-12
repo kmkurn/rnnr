@@ -110,9 +110,12 @@ class Checkpointer:
         >>> batches = range(3)
         >>> batch_fn = lambda _: None
         >>> tmp_dir = Path('/tmp')
-        >>> objs = {'model.pkl': 'MODEL', 'optimizer.pkl': 'OPTIMIZER'}
         >>> runner = Runner()
-        >>> runner.append_handler(Event.EPOCH_FINISHED, Checkpointer(tmp_dir, objs, max_saved=3))
+        >>> @runner.on(Event.EPOCH_FINISHED)
+        ... def store_checkpoint(state):
+        ...     state['checkpoint'] = {'model.pkl': 'MODEL', 'optimizer.pkl': 'OPTIMIZER'}
+        ...
+        >>> runner.append_handler(Event.EPOCH_FINISHED, Checkpointer(tmp_dir, max_saved=3))
         >>> _ = runner.run(batch_fn, batches, max_epoch=7)
         >>> pprint(sorted(list(tmp_dir.glob('*.pkl'))))
         [PosixPath('/tmp/5_model.pkl'),
@@ -124,7 +127,8 @@ class Checkpointer:
 
     Args:
         save_dir: Save checkpoints in this directory.
-        objs: Dictionary whose keys are filenames and the values are the objects to checkpoint.
+        checkpoint_key: Key to get the checkpoint to save from the runner's state. A checkpoint
+            is a mapping whose keys are filenames and the values are the objects to checkpoint.
             The filenames in this dictionary's keys are prepended with the number of times
             this handler is called to get the actual saved files' names. This allows the
             actual filenames contain the e.g. epoch number if this handler is invoked at the
