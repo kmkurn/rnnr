@@ -66,7 +66,6 @@ class EarlyStopper:
         eps: An improvement is considered only when the loss value decreases by at least
             this amount.
     """
-
     def __init__(
             self,
             runner: Runner,
@@ -79,18 +78,18 @@ class EarlyStopper:
         self._loss_key = loss_key
         self._eps = eps
 
-        self._num_bad_loss = 0
+        self._n_bad_losses = 0
         self._min_loss = float('inf')
 
     def __call__(self, state: dict) -> None:
         loss = state[self._loss_key]
         if loss <= self._min_loss - self._eps:
             self._min_loss = loss
-            self._num_bad_loss = 0
+            self._n_bad_losses = 0
         else:
-            self._num_bad_loss += 1
+            self._n_bad_losses += 1
 
-        if self._num_bad_loss > self._patience:
+        if self._n_bad_losses > self._patience:
             logger.info('Patience exceeded, stopping early')
             self._runner.stop()
 
@@ -143,7 +142,6 @@ class Checkpointer:
         eps: The loss value must be smaller at least by this value to be considered as an
             improvement. Only used if ``loss_fn`` is given.
     """
-
     def __init__(
             self,
             save_dir: Path,
