@@ -166,6 +166,11 @@ class Checkpointer:
         self._min_loss = float('inf')
 
     def dump_state(self) -> dict:
+        """Dump the internal state of this checkpointer.
+
+        Returns:
+            Internal state of checkpointer.
+        """
         return {
             'n_calls': self._n_calls,
             'deque': list(self._deque),
@@ -173,6 +178,11 @@ class Checkpointer:
         }
 
     def load_state(self, state: dict) -> None:
+        """Load internal state with the given dumped state.
+
+        Args:
+            state: State returned by ``dump_state()``, possibly of another checkpointer.
+        """
         try:
             self._n_calls = state['n_calls']
             self._deque = deque(state['deque'])
