@@ -165,6 +165,21 @@ class Checkpointer:
         self._deque: Deque[int] = deque()
         self._min_loss = float('inf')
 
+    def dump_state(self) -> dict:
+        return {
+            'n_calls': self._n_calls,
+            'deque': list(self._deque),
+            'min_loss': self._min_loss,
+        }
+
+    def load_state(self, state: dict) -> None:
+        try:
+            self._n_calls = state['n_calls']
+            self._deque = deque(state['deque'])
+            self._min_loss = state['min_loss']
+        except (TypeError, KeyError):
+            raise InvalidStateError
+
     @staticmethod
     def _default_save_fn(obj: Any, path: Path) -> None:
         with open(path, 'wb') as f:
@@ -212,3 +227,8 @@ class Checkpointer:
             path = self._save_dir / f'{num}_{name}'
             if path.exists():
                 path.unlink()
+
+
+class InvalidStateError(Exception):
+    def __str__(self) -> str:
+        return 'Invalid state found. Are you sure this state is returned by dump_state()?'
