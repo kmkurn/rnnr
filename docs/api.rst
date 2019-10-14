@@ -18,8 +18,12 @@ Handlers
 --------
 
 .. autoclass:: rnnr.handlers.EarlyStopper
+   :members:
 
 .. autoclass:: rnnr.handlers.Checkpointer
+   :members:
+
+.. autoclass:: rnnr.handlers.InvalidStateError
 
 .. _Attachments:
 

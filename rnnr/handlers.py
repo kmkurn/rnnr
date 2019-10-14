@@ -94,6 +94,8 @@ class EarlyStopper:
 
         Args:
             state: State returned by ``dump_state()``, possibly of another early stopper.
+        Raises:
+            `~rnnr.handlers.InvalidStateError`
         """
         try:
             self._n_bad_losses = state['n_bad_losses']
@@ -202,6 +204,8 @@ class Checkpointer:
 
         Args:
             state: State returned by ``dump_state()``, possibly of another checkpointer.
+        Raises:
+            `~rnnr.handlers.InvalidStateError`
         """
         try:
             self._n_calls = state['n_calls']
@@ -260,5 +264,6 @@ class Checkpointer:
 
 
 class InvalidStateError(Exception):
+    """An exception for when the given state to load is not a valid state for the handler."""
     def __str__(self) -> str:
         return 'Invalid state found. Are you sure this state is returned by dump_state()?'
