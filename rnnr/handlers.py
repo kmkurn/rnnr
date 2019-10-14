@@ -61,8 +61,7 @@ class EarlyStopper:
     Args:
         runner: Runner to stop early.
         patience: Number of times to wait for the loss to improve before stopping.
-        loss_key: Key to get the loss value from the runner's state on which this
-            handler is appended.
+        loss_key: Get the loss value from ``state[loss_key]``.
         eps: An improvement is considered only when the loss value decreases by at least
             this amount.
     """
@@ -149,15 +148,15 @@ class Checkpointer:
 
     Args:
         save_dir: Save checkpoints in this directory.
-        checkpoint_key: Key to get the checkpoint to save from the runner's state. A checkpoint
+        checkpoint_key: Get the checkpoint from ``state[checkpoint_key]``. A checkpoint
             is a mapping whose keys are filenames and the values are the objects to checkpoint.
             The filenames in this dictionary's keys are prepended with the number of times
             this handler is called to get the actual saved files' names. This allows the
             actual filenames contain the e.g. epoch number if this handler is invoked at the
             end of each epoch.
         max_saved: Maximum number of checkpoints saved.
-        loss_key: Key to get the loss value from the runner's state. Checkpoints are saved only
-            when the returned loss is smaller than the minimum loss observed so far. The default
+        loss_key: Get the loss value from ``state[loss_key]``. Checkpoints are saved only
+            when the loss is smaller than the minimum loss observed so far. The default
             of ``None`` means checkpoints are saved whenever this handler is called.
         save_fn: Function to invoke to save the checkpoints. If given, this must be a callable
             accepting two arguments: an object to save and a path to save it to. The default

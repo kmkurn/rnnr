@@ -23,7 +23,6 @@ from .runner import Runner
 
 class Attachment(abc.ABC):
     """An abstract base class for an attachment."""
-
     @abc.abstractmethod
     def attach_on(self, runner: Runner) -> None:
         """Attach to the given runner.
@@ -48,18 +47,17 @@ class ProgressBar(Attachment):
         >>> _ = runner.run(lambda _: None, range(10), max_epoch=10)
 
     Args:
-        size_key: Key to get the size of a batch from the runner's state to update the
+        size_key: Get the size of a batch from ``state[size_key]`` to update the
             progress bar with. If not given, the default is to always set 1 as the size of
             a batch.
-        stats_key: Key to get the statistics dictionary from the runner's state to be
-            displayed along with the progress bar. The statistics dictionary has the names
-            of the statistics as keys and the statistics as values.
+        stats_key: Get the batch statistics from ``state[stats_key]`` and display it along
+            with the progress bar. The statistics dictionary has the names of the statistics
+            as keys and the statistics as values.
         **kwargs: Keyword arguments to be passed to `tqdm`_ class.
 
 
     .. _tqdm: https://github.com/tqdm/tqdm
     """
-
     def __init__(
             self,
             size_key: str = 'size',
@@ -118,9 +116,8 @@ class LambdaReducer(Attachment):
             state dict to store the reduction result.
         reduce_fn: Reduction function. It should accept two batch values and
             return their reduction result.
-        value_key: Key to get the value of a batch from the runner's state.
+        value_key: Get the value of a batch from ``state[value_key]``.
     """
-
     def __init__(
             self,
             name: str,
@@ -171,12 +168,11 @@ class MeanReducer(LambdaReducer):
     Args:
         name: Name of this attachment to be used as the key in the runner's state
             dict to store the mean value.
-        value_key: Key to get the value of a batch from the runner's state dict.
-        size_key: Key to get the size of a batch from the runner's state dict. If
+        value_key: Get the value of a batch from ``state[value_key]``.
+        size_key: Get the size of a batch from ``state[size_key]``. If
             the state has no such key, the size defaults to 1. The sum of all these
             batch sizes is the divisor when computing the mean.
     """
-
     def __init__(
             self,
             name: str = 'mean',
