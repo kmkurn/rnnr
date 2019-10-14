@@ -40,9 +40,8 @@ class Runner:
       and `Event.FINISHED`.
     * ``batch`` - current batch retrieved from ``state['batches']``. Only available to
       handlers of `Event.BATCH_STARTED` and `Event.BATCH_FINISHED`, as well as ``batch_fn``
-      passed to `~rnnr.Runner.run()` method.
+      passed to `~Runner.run`.
     """
-
     def __init__(self) -> None:
         self._handlers: Dict[Event, List[Handler]] = defaultdict(list)
         self._running = False

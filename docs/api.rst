@@ -1,15 +1,17 @@
 API reference
 =============
 
+.. currentmodule:: rnnr
+
 Event
 -----
 
-.. autoclass:: rnnr.Event
+.. autoclass:: Event
 
 Runner
 ------
 
-.. autoclass:: rnnr.Runner
+.. autoclass:: Runner
    :members:
 
 .. _Handlers:
@@ -17,25 +19,29 @@ Runner
 Handlers
 --------
 
-.. autoclass:: rnnr.handlers.EarlyStopper
+.. currentmodule:: rnnr.handlers
+
+.. autoclass:: EarlyStopper
    :members:
 
-.. autoclass:: rnnr.handlers.Checkpointer
+.. autoclass:: Checkpointer
    :members:
 
-.. autoclass:: rnnr.handlers.InvalidStateError
+.. autoclass:: InvalidStateError
 
 .. _Attachments:
 
 Attachments
 -----------
 
-.. autoclass:: rnnr.attachments.Attachment
+.. currentmodule:: rnnr.attachments
+
+.. autoclass:: Attachment
    :members:
    :show-inheritance:
 
-.. autoclass:: rnnr.attachments.ProgressBar
+.. autoclass:: ProgressBar
 
-.. autoclass:: rnnr.attachments.LambdaReducer
+.. autoclass:: LambdaReducer
 
-.. autoclass:: rnnr.attachments.MeanReducer
+.. autoclass:: MeanReducer

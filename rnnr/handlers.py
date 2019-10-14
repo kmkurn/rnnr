@@ -93,9 +93,10 @@ class EarlyStopper:
         """Load internal state with the given dumped state.
 
         Args:
-            state: State returned by ``dump_state()``, possibly of another early stopper.
+            state: State returned by `~EarlyStopper.dump_state`, possibly of another early
+                stopper.
         Raises:
-            `~rnnr.handlers.InvalidStateError`
+            `InvalidStateError`
         """
         try:
             self._n_bad_losses = state['n_bad_losses']
@@ -203,9 +204,10 @@ class Checkpointer:
         """Load internal state with the given dumped state.
 
         Args:
-            state: State returned by ``dump_state()``, possibly of another checkpointer.
+            state: State returned by `~Checkpointer.dump_state`, possibly of another
+                checkpointer.
         Raises:
-            `~rnnr.handlers.InvalidStateError`
+            `InvalidStateError`
         """
         try:
             self._n_calls = state['n_calls']
