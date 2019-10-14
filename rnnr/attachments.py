@@ -60,7 +60,7 @@ class ProgressBar(Attachment):
     """
     def __init__(
             self,
-            size_key: str = 'size',
+            size_key: str = 'n_items',
             stats_key: Optional[str] = None,
             tqdm_cls: Optional[Type[tqdm]] = None,
             **kwargs,

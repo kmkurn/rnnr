@@ -24,7 +24,7 @@ def test_default_size_key(runner):
     mock_tqdm_cls = MagicMock(spec=tqdm)
 
     def batch_fn(state):
-        state['size'] = len(state['batch'])
+        state['n_items'] = len(state['batch'])
 
     pbar = ProgressBar(tqdm_cls=mock_tqdm_cls)
     pbar.attach_on(runner)
