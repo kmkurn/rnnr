@@ -82,9 +82,19 @@ class EarlyStopper:
         self._min_loss = float('inf')
 
     def dump_state(self) -> dict:
+        """Dump the internal state of this early stopper.
+
+        Returns:
+            Internal state of early stopper.
+        """
         return {'n_bad_losses': self._n_bad_losses, 'min_loss': self._min_loss}
 
     def load_state(self, state: dict) -> None:
+        """Load internal state with the given dumped state.
+
+        Args:
+            state: State returned by ``dump_state()``, possibly of another early stopper.
+        """
         try:
             self._n_bad_losses = state['n_bad_losses']
             self._min_loss = state['min_loss']
