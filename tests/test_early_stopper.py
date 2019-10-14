@@ -1,6 +1,8 @@
 from unittest.mock import call, patch
 
-from rnnr.handlers import EarlyStopper
+import pytest
+
+from rnnr.handlers import EarlyStopper, InvalidStateError
 
 
 def test_ok(runner):
@@ -47,3 +49,28 @@ def test_loss_key(runner):
                 assert mock_stop.mock_calls == [call(), call()]
             else:
                 assert not mock_stop.called
+
+
+def test_dump_load_state(runner):
+    losses = [1, 2]
+    es = EarlyStopper(runner, patience=1)
+
+    with patch.object(runner, 'stop', autospec=True) as mock_stop:
+        for v in losses:
+            es({'loss': v})
+        assert not mock_stop.called
+
+        es2 = EarlyStopper(runner, patience=1)
+        es2.load_state(es.dump_state())
+        es2({'loss': losses[-1]})
+        assert mock_stop.called
+
+
+def test_load_invalid_state(runner):
+    es = EarlyStopper(runner)
+    with pytest.raises(InvalidStateError) as excinfo:
+        es.load_state({})
+    assert 'Invalid state' in str(excinfo.value)
+    assert 'state is returned by dump_state()' in str(excinfo.value)
+    with pytest.raises(InvalidStateError):
+        es.load_state('')
