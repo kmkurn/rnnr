@@ -42,6 +42,7 @@ class Runner:
       handlers of `Event.BATCH_STARTED` and `Event.BATCH_FINISHED`, as well as ``batch_fn``
       passed to `~Runner.run`.
     """
+
     def __init__(self) -> None:
         self._handlers: Dict[Event, List[Handler]] = defaultdict(list)
         self._running = False
@@ -94,7 +95,7 @@ class Runner:
             State of the run at the end.
         """
         self._running = True
-        state: dict = {'max_epoch': max_epoch, 'batches': batches}
+        state: dict = {'runner': self, 'max_epoch': max_epoch, 'batches': batches}
 
         self._emit(Event.STARTED, state)
         for epoch in range(1, max_epoch + 1):

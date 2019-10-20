@@ -1,108 +1,129 @@
-from unittest.mock import Mock, call, patch
-import copy
+from unittest.mock import Mock, patch
 
 from rnnr import Event
 
 
-# https://stackoverflow.com/questions/29516339/how-to-mock-calls-to-function-that-receives-mutable-object-as-parameter
-class DeepcopyMock(Mock):
-    def _mock_call(self, *args, **kwargs):
-        return super()._mock_call(*copy.deepcopy(args), **copy.deepcopy(kwargs))
-
-
 class TestRun:
     def test_ok(self, runner):
-        mock_fn = DeepcopyMock()
-        batches = range(10)
-        state = runner.run(mock_fn, batches)
-        assert mock_fn.mock_calls == [
-            call(dict(batches=batches, max_epoch=1, epoch=1, batch=b)) for b in batches
-        ]
+        batches, n_calls = range(10), 0
+
+        def batch_fn(state):
+            nonlocal n_calls
+            assert state['runner'] is runner
+            assert state['batches'] == batches
+            assert state['max_epoch'] == 1
+            assert state['epoch'] == 1
+            assert state['batch'] == batches[n_calls]
+            n_calls += 1
+
+        state = runner.run(batch_fn, batches)
+
         assert state['batches'] == batches
         assert state['max_epoch'] == 1
 
     def test_more_than_one_epoch(self, runner):
-        mock_fn = DeepcopyMock()
-        batches, max_epoch = range(10), 5
-        runner.run(mock_fn, batches, max_epoch=max_epoch)
-        assert mock_fn.mock_calls == [
-            call(dict(batches=batches, max_epoch=max_epoch, epoch=e, batch=b))
-            for e in range(1, max_epoch + 1)
-            for b in batches
-        ]
+        batches, max_epoch, n_calls = range(10), 5, 0
+
+        def batch_fn(state):
+            nonlocal n_calls
+            assert state['max_epoch'] == max_epoch
+            assert state['epoch'] == n_calls // len(batches) + 1
+            assert state['batch'] == batches[n_calls % len(batches)]
+            n_calls += 1
+
+        runner.run(batch_fn, batches, max_epoch=max_epoch)
 
 
 class TestAppendHandler:
     def test_started(self, runner):
-        mock_handler = DeepcopyMock()
         batches, max_epoch = range(10), 5
 
-        runner.append_handler(Event.STARTED, mock_handler)
-        runner.run(Mock(), batches, max_epoch=max_epoch)
+        def on_started(state):
+            assert set(state) == {'runner', 'batches', 'max_epoch'}
+            assert state['runner'] is runner
+            assert state['batches'] == batches
+            assert state['max_epoch'] == max_epoch
 
-        mock_handler.assert_called_once_with(dict(max_epoch=max_epoch, batches=batches))
+        runner.append_handler(Event.STARTED, on_started)
+        runner.run(Mock(), batches, max_epoch=max_epoch)
 
     def test_epoch_started(self, runner):
-        mock_handler = DeepcopyMock()
-        batches, max_epoch = range(10), 5
+        batches, max_epoch, n_calls = range(10), 5, 0
 
-        runner.append_handler(Event.EPOCH_STARTED, mock_handler)
+        def on_epoch_started(state):
+            nonlocal n_calls
+            assert set(state) == {'runner', 'batches', 'max_epoch', 'epoch'}
+            assert state['runner'] is runner
+            assert state['batches'] == batches
+            assert state['max_epoch'] == max_epoch
+            assert state['epoch'] == n_calls + 1
+            n_calls += 1
+
+        runner.append_handler(Event.EPOCH_STARTED, on_epoch_started)
         runner.run(Mock(), batches, max_epoch=max_epoch)
-
-        assert mock_handler.mock_calls == [
-            call(dict(batches=batches, epoch=e, max_epoch=max_epoch))
-            for e in range(1, max_epoch + 1)
-        ]
 
     def test_batch_started(self, runner):
-        mock_handler = DeepcopyMock()
-        batches, max_epoch = range(10), 5
+        batches, max_epoch, n_calls = range(10), 5, 0
 
-        runner.append_handler(Event.BATCH_STARTED, mock_handler)
+        def on_batch_started(state):
+            nonlocal n_calls
+            assert set(state) == {'runner', 'batches', 'max_epoch', 'epoch', 'batch'}
+            assert state['runner'] is runner
+            assert state['batches'] == batches
+            assert state['max_epoch'] == max_epoch
+            assert state['epoch'] == n_calls // len(batches) + 1
+            assert state['batch'] == batches[n_calls % len(batches)]
+            n_calls += 1
+
+        runner.append_handler(Event.BATCH_STARTED, on_batch_started)
         runner.run(Mock(), batches, max_epoch=max_epoch)
 
-        assert mock_handler.mock_calls == [
-            call(dict(batches=batches, epoch=e, max_epoch=max_epoch, batch=b))
-            for e in range(1, max_epoch + 1)
-            for b in batches
-        ]
-
     def test_batch_finished(self, runner):
-        mock_handler = DeepcopyMock()
-        batches, max_epoch = range(10), 5
+        batches, max_epoch, n_calls = range(10), 5, 0
 
         def batch_fn(state):
             state['output'] = state['batch']**2
 
-        runner.append_handler(Event.BATCH_FINISHED, mock_handler)
+        def on_batch_finished(state):
+            nonlocal n_calls
+            assert set(state) == {'runner', 'batches', 'max_epoch', 'epoch', 'batch', 'output'}
+            assert state['runner'] is runner
+            assert state['batches'] == batches
+            assert state['max_epoch'] == max_epoch
+            assert state['epoch'] == n_calls // len(batches) + 1
+            assert state['batch'] == batches[n_calls % len(batches)]
+            assert state['output'] == state['batch']**2
+            n_calls += 1
+
+        runner.append_handler(Event.BATCH_FINISHED, on_batch_finished)
         runner.run(batch_fn, batches, max_epoch=max_epoch)
 
-        assert mock_handler.mock_calls == [
-            call(dict(batches=batches, epoch=e, max_epoch=max_epoch, batch=b, output=b**2))
-            for e in range(1, max_epoch + 1)
-            for b in batches
-        ]
-
     def test_epoch_finished(self, runner):
-        mock_handler = DeepcopyMock()
-        batches, max_epoch = range(10), 5
+        batches, max_epoch, n_calls = range(10), 5, 0
 
-        runner.append_handler(Event.EPOCH_FINISHED, mock_handler)
+        def on_epoch_finished(state):
+            nonlocal n_calls
+            assert set(state) == {'runner', 'batches', 'max_epoch', 'epoch'}
+            assert state['runner'] is runner
+            assert state['batches'] == batches
+            assert state['max_epoch'] == max_epoch
+            assert state['epoch'] == n_calls + 1
+            n_calls += 1
+
+        runner.append_handler(Event.EPOCH_FINISHED, on_epoch_finished)
         runner.run(Mock(), batches, max_epoch=max_epoch)
-
-        assert mock_handler.mock_calls == [
-            call(dict(batches=batches, epoch=e, max_epoch=max_epoch))
-            for e in range(1, max_epoch + 1)
-        ]
 
     def test_finished(self, runner):
-        mock_handler = DeepcopyMock()
         batches, max_epoch = range(10), 5
 
-        runner.append_handler(Event.FINISHED, mock_handler)
-        runner.run(Mock(), batches, max_epoch=max_epoch)
+        def on_finished(state):
+            assert set(state) == {'runner', 'batches', 'max_epoch'}
+            assert state['runner'] is runner
+            assert state['batches'] == batches
+            assert state['max_epoch'] == max_epoch
 
-        mock_handler.assert_called_once_with(dict(max_epoch=max_epoch, batches=batches))
+        runner.append_handler(Event.FINISHED, on_finished)
+        runner.run(Mock(), batches, max_epoch=max_epoch)
 
 
 class TestStop:
