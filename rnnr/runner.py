@@ -34,6 +34,7 @@ class Runner:
     A handler is a callable that accepts a `dict` and returns nothing. The `dict` is
     the state of the run. By default, the state contains:
 
+    * ``runner`` - The runner object itself.
     * ``batches`` - iterable of batches which constitutes an epoch.
     * ``max_epoch`` - maximum number of epochs to run.
     * ``epoch`` - current number of epoch. Not available to handlers of `Event.STARTED`
