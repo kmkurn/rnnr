@@ -14,7 +14,7 @@
 """rnnr: neural network runner"""
 
 __all__ = ['Event', 'Runner']
-__version__ = '0.0.5'
+__version__ = '0.0.6'
 
 from .event import Event
 from .runner import Runner
