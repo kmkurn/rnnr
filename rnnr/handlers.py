@@ -180,9 +180,9 @@ class Checkpointer:
         self._save_fn = save_fn
         self._eps = eps
 
+        self.min_loss = float('inf')
         self._n_calls = 0
         self._deque: Deque[int] = deque()
-        self._min_loss = float('inf')
 
     def dump_state(self) -> dict:
         """Dump the internal state of this checkpointer.
@@ -191,9 +191,9 @@ class Checkpointer:
             Internal state of checkpointer.
         """
         return {
+            'min_loss': self.min_loss,
             'n_calls': self._n_calls,
             'deque': list(self._deque),
-            'min_loss': self._min_loss,
         }
 
     def load_state(self, state: dict) -> None:
@@ -206,9 +206,9 @@ class Checkpointer:
             `InvalidStateError`
         """
         try:
+            self.min_loss = state['min_loss']
             self._n_calls = state['n_calls']
             self._deque = deque(state['deque'])
-            self._min_loss = state['min_loss']
         except (TypeError, KeyError):
             raise InvalidStateError
 
@@ -236,9 +236,9 @@ class Checkpointer:
             return True
 
         loss = state[self._loss_key]
-        if loss <= self._min_loss - self._eps:
+        if loss <= self.min_loss - self._eps:
             logger.info('Found new best loss of %f', loss)
-            self._min_loss = loss
+            self.min_loss = loss
             return True
 
         return False
