@@ -18,8 +18,6 @@ from pathlib import Path
 import logging
 import pickle
 
-from .runner import Runner
-
 logger = logging.getLogger(__name__)
 
 
@@ -39,7 +37,7 @@ class EarlyStopper:
         >>> from rnnr.attachments import MeanReducer
         >>> from rnnr.handlers import EarlyStopper
         >>>
-        >>> trainer, evaluator = Runner(), Runner()
+        >>> trainer = Runner()
         >>> @trainer.on(Event.EPOCH_STARTED)
         ... def print_epoch(state):
         ...     print('Epoch', state['epoch'], 'started')
@@ -48,10 +46,12 @@ class EarlyStopper:
         ... def eval_on_valid(state):
         ...     def eval_fn(state):
         ...         state['output'] = state['batch']
-        ...     evaluator.run(eval_fn, valid_losses)
+        ...     evaluator = Runner()
+        ...     MeanReducer(name='mean').attach_on(evaluator)
+        ...     eval_state = evaluator.run(eval_fn, valid_losses)
+        ...     state['loss'] = eval_state['mean']
         ...
-        >>> MeanReducer(name='loss').attach_on(evaluator)
-        >>> evaluator.append_handler(Event.FINISHED, EarlyStopper(trainer, patience=2))
+        >>> trainer.append_handler(Event.EPOCH_FINISHED, EarlyStopper(patience=2))
         >>> _ = trainer.run(batch_fn, batches, max_epoch=7)
         Epoch 1 started
         Epoch 2 started
@@ -59,7 +59,6 @@ class EarlyStopper:
         Epoch 4 started
 
     Args:
-        runner: Runner to stop early.
         patience: Number of times to wait for the loss to improve before stopping.
         loss_key: Get the loss value from ``state[loss_key]``.
         eps: An improvement is considered only when the loss value decreases by at least
@@ -67,12 +66,10 @@ class EarlyStopper:
     """
     def __init__(
             self,
-            runner: Runner,
             patience: int = 5,
             loss_key: str = 'loss',
             eps: float = 1e-4,
     ) -> None:
-        self._runner = runner
         self._patience = patience
         self._loss_key = loss_key
         self._eps = eps
@@ -113,7 +110,7 @@ class EarlyStopper:
 
         if self._n_bad_losses > self._patience:
             logger.info('Patience exceeded, stopping early')
-            self._runner.stop()
+            state['runner'].stop()
 
 
 class Checkpointer:
