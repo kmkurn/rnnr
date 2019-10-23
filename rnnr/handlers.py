@@ -77,29 +77,6 @@ class EarlyStopper:
         self.min_loss = float('inf')
         self._n_bad_losses = 0
 
-    def dump_state(self) -> dict:
-        """Dump the internal state of this early stopper.
-
-        Returns:
-            Internal state of early stopper.
-        """
-        return {'min_loss': self.min_loss, 'n_bad_losses': self._n_bad_losses}
-
-    def load_state(self, state: dict) -> None:
-        """Load internal state with the given dumped state.
-
-        Args:
-            state: State returned by `~EarlyStopper.dump_state`, possibly of another early
-                stopper.
-        Raises:
-            `InvalidStateError`
-        """
-        try:
-            self.min_loss = state['min_loss']
-            self._n_bad_losses = state['n_bad_losses']
-        except (TypeError, KeyError):
-            raise InvalidStateError
-
     def __call__(self, state: dict) -> None:
         loss = state[self._loss_key]
         if loss <= self.min_loss - self._eps:
@@ -184,34 +161,6 @@ class Checkpointer:
         self._n_calls = 0
         self._deque: Deque[int] = deque()
 
-    def dump_state(self) -> dict:
-        """Dump the internal state of this checkpointer.
-
-        Returns:
-            Internal state of checkpointer.
-        """
-        return {
-            'min_loss': self.min_loss,
-            'n_calls': self._n_calls,
-            'deque': list(self._deque),
-        }
-
-    def load_state(self, state: dict) -> None:
-        """Load internal state with the given dumped state.
-
-        Args:
-            state: State returned by `~Checkpointer.dump_state`, possibly of another
-                checkpointer.
-        Raises:
-            `InvalidStateError`
-        """
-        try:
-            self.min_loss = state['min_loss']
-            self._n_calls = state['n_calls']
-            self._deque = deque(state['deque'])
-        except (TypeError, KeyError):
-            raise InvalidStateError
-
     @staticmethod
     def _default_save_fn(obj: Any, path: Path) -> None:
         with open(path, 'wb') as f:
@@ -259,9 +208,3 @@ class Checkpointer:
             path = self._save_dir / f'{num}_{name}'
             if path.exists():
                 path.unlink()
-
-
-class InvalidStateError(Exception):
-    """An exception for when the given state to load is not a valid state for the handler."""
-    def __str__(self) -> str:
-        return 'Invalid state found. Are you sure this state is returned by dump_state()?'
