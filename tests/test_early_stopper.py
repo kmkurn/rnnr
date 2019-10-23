@@ -8,11 +8,13 @@ from rnnr.handlers import EarlyStopper, InvalidStateError
 def test_ok(runner):
     # default patience is 5
     values = [5, 4, 3, 4, 5, 4, 3, 2, 1, 0, 1, 2, 3, 4, 5, 6, 7]
+    min_values = [5, 4, 3, 3, 3, 3, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0]
     es = EarlyStopper()
 
     with patch.object(runner, 'stop', autospec=True) as mock_stop:
-        for i, v in enumerate(values):
+        for i, (v, mv) in enumerate(zip(values, min_values)):
             es({'runner': runner, 'loss': v})
+            assert es.min_loss == pytest.approx(mv, abs=1e-4)
             if i == len(values) - 2:
                 mock_stop.assert_called_once_with()
             elif i == len(values) - 1:

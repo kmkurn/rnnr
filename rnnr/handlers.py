@@ -74,8 +74,8 @@ class EarlyStopper:
         self._loss_key = loss_key
         self._eps = eps
 
+        self.min_loss = float('inf')
         self._n_bad_losses = 0
-        self._min_loss = float('inf')
 
     def dump_state(self) -> dict:
         """Dump the internal state of this early stopper.
@@ -83,7 +83,7 @@ class EarlyStopper:
         Returns:
             Internal state of early stopper.
         """
-        return {'n_bad_losses': self._n_bad_losses, 'min_loss': self._min_loss}
+        return {'n_bad_losses': self._n_bad_losses, 'min_loss': self.min_loss}
 
     def load_state(self, state: dict) -> None:
         """Load internal state with the given dumped state.
@@ -96,14 +96,14 @@ class EarlyStopper:
         """
         try:
             self._n_bad_losses = state['n_bad_losses']
-            self._min_loss = state['min_loss']
+            self.min_loss = state['min_loss']
         except (TypeError, KeyError):
             raise InvalidStateError
 
     def __call__(self, state: dict) -> None:
         loss = state[self._loss_key]
-        if loss <= self._min_loss - self._eps:
-            self._min_loss = loss
+        if loss <= self.min_loss - self._eps:
+            self.min_loss = loss
             self._n_bad_losses = 0
         else:
             self._n_bad_losses += 1
