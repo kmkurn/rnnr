@@ -83,7 +83,7 @@ class EarlyStopper:
         Returns:
             Internal state of early stopper.
         """
-        return {'n_bad_losses': self._n_bad_losses, 'min_loss': self.min_loss}
+        return {'min_loss': self.min_loss, 'n_bad_losses': self._n_bad_losses}
 
     def load_state(self, state: dict) -> None:
         """Load internal state with the given dumped state.
@@ -95,8 +95,8 @@ class EarlyStopper:
             `InvalidStateError`
         """
         try:
-            self._n_bad_losses = state['n_bad_losses']
             self.min_loss = state['min_loss']
+            self._n_bad_losses = state['n_bad_losses']
         except (TypeError, KeyError):
             raise InvalidStateError
 
