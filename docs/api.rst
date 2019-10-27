@@ -27,8 +27,6 @@ Handlers
 .. autoclass:: Checkpointer
    :members:
 
-.. autoclass:: InvalidStateError
-
 .. _Attachments:
 
 Attachments
