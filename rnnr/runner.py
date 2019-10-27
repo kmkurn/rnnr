@@ -34,7 +34,7 @@ class Runner:
     A handler is a callable that accepts a `dict` and returns nothing. The `dict` is
     the state of the run. By default, the state contains:
 
-    * ``runner`` - The runner object itself.
+    * ``runner`` - the runner object itself.
     * ``batches`` - iterable of batches which constitutes an epoch.
     * ``max_epoch`` - maximum number of epochs to run.
     * ``epoch`` - current number of epoch. Not available to handlers of `Event.STARTED`
@@ -42,6 +42,8 @@ class Runner:
     * ``batch`` - current batch retrieved from ``state['batches']``. Only available to
       handlers of `Event.BATCH_STARTED` and `Event.BATCH_FINISHED`, as well as ``batch_fn``
       passed to `~Runner.run`.
+
+    Note that handlers for an event are called in the order they are appended.
     """
 
     def __init__(self) -> None:
