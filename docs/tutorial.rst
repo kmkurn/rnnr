@@ -34,7 +34,7 @@ To run the trainer, simply invoke the `~Runner.run` method.
 
 .. code-block:: python
 
-   trainer.run(batch_fn, dataloader, max_epoch=5)
+   trainer.run(batch_fn, batches, max_epoch=5)
 
 Handling events
 ---------------
