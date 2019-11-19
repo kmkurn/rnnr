@@ -144,14 +144,16 @@ class Checkpointer:
             actual filenames contain the e.g. epoch number if this handler is invoked at the
             end of each epoch.
         max_saved: Maximum number of checkpoints saved.
-        value_key: Get some value from ``state[value_key]``. Checkpoints are saved only
-            when this value improves over the best value observed so far. The default
-            of ``None`` means checkpoints are saved whenever this handler is called.
         save_fn: Function to invoke to save the checkpoints. If given, this must be a callable
             accepting two arguments: an object to save and a path to save it to. The default
             is to save the object using `pickle`.
+        value_key: Get some value from ``state[value_key]``. Checkpoints are saved only
+            when this value improves over the best value observed so far. The default
+            of ``None`` means checkpoints are saved whenever this handler is called.
+        mode: Whether to consider lower (``min`` mode) or higher (``max`` mode) value
+            as improvement.
         eps: The value must improve at least by this amount to be considered as an
-            improvement. Only used if ``loss_key`` is given.
+            improvement. Only used if ``value_key`` is given.
     """
 
     def __init__(
@@ -159,8 +161,8 @@ class Checkpointer:
             save_dir: Path,
             checkpoint_key: str = 'checkpoint',
             max_saved: int = 1,
-            value_key: Optional[str] = None,
             save_fn: Optional[Callable[[Any, Path], None]] = None,
+            value_key: Optional[str] = None,
             mode: str = 'min',
             eps: float = 1e-4,
     ) -> None:
