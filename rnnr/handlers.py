@@ -188,12 +188,12 @@ class Checkpointer:
             max_saved: int = 1,
             save_fn: Optional[Callable[[Any, Path], None]] = None,
             value_key: Optional[str] = None,
-            mode: str = 'min',
+            mode: Union[str, Sequence[str]] = 'min',
             eps: float = 1e-4,
     ) -> None:
         if save_fn is None:
             save_fn = self._default_save_fn
-        if mode not in ('min', 'max'):  # pragma: no cover
+        if isinstance(mode, str) and mode not in ('min', 'max'):  # pragma: no cover
             warnings.warn(f"mode {mode!r} is unknown; will be interpreted as 'max'")
             mode = 'max'
 
@@ -234,18 +234,11 @@ class Checkpointer:
 
         value = state[self._value_key]
         if self.best_value is None or self._improved(value):
-            fmt = '%f' if isinstance(value, float) else '%s'
-            logger.info(f'Found new best %s of {fmt}', self._value_key, value)
+            self._log(value)
             self.best_value = value
             return True
 
         return False
-
-    def _improved(self, value: float) -> bool:
-        assert self.best_value is not None
-        if self._mode == 'min':
-            return value <= self.best_value - self._eps
-        return value >= self.best_value + self._eps
 
     def _should_delete(self) -> bool:
         return self._n_saved > self._max_saved
@@ -263,3 +256,45 @@ class Checkpointer:
             path = self._save_dir / f'{num}_{name}'
             if path.exists():
                 path.unlink()
+
+    def _improved(self, value: Union[float, Sequence[float]]) -> bool:
+        assert self.best_value is not None
+
+        try:
+            list(zip(value, self.best_value))
+        except TypeError:
+            return self._better(value, self.best_value, self._mode)
+
+        if isinstance(self._mode, str):
+            modes = [self._mode] * len(value)
+        else:
+            modes = self._mode
+
+        for v, bv, m in zip(value, self.best_value, modes):
+            if self._better(v, bv, m):
+                return True
+            if self._worse(v, bv, m):
+                return False
+        return False
+
+    def _better(self, x: float, y: float, mode: str) -> bool:
+        if mode == 'min':
+            return x <= y - self._eps
+        return x >= y + self._eps
+
+    def _worse(self, x: float, y: float, mode: str) -> bool:
+        if mode == 'min':
+            return x >= y + self._eps
+        return x <= y - self._eps
+
+    def _log(self, value):
+        try:
+            fmt = ['%f' for _ in value]
+        except TypeError:
+            logger.info('Found new best %s of %f', self._value_key, value)
+            # print(('Found new best %s of %f') % (self._value_key, value))
+        else:
+            fmt = ', '.join(fmt)
+            fmt = ''.join(['(', fmt, ')'])
+            logger.info(f'Found new best %s of {fmt}', self._value_key, *value)
+            # print((f'Found new best %s of {fmt}') % tuple([self._value_key] + list(value)))

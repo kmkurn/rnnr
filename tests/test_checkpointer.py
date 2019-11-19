@@ -73,6 +73,33 @@ def test_value_key(tmp_path):
                 assert pickle.load(f) == objs_values[name][c - 1]
 
 
+def test_sequence_as_value(tmp_path):
+    n_calls, max_saved = 5, 2
+    objs_values = {
+        'model.pkl': [f'MODEL_{i}' for i in range(n_calls)],
+        'opt.pkl': [f'OPT_{i}' for i in range(n_calls)],
+    }
+    # new best losses are call #1, #3, and #5
+    losses = [(5, 50), (6, 40), (4, 60), (4, 70), (4, 50)]
+    min_losses = [(5, 50), (5, 50), (4, 60), (4, 60), (4, 50)]
+
+    ckptr = Checkpointer(tmp_path, max_saved=max_saved, value_key='loss')
+    for i in range(n_calls):
+        ckpt = {name: values[i] for name, values in objs_values.items()}
+        ckptr({'loss': losses[i], 'checkpoint': ckpt})
+        assert ckptr.best_value == min_losses[i]
+
+    # saved call are #3 and #5 (the last 2)
+    saved_calls = [3, 5]
+    for name in objs_values:
+        assert len(list(tmp_path.glob(f'*_{name}'))) == max_saved
+        for c in saved_calls:
+            path = tmp_path / f'{c}_{name}'
+            assert path.exists()
+            with open(path, 'rb') as f:
+                assert pickle.load(f) == objs_values[name][c - 1]
+
+
 def test_max_mode(tmp_path):
     n_calls, max_saved = 5, 2
     objs_values = {
@@ -88,6 +115,33 @@ def test_max_mode(tmp_path):
         ckpt = {name: values[i] for name, values in objs_values.items()}
         ckptr({'acc': accs[i], 'checkpoint': ckpt})
         assert ckptr.best_value == pytest.approx(max_accs[i])
+
+    # saved call are #3 and #5 (the last 2)
+    saved_calls = [3, 5]
+    for name in objs_values:
+        assert len(list(tmp_path.glob(f'*_{name}'))) == max_saved
+        for c in saved_calls:
+            path = tmp_path / f'{c}_{name}'
+            assert path.exists()
+            with open(path, 'rb') as f:
+                assert pickle.load(f) == objs_values[name][c - 1]
+
+
+def test_sequential_value_and_mode(tmp_path):
+    n_calls, max_saved = 6, 2
+    objs_values = {
+        'model.pkl': [f'MODEL_{i}' for i in range(n_calls)],
+        'opt.pkl': [f'OPT_{i}' for i in range(n_calls)],
+    }
+    # new best values are call #1, #3, and #5
+    values = [(5, 50), (6, 60), (4, 40), (4, 30), (4, 50), (4, 50)]
+    min_values = [(5, 50), (5, 50), (4, 40), (4, 40), (4, 50), (4, 50)]
+
+    ckptr = Checkpointer(tmp_path, max_saved=max_saved, value_key='loss', mode=('min', 'max'))
+    for i in range(n_calls):
+        ckpt = {name: values[i] for name, values in objs_values.items()}
+        ckptr({'loss': values[i], 'checkpoint': ckpt})
+        assert ckptr.best_value == min_values[i]
 
     # saved call are #3 and #5 (the last 2)
     saved_calls = [3, 5]
