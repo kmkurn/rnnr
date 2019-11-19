@@ -46,7 +46,7 @@ def test_max_saved(tmp_path):
                 assert pickle.load(f) == objs_values[name][n_calls - i - 1]
 
 
-def test_loss_key(tmp_path):
+def test_value_key(tmp_path):
     n_calls, max_saved = 5, 2
     objs_values = {
         'model.pkl': [f'MODEL_{i}' for i in range(n_calls)],
@@ -56,11 +56,11 @@ def test_loss_key(tmp_path):
     losses = [3, 4, 2, 4, 1]
     min_losses = [3, 3, 2, 2, 1]
 
-    ckptr = Checkpointer(tmp_path, max_saved=max_saved, loss_key='loss')
+    ckptr = Checkpointer(tmp_path, max_saved=max_saved, value_key='loss')
     for i in range(n_calls):
         ckpt = {name: values[i] for name, values in objs_values.items()}
         ckptr({'loss': losses[i], 'checkpoint': ckpt})
-        assert ckptr.min_loss == pytest.approx(min_losses[i])
+        assert ckptr.min_value == pytest.approx(min_losses[i])
 
     # saved call are #3 and #5 (the last 2)
     saved_calls = [3, 5]

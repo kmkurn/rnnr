@@ -159,7 +159,7 @@ class Checkpointer:
             save_dir: Path,
             checkpoint_key: str = 'checkpoint',
             max_saved: int = 1,
-            loss_key: Optional[str] = None,
+            value_key: Optional[str] = None,
             save_fn: Optional[Callable[[Any, Path], None]] = None,
             eps: float = 1e-4,
     ) -> None:
@@ -169,11 +169,11 @@ class Checkpointer:
         self._save_dir = save_dir
         self._checkpoint_key = checkpoint_key
         self._max_saved = max_saved
-        self._loss_key = loss_key
+        self._value_key = value_key
         self._save_fn = save_fn
         self._eps = eps
 
-        self.min_loss = float('inf')
+        self.min_value = float('inf')
         self._n_calls = 0
         self._deque: Deque[int] = deque()
 
@@ -197,13 +197,13 @@ class Checkpointer:
         return len(self._deque)
 
     def _should_save(self, state: dict) -> bool:
-        if self._loss_key is None:
+        if self._value_key is None:
             return True
 
-        loss = state[self._loss_key]
-        if loss <= self.min_loss - self._eps:
-            logger.info('Found new best loss of %f', loss)
-            self.min_loss = loss
+        value = state[self._value_key]
+        if value <= self.min_value - self._eps:
+            logger.info('Found new best value of %f', value)
+            self.min_value = value
             return True
 
         return False
