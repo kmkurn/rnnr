@@ -22,7 +22,49 @@ import warnings
 logger = logging.getLogger(__name__)
 
 
-class EarlyStopper:
+class ImprovementHandlerMixin:
+    def __init__(self, mode='min', eps=1e-4):
+        if isinstance(mode, str) and mode not in ('min', 'max'):  # pragma: no cover
+            warnings.warn(f"mode {mode!r} is unknown; will be interpreted as 'max'")
+            mode = 'max'
+
+        self._mode = mode
+        self._eps = eps
+        self.best_value = None
+
+    def _improved(self, value):
+        if self.best_value is None:
+            return True
+
+        try:
+            list(zip(value, self.best_value))
+        except TypeError:
+            return self._better(value, self.best_value, self._mode)
+
+        if isinstance(self._mode, str):
+            modes = [self._mode] * len(value)
+        else:
+            modes = self._mode
+
+        for v, bv, m in zip(value, self.best_value, modes):
+            if self._better(v, bv, m):
+                return True
+            if self._worse(v, bv, m):
+                return False
+        return False
+
+    def _better(self, x, y, mode):
+        if mode == 'min':
+            return x <= y - self._eps
+        return x >= y + self._eps
+
+    def _worse(self, x, y, mode):
+        if mode == 'min':
+            return x >= y + self._eps
+        return x <= y - self._eps
+
+
+class EarlyStopper(ImprovementHandlerMixin):
     """A handler for early stopping.
 
     This handler keeps track the number of times some value does not improve. If this
@@ -75,21 +117,14 @@ class EarlyStopper:
             mode: Union[str, Sequence[str]] = 'min',
             eps: float = 1e-4,
     ) -> None:
-        if isinstance(mode, str) and mode not in ('min', 'max'):  # pragma: no cover
-            warnings.warn(f"mode {mode!r} is unknown; will be interpreted as 'max'")
-            mode = 'max'
-
+        super().__init__(mode=mode, eps=eps)
         self._patience = patience
         self._value_key = value_key
-        self._mode = mode
-        self._eps = eps
-
-        self.best_value = None
         self._n_bad_values = 0
 
     def __call__(self, state: dict) -> None:
         value = state[self._value_key]
-        if self.best_value is None or self._improved(value):
+        if self._improved(value):
             self.best_value = value
             self._n_bad_values = 0
         else:
@@ -99,38 +134,8 @@ class EarlyStopper:
             logger.info('Patience exceeded, stopping early')
             state['runner'].stop()
 
-    def _improved(self, value: Union[float, Sequence[float]]) -> bool:
-        assert self.best_value is not None
 
-        try:
-            list(zip(value, self.best_value))
-        except TypeError:
-            return self._better(value, self.best_value, self._mode)
-
-        if isinstance(self._mode, str):
-            modes = [self._mode] * len(value)
-        else:
-            modes = self._mode
-
-        for v, bv, m in zip(value, self.best_value, modes):
-            if self._better(v, bv, m):
-                return True
-            if self._worse(v, bv, m):
-                return False
-        return False
-
-    def _better(self, x: float, y: float, mode: str) -> bool:
-        if mode == 'min':
-            return x <= y - self._eps
-        return x >= y + self._eps
-
-    def _worse(self, x: float, y: float, mode: str) -> bool:
-        if mode == 'min':
-            return x >= y + self._eps
-        return x <= y - self._eps
-
-
-class Checkpointer:
+class Checkpointer(ImprovementHandlerMixin):
     """A handler for checkpointing.
 
     Checkpointing here means saving some objects (e.g., models) periodically during a run.
@@ -191,21 +196,16 @@ class Checkpointer:
             mode: Union[str, Sequence[str]] = 'min',
             eps: float = 1e-4,
     ) -> None:
+        super().__init__(mode=mode, eps=eps)
         if save_fn is None:
             save_fn = self._default_save_fn
-        if isinstance(mode, str) and mode not in ('min', 'max'):  # pragma: no cover
-            warnings.warn(f"mode {mode!r} is unknown; will be interpreted as 'max'")
-            mode = 'max'
 
         self._save_dir = save_dir
         self._checkpoint_key = checkpoint_key
         self._max_saved = max_saved
         self._value_key = value_key
         self._save_fn = save_fn
-        self._mode = mode
-        self._eps = eps
 
-        self.best_value = None
         self._n_calls = 0
         self._deque: Deque[int] = deque()
 
@@ -233,7 +233,7 @@ class Checkpointer:
             return True
 
         value = state[self._value_key]
-        if self.best_value is None or self._improved(value):
+        if self._improved(value):
             self._log(value)
             self.best_value = value
             return True
@@ -256,36 +256,6 @@ class Checkpointer:
             path = self._save_dir / f'{num}_{name}'
             if path.exists():
                 path.unlink()
-
-    def _improved(self, value: Union[float, Sequence[float]]) -> bool:
-        assert self.best_value is not None
-
-        try:
-            list(zip(value, self.best_value))
-        except TypeError:
-            return self._better(value, self.best_value, self._mode)
-
-        if isinstance(self._mode, str):
-            modes = [self._mode] * len(value)
-        else:
-            modes = self._mode
-
-        for v, bv, m in zip(value, self.best_value, modes):
-            if self._better(v, bv, m):
-                return True
-            if self._worse(v, bv, m):
-                return False
-        return False
-
-    def _better(self, x: float, y: float, mode: str) -> bool:
-        if mode == 'min':
-            return x <= y - self._eps
-        return x >= y + self._eps
-
-    def _worse(self, x: float, y: float, mode: str) -> bool:
-        if mode == 'min':
-            return x >= y + self._eps
-        return x <= y - self._eps
 
     def _log(self, value):
         try:
