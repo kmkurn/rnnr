@@ -53,6 +53,18 @@ def test_value_key(runner):
                 assert not mock_stop.called
 
 
+def test_sequence_as_value(runner):
+    values = [(5, 10), (5, 9), (5, 8), (5, 10), (5, 8)]
+    min_values = [(5, 10), (5, 9), (5, 8), (5, 8), (5, 8)]
+    es = EarlyStopper(patience=2)
+
+    with patch.object(runner, 'stop', autospec=True) as mock_stop:
+        for v, mv in zip(values, min_values):
+            es({'runner': runner, 'loss': v})
+        assert not mock_stop.called
+        assert es.best_value == mv
+
+
 def test_max_mode(runner):
     values = [5, 4, 3, 7, 5, 6, 3]
     max_values = [5, 5, 5, 7, 7, 7, 7]

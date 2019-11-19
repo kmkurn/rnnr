@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import deque
-from typing import Any, Callable, Deque, Iterable, Optional, Mapping
+from typing import Any, Callable, Deque, Iterable, Mapping, Optional, Sequence, Union
 from pathlib import Path
 import logging
 import pickle
@@ -99,11 +99,30 @@ class EarlyStopper:
             logger.info('Patience exceeded, stopping early')
             state['runner'].stop()
 
-    def _improved(self, value: float) -> bool:
+    def _improved(self, value: Union[float, Sequence[float]]) -> bool:
         assert self.best_value is not None
+
+        try:
+            vbv = list(zip(value, self.best_value))
+        except TypeError:
+            return self._better(value, self.best_value)
+
+        for v, bv in vbv:
+            if self._better(v, bv):
+                return True
+            if self._worse(v, bv):
+                return False
+        return False
+
+    def _better(self, x: float, y: float) -> bool:
         if self._mode == 'min':
-            return value <= self.best_value - self._eps
-        return value >= self.best_value + self._eps
+            return x <= y - self._eps
+        return x >= y + self._eps
+
+    def _worse(self, x: float, y: float) -> bool:
+        if self._mode == 'min':
+            return x >= y + self._eps
+        return x <= y - self._eps
 
 
 class Checkpointer:
