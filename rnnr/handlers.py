@@ -84,12 +84,12 @@ class EarlyStopper:
         self._mode = mode
         self._eps = eps
 
-        self.best_value = float('inf') if mode == 'min' else float('-inf')
+        self.best_value = None
         self._n_bad_values = 0
 
     def __call__(self, state: dict) -> None:
         value = state[self._value_key]
-        if self._improved(value):
+        if self.best_value is None or self._improved(value):
             self.best_value = value
             self._n_bad_values = 0
         else:
@@ -100,6 +100,7 @@ class EarlyStopper:
             state['runner'].stop()
 
     def _improved(self, value: float) -> bool:
+        assert self.best_value is not None
         if self._mode == 'min':
             return value <= self.best_value - self._eps
         return value >= self.best_value + self._eps
@@ -180,7 +181,7 @@ class Checkpointer:
         self._mode = mode
         self._eps = eps
 
-        self.best_value = float('inf') if mode == 'min' else float('-inf')
+        self.best_value = None
         self._n_calls = 0
         self._deque: Deque[int] = deque()
 
@@ -208,7 +209,7 @@ class Checkpointer:
             return True
 
         value = state[self._value_key]
-        if self._improved(value):
+        if self.best_value is None or self._improved(value):
             logger.info('Found new best value of %f', value)
             self.best_value = value
             return True
@@ -216,6 +217,7 @@ class Checkpointer:
         return False
 
     def _improved(self, value: float) -> bool:
+        assert self.best_value is not None
         if self._mode == 'min':
             return value <= self.best_value - self._eps
         return value >= self.best_value + self._eps
