@@ -144,13 +144,13 @@ class Checkpointer:
             actual filenames contain the e.g. epoch number if this handler is invoked at the
             end of each epoch.
         max_saved: Maximum number of checkpoints saved.
-        loss_key: Get the loss value from ``state[loss_key]``. Checkpoints are saved only
-            when the loss is smaller than the minimum loss observed so far. The default
+        value_key: Get some value from ``state[value_key]``. Checkpoints are saved only
+            when this value improves over the best value observed so far. The default
             of ``None`` means checkpoints are saved whenever this handler is called.
         save_fn: Function to invoke to save the checkpoints. If given, this must be a callable
             accepting two arguments: an object to save and a path to save it to. The default
             is to save the object using `pickle`.
-        eps: The loss value must be smaller at least by this value to be considered as an
+        eps: The value must improve at least by this amount to be considered as an
             improvement. Only used if ``loss_key`` is given.
     """
 
