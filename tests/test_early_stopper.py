@@ -61,8 +61,8 @@ def test_sequence_as_value(runner):
     with patch.object(runner, 'stop', autospec=True) as mock_stop:
         for v, mv in zip(values, min_values):
             es({'runner': runner, 'loss': v})
-        assert not mock_stop.called
-        assert es.best_value == mv
+            assert not mock_stop.called
+            assert es.best_value == mv
 
 
 def test_max_mode(runner):
