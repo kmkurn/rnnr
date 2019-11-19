@@ -14,7 +14,7 @@ def test_ok(runner):
     with patch.object(runner, 'stop', autospec=True) as mock_stop:
         for i, (v, mv) in enumerate(zip(values, min_values)):
             es({'runner': runner, 'loss': v})
-            assert es.min_loss == pytest.approx(mv, abs=1e-4)
+            assert es.min_value == pytest.approx(mv, abs=1e-4)
             if i == len(values) - 2:
                 mock_stop.assert_called_once_with()
             elif i == len(values) - 1:
@@ -38,9 +38,9 @@ def test_custom_patience(runner):
                 assert not mock_stop.called
 
 
-def test_loss_key(runner):
+def test_value_key(runner):
     values = [5, 4, 3, 4, 5, 6, 7]
-    es = EarlyStopper(patience=2, loss_key='foo')
+    es = EarlyStopper(patience=2, value_key='foo')
 
     with patch.object(runner, 'stop', autospec=True) as mock_stop:
         for i, v in enumerate(values):

@@ -68,25 +68,25 @@ class EarlyStopper:
     def __init__(
             self,
             patience: int = 5,
-            loss_key: str = 'loss',
+            value_key: str = 'loss',
             eps: float = 1e-4,
     ) -> None:
         self._patience = patience
-        self._loss_key = loss_key
+        self._value_key = value_key
         self._eps = eps
 
-        self.min_loss = float('inf')
-        self._n_bad_losses = 0
+        self.min_value = float('inf')
+        self._n_bad_values = 0
 
     def __call__(self, state: dict) -> None:
-        loss = state[self._loss_key]
-        if loss <= self.min_loss - self._eps:
-            self.min_loss = loss
-            self._n_bad_losses = 0
+        loss = state[self._value_key]
+        if loss <= self.min_value - self._eps:
+            self.min_value = loss
+            self._n_bad_values = 0
         else:
-            self._n_bad_losses += 1
+            self._n_bad_values += 1
 
-        if self._n_bad_losses > self._patience:
+        if self._n_bad_values > self._patience:
             logger.info('Patience exceeded, stopping early')
             state['runner'].stop()
 
