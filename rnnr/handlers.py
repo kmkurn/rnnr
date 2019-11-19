@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class EarlyStopper:
     """A handler for early stopping.
 
-    This handler keeps track the number of times the loss value does not improve. If this
+    This handler keeps track the number of times some value does not improve. If this
     number is greater than the given patience, this handler stops the given runner.
 
     Example:
@@ -60,9 +60,11 @@ class EarlyStopper:
         Epoch 4 started
 
     Args:
-        patience: Number of times to wait for the loss to improve before stopping.
-        loss_key: Get the loss value from ``state[loss_key]``.
-        eps: An improvement is considered only when the loss value decreases by at least
+        patience: Number of times to wait for the value to improve before stopping.
+        value_key: Get the value from ``state[value_key]``.
+        mode: Whether to consider lower (``min`` mode) or higher (``max`` mode) value
+            as improvement.
+        eps: Improvement is considered only when the value improves by at least
             this amount.
     """
 
