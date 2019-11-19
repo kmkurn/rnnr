@@ -78,3 +78,15 @@ def test_max_mode(runner):
                 mock_stop.assert_called_once_with()
             else:
                 assert not mock_stop.called
+
+
+def test_sequential_value_and_mode(runner):
+    values = [(5, 50), (4, 40), (6, 60), (4, 50), (4, 40)]
+    best_values = [(5, 50), (4, 40), (4, 40), (4, 50), (4, 50)]
+    es = EarlyStopper(patience=1, mode=('min', 'max'), value_key='value')
+
+    with patch.object(runner, 'stop', autospec=True) as mock_stop:
+        for v, bv in zip(values, best_values):
+            es({'runner': runner, 'value': v})
+            assert not mock_stop.called
+            assert es.best_value == bv

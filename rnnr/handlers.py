@@ -72,10 +72,10 @@ class EarlyStopper:
             self,
             patience: int = 5,
             value_key: str = 'loss',
-            mode: str = 'min',
+            mode: Union[str, Sequence[str]] = 'min',
             eps: float = 1e-4,
     ) -> None:
-        if mode not in ('min', 'max'):  # pragma: no cover
+        if isinstance(mode, str) and mode not in ('min', 'max'):  # pragma: no cover
             warnings.warn(f"mode {mode!r} is unknown; will be interpreted as 'max'")
             mode = 'max'
 
@@ -103,24 +103,29 @@ class EarlyStopper:
         assert self.best_value is not None
 
         try:
-            vbv = list(zip(value, self.best_value))
+            list(zip(value, self.best_value))
         except TypeError:
-            return self._better(value, self.best_value)
+            return self._better(value, self.best_value, self._mode)
 
-        for v, bv in vbv:
-            if self._better(v, bv):
+        if isinstance(self._mode, str):
+            modes = [self._mode] * len(value)
+        else:
+            modes = self._mode
+
+        for v, bv, m in zip(value, self.best_value, modes):
+            if self._better(v, bv, m):
                 return True
-            if self._worse(v, bv):
+            if self._worse(v, bv, m):
                 return False
         return False
 
-    def _better(self, x: float, y: float) -> bool:
-        if self._mode == 'min':
+    def _better(self, x: float, y: float, mode: str) -> bool:
+        if mode == 'min':
             return x <= y - self._eps
         return x >= y + self._eps
 
-    def _worse(self, x: float, y: float) -> bool:
-        if self._mode == 'min':
+    def _worse(self, x: float, y: float, mode: str) -> bool:
+        if mode == 'min':
             return x >= y + self._eps
         return x <= y - self._eps
 
