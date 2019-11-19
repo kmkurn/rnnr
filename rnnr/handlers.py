@@ -210,7 +210,7 @@ class Checkpointer:
 
         value = state[self._value_key]
         if self.best_value is None or self._improved(value):
-            logger.info('Found new best value of %f', value)
+            logger.info('Found new best %s of %f', self._value_key, value)
             self.best_value = value
             return True
 
