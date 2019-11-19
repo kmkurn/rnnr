@@ -69,6 +69,8 @@ class EarlyStopper(ImprovementHandlerMixin):
 
     This handler keeps track the number of times some value does not improve. If this
     number is greater than the given patience, this handler stops the given runner.
+    The value can also be a sequence, in which case checking for improvement is done
+    by comparing its elements in sequential order (i.e. "lexicographically").
 
     Example:
 
@@ -105,7 +107,10 @@ class EarlyStopper(ImprovementHandlerMixin):
         patience: Number of times to wait for the value to improve before stopping.
         value_key: Get the value from ``state[value_key]``.
         mode: Whether to consider lower (``min`` mode) or higher (``max`` mode) value
-            as improvement.
+            as improvement. Can be a sequence of such modes if the value is also a
+            sequence. In that case, the mode is used to compare, in sequential order,
+            each element in the sequence of values with its corresponding best value
+            seen so far.
         eps: Improvement is considered only when the value improves by at least
             this amount.
     """
@@ -179,9 +184,14 @@ class Checkpointer(ImprovementHandlerMixin):
             is to save the object using `pickle`.
         value_key: Get some value from ``state[value_key]``. Checkpoints are saved only
             when this value improves over the best value observed so far. The default
-            of ``None`` means checkpoints are saved whenever this handler is called.
+            of ``None`` means checkpoints are always saved whenever this handler is called.
+            The value can also be a sequence, in which case checking for improvement is done
+            by comparing its elements in sequential order (i.e. "lexicographically").
         mode: Whether to consider lower (``min`` mode) or higher (``max`` mode) value
-            as improvement.
+            as improvement. Can be a sequence of such modes if the value is also a
+            sequence. In that case, the mode is used to compare, in sequential order,
+            each element in the sequence of values with its corresponding best value
+            seen so far.
         eps: The value must improve at least by this amount to be considered as an
             improvement. Only used if ``value_key`` is given.
     """
