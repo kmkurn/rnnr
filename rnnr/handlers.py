@@ -161,19 +161,24 @@ class Checkpointer:
             max_saved: int = 1,
             value_key: Optional[str] = None,
             save_fn: Optional[Callable[[Any, Path], None]] = None,
+            mode: str = 'min',
             eps: float = 1e-4,
     ) -> None:
         if save_fn is None:
             save_fn = self._default_save_fn
+        if mode not in ('min', 'max'):  # pragma: no cover
+            warnings.warn(f"mode {mode!r} is unknown; will be interpreted as 'max'")
+            mode = 'max'
 
         self._save_dir = save_dir
         self._checkpoint_key = checkpoint_key
         self._max_saved = max_saved
         self._value_key = value_key
         self._save_fn = save_fn
+        self._mode = mode
         self._eps = eps
 
-        self.min_value = float('inf')
+        self.best_value = float('inf') if mode == 'min' else float('-inf')
         self._n_calls = 0
         self._deque: Deque[int] = deque()
 
@@ -201,12 +206,17 @@ class Checkpointer:
             return True
 
         value = state[self._value_key]
-        if value <= self.min_value - self._eps:
+        if self._improved(value):
             logger.info('Found new best value of %f', value)
-            self.min_value = value
+            self.best_value = value
             return True
 
         return False
+
+    def _improved(self, value: float) -> bool:
+        if self._mode == 'min':
+            return value <= self.best_value - self._eps
+        return value >= self.best_value + self._eps
 
     def _should_delete(self) -> bool:
         return self._n_saved > self._max_saved

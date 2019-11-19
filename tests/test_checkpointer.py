@@ -60,7 +60,34 @@ def test_value_key(tmp_path):
     for i in range(n_calls):
         ckpt = {name: values[i] for name, values in objs_values.items()}
         ckptr({'loss': losses[i], 'checkpoint': ckpt})
-        assert ckptr.min_value == pytest.approx(min_losses[i])
+        assert ckptr.best_value == pytest.approx(min_losses[i])
+
+    # saved call are #3 and #5 (the last 2)
+    saved_calls = [3, 5]
+    for name in objs_values:
+        assert len(list(tmp_path.glob(f'*_{name}'))) == max_saved
+        for c in saved_calls:
+            path = tmp_path / f'{c}_{name}'
+            assert path.exists()
+            with open(path, 'rb') as f:
+                assert pickle.load(f) == objs_values[name][c - 1]
+
+
+def test_max_mode(tmp_path):
+    n_calls, max_saved = 5, 2
+    objs_values = {
+        'model.pkl': [f'MODEL_{i}' for i in range(n_calls)],
+        'opt.pkl': [f'OPT_{i}' for i in range(n_calls)],
+    }
+    # new best accs are call #1, #3, and #5
+    accs = [3, 2, 4, 4, 5]
+    max_accs = [3, 3, 4, 4, 5]
+
+    ckptr = Checkpointer(tmp_path, max_saved=max_saved, value_key='acc', mode='max')
+    for i in range(n_calls):
+        ckpt = {name: values[i] for name, values in objs_values.items()}
+        ckptr({'acc': accs[i], 'checkpoint': ckpt})
+        assert ckptr.best_value == pytest.approx(max_accs[i])
 
     # saved call are #3 and #5 (the last 2)
     saved_calls = [3, 5]
