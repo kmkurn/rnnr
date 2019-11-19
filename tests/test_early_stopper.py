@@ -14,7 +14,7 @@ def test_ok(runner):
     with patch.object(runner, 'stop', autospec=True) as mock_stop:
         for i, (v, mv) in enumerate(zip(values, min_values)):
             es({'runner': runner, 'loss': v})
-            assert es.min_value == pytest.approx(mv, abs=1e-4)
+            assert es.best_value == pytest.approx(mv, abs=1e-4)
             if i == len(values) - 2:
                 mock_stop.assert_called_once_with()
             elif i == len(values) - 1:
@@ -49,5 +49,20 @@ def test_value_key(runner):
                 mock_stop.assert_called_once_with()
             elif i == len(values) - 1:
                 assert mock_stop.mock_calls == [call(), call()]
+            else:
+                assert not mock_stop.called
+
+
+def test_max_mode(runner):
+    values = [5, 4, 3, 7, 5, 6, 3]
+    max_values = [5, 5, 5, 7, 7, 7, 7]
+    es = EarlyStopper(patience=2, mode='max', value_key='acc')
+
+    with patch.object(runner, 'stop', autospec=True) as mock_stop:
+        for i, (v, mv) in enumerate(zip(values, max_values)):
+            es({'runner': runner, 'acc': v})
+            assert es.best_value == pytest.approx(mv)
+            if i == len(values) - 1:
+                mock_stop.assert_called_once_with()
             else:
                 assert not mock_stop.called

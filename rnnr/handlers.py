@@ -17,6 +17,7 @@ from typing import Any, Callable, Deque, Iterable, Optional, Mapping
 from pathlib import Path
 import logging
 import pickle
+import warnings
 
 logger = logging.getLogger(__name__)
 
@@ -69,19 +70,25 @@ class EarlyStopper:
             self,
             patience: int = 5,
             value_key: str = 'loss',
+            mode: str = 'min',
             eps: float = 1e-4,
     ) -> None:
+        if mode not in ('min', 'max'):  # pragma: no cover
+            warnings.warn(f"mode {mode!r} is unknown; will be interpreted as 'max'")
+            mode = 'max'
+
         self._patience = patience
         self._value_key = value_key
+        self._mode = mode
         self._eps = eps
 
-        self.min_value = float('inf')
+        self.best_value = float('inf') if mode == 'min' else float('-inf')
         self._n_bad_values = 0
 
     def __call__(self, state: dict) -> None:
-        loss = state[self._value_key]
-        if loss <= self.min_value - self._eps:
-            self.min_value = loss
+        value = state[self._value_key]
+        if self._improved(value):
+            self.best_value = value
             self._n_bad_values = 0
         else:
             self._n_bad_values += 1
@@ -89,6 +96,11 @@ class EarlyStopper:
         if self._n_bad_values > self._patience:
             logger.info('Patience exceeded, stopping early')
             state['runner'].stop()
+
+    def _improved(self, value: float) -> bool:
+        if self._mode == 'min':
+            return value <= self.best_value - self._eps
+        return value >= self.best_value + self._eps
 
 
 class Checkpointer:
