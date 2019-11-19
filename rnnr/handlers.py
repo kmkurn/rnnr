@@ -64,6 +64,7 @@ class EarlyStopper:
         eps: An improvement is considered only when the loss value decreases by at least
             this amount.
     """
+
     def __init__(
             self,
             patience: int = 5,
@@ -136,8 +137,9 @@ class Checkpointer:
             accepting two arguments: an object to save and a path to save it to. The default
             is to save the object using `pickle`.
         eps: The loss value must be smaller at least by this value to be considered as an
-            improvement. Only used if ``loss_fn`` is given.
+            improvement. Only used if ``loss_key`` is given.
     """
+
     def __init__(
             self,
             save_dir: Path,
