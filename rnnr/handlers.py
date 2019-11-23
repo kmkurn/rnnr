@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import deque
-from typing import Any, Callable, Deque, Iterable, Mapping, Optional, Sequence, Union
+from typing import Any, Callable, Deque, Iterable, Mapping, Optional
 from pathlib import Path
 import logging
 import pickle
@@ -23,45 +23,27 @@ logger = logging.getLogger(__name__)
 
 
 class ImprovementHandlerMixin:
-    def __init__(self, mode='min', eps=1e-4):
-        if isinstance(mode, str) and mode not in ('min', 'max'):  # pragma: no cover
-            warnings.warn(f"mode {mode!r} is unknown; will be interpreted as 'max'")
+    def __init__(self, mode: str = 'min', eps: float = 1e-4) -> None:
+        if mode not in ('min', 'max'):  # pragma: no cover
+            warnings.warn("mode {mode!r} is unknown; will be interpreted as 'max'")
             mode = 'max'
 
         self._mode = mode
         self._eps = eps
         self.best_value = None
 
-    def _improved(self, value):
+    def _improved(self, value: Any) -> bool:
         if self.best_value is None:
             return True
 
-        try:
-            list(zip(value, self.best_value))
-        except TypeError:
-            return self._better(value, self.best_value, self._mode)
+        if self._mode == 'min':
+            if isinstance(self.best_value, float):
+                return value <= self.best_value - self._eps
+            return value < self.best_value
 
-        if isinstance(self._mode, str):
-            modes = [self._mode] * len(value)
-        else:
-            modes = self._mode
-
-        for v, bv, m in zip(value, self.best_value, modes):
-            if self._better(v, bv, m):
-                return True
-            if self._worse(v, bv, m):
-                return False
-        return False
-
-    def _better(self, x, y, mode):
-        if mode == 'min':
-            return x <= y - self._eps
-        return x >= y + self._eps
-
-    def _worse(self, x, y, mode):
-        if mode == 'min':
-            return x >= y + self._eps
-        return x <= y - self._eps
+        if isinstance(self.best_value, float):
+            return value >= self.best_value + self._eps
+        return value > self.best_value
 
 
 class EarlyStopper(ImprovementHandlerMixin):
@@ -69,8 +51,6 @@ class EarlyStopper(ImprovementHandlerMixin):
 
     This handler keeps track the number of times some value does not improve. If this
     number is greater than the given patience, this handler stops the given runner.
-    The value can also be a sequence, in which case checking for improvement is done
-    by comparing its elements in sequential order (i.e. "lexicographically").
 
     Example:
 
@@ -106,20 +86,16 @@ class EarlyStopper(ImprovementHandlerMixin):
     Args:
         patience: Number of times to wait for the value to improve before stopping.
         value_key: Get the value from ``state[value_key]``.
-        mode: Whether to consider lower (``min`` mode) or higher (``max`` mode) value
-            as improvement. Can be a sequence of such modes if the value is also a
-            sequence. In that case, the mode is used to compare, in sequential order,
-            each element in the sequence of values with its corresponding best value
-            seen so far.
-        eps: Improvement is considered only when the value improves by at least
-            this amount.
+        mode: Whether to consider lower (``min``) or higher (``max``) value as improvement.
+        eps: Improvement is considered only when the value improves by at least this amount.
+            Only used if the value is an instance of `float`.
     """
 
     def __init__(
             self,
             patience: int = 5,
             value_key: str = 'loss',
-            mode: Union[str, Sequence[str]] = 'min',
+            mode: str = 'min',
             eps: float = 1e-4,
     ) -> None:
         super().__init__(mode=mode, eps=eps)
@@ -185,15 +161,9 @@ class Checkpointer(ImprovementHandlerMixin):
         value_key: Get some value from ``state[value_key]``. Checkpoints are saved only
             when this value improves over the best value observed so far. The default
             of ``None`` means checkpoints are always saved whenever this handler is called.
-            The value can also be a sequence, in which case checking for improvement is done
-            by comparing its elements in sequential order (i.e. "lexicographically").
-        mode: Whether to consider lower (``min`` mode) or higher (``max`` mode) value
-            as improvement. Can be a sequence of such modes if the value is also a
-            sequence. In that case, the mode is used to compare, in sequential order,
-            each element in the sequence of values with its corresponding best value
-            seen so far.
-        eps: The value must improve at least by this amount to be considered as an
-            improvement. Only used if ``value_key`` is given.
+        mode: Whether to consider lower (``min``) or higher (``max``) value as improvement.
+        eps: Improvement is considered only when the value improves by at least this amount.
+            Only used if ``value_key`` is given and it is an instance of `float`.
     """
 
     def __init__(
@@ -203,7 +173,7 @@ class Checkpointer(ImprovementHandlerMixin):
             max_saved: int = 1,
             save_fn: Optional[Callable[[Any, Path], None]] = None,
             value_key: Optional[str] = None,
-            mode: Union[str, Sequence[str]] = 'min',
+            mode: str = 'min',
             eps: float = 1e-4,
     ) -> None:
         super().__init__(mode=mode, eps=eps)
@@ -267,14 +237,7 @@ class Checkpointer(ImprovementHandlerMixin):
             if path.exists():
                 path.unlink()
 
-    def _log(self, value):
-        try:
-            fmt = ['%f' for _ in value]
-        except TypeError:
-            logger.info('Found new best %s of %f', self._value_key, value)
-            # print(('Found new best %s of %f') % (self._value_key, value))
-        else:
-            fmt = ', '.join(fmt)
-            fmt = ''.join(['(', fmt, ')'])
-            logger.info(f'Found new best %s of {fmt}', self._value_key, *value)
-            # print((f'Found new best %s of {fmt}') % tuple([self._value_key] + list(value)))
+    def _log(self, value: Any) -> None:
+        fmt = '%f' if isinstance(value, float) else '%s'
+        logger.info(f'Found new best %s of {fmt}', self._value_key, value)
+        # print((f'Found new best %s of {fmt}') % (self._value_key, value))
