@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class ImprovementHandlerMixin:
-    def __init__(self, mode: str = 'min', eps: float = 1e-4) -> None:
+    def __init__(self, mode: str = 'min', *, eps: float = 1e-4) -> None:
         if mode not in ('min', 'max'):  # pragma: no cover
             warnings.warn("mode {mode!r} is unknown; will be interpreted as 'max'")
             mode = 'max'
@@ -93,9 +93,10 @@ class EarlyStopper(ImprovementHandlerMixin):
 
     def __init__(
             self,
-            patience: int = 5,
             value_key: str = 'loss',
             mode: str = 'min',
+            *,
+            patience: int = 5,
             eps: float = 1e-4,
     ) -> None:
         super().__init__(mode=mode, eps=eps)
@@ -170,10 +171,11 @@ class Checkpointer(ImprovementHandlerMixin):
             self,
             save_dir: Path,
             checkpoint_key: str = 'checkpoint',
-            max_saved: int = 1,
             save_fn: Optional[Callable[[Any, Path], None]] = None,
             value_key: Optional[str] = None,
             mode: str = 'min',
+            *,
+            max_saved: int = 1,
             eps: float = 1e-4,
     ) -> None:
         super().__init__(mode=mode, eps=eps)
