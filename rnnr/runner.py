@@ -14,7 +14,7 @@
 
 from collections import defaultdict
 from datetime import timedelta
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List
 import time
 import logging
 
@@ -65,30 +65,31 @@ class Runner:
             elapsed = timedelta(seconds=time.time() - self._epoch_start_time)
             logger.info('Epoch %d/%d done in %s', state['epoch'], state['max_epoch'], elapsed)
 
-    def on(
-            self,
-            event: Event,
-            callback: Optional[Callback] = None,
-    ) -> Optional[Callable[[Callback], Callback]]:
-        """Add a callback to listen to an event.
+    def on(self, event: Event, callbacks=None):
+        """Add single/multiple callback(s) to listen to an event.
 
-        When ``callback`` is ``None``, this method returns a decorator which accepts
-        a callback for the event.
+        If ``callbacks`` is ``None``, this method returns a decorator which accepts
+        a single callback for the event. If ``callbacks`` is a sequence of callbacks,
+        they will all be added as listeners to the event *in order*.
 
         Args:
             event: Event to listen.
-            callback: Callback for the event.
+            callbacks: Callback(s) for the event.
 
         Returns:
-            A decorator which accepts a callback, if ``callback`` is ``None``.
+            A decorator which accepts a callback, if ``callbacks`` is ``None``.
         """
-        if callback is not None:
-            self._callbacks[event].append(callback)
-            return None
+        if callbacks is not None:
+            cblist = self._callbacks[event]
+            try:
+                cblist.extend(callbacks)
+            except TypeError:  # must be a single callback
+                cblist.append(callbacks)
+            return
 
-        def decorator(callback: Callback) -> Callback:
-            self._callbacks[event].append(callback)
-            return callback
+        def decorator(cb: Callback) -> Callback:
+            self._callbacks[event].append(cb)
+            return cb
 
         return decorator
 

@@ -136,6 +136,14 @@ class TestOn:
         runner.run(Mock(), range(5), max_epoch=max_epoch)
         assert n_calls == max_epoch
 
+    def test_multiple_callbacks(self, runner):
+        mock_escb1, mock_escb2, max_epoch = Mock(), Mock(), 10
+        runner.on(Event.EPOCH_STARTED, [mock_escb1, mock_escb2])
+        runner.run(Mock(), range(5), max_epoch=max_epoch)
+
+        assert mock_escb1.call_count == max_epoch
+        assert mock_escb2.call_count == max_epoch
+
 
 class TestStop:
     def test_on_batch_started(self, runner):
