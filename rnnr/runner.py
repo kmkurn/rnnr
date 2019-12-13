@@ -43,7 +43,7 @@ class Runner:
       handlers of `Event.BATCH_STARTED` and `Event.BATCH_FINISHED`, as well as ``batch_fn``
       passed to `~Runner.run`.
 
-    Note that handlers for an event are called in the order they are appended.
+    Note that handlers for an event are called in the order they are passed to `~Runner.on`.
     """
 
     def __init__(self) -> None:
@@ -69,6 +69,18 @@ class Runner:
             event: Event,
             handler: Optional[Handler] = None,
     ) -> Optional[Callable[[Handler], Handler]]:
+        """Append a handler to listen to an event.
+
+        When ``handler`` is ``None``, this method returns a decorator which accepts
+        a handler and append it for the event.
+
+        Args:
+            event: Event to listen.
+            handler: Handler for the event.
+
+        Returns:
+            A decorator which accepts a handler, if ``handler`` is ``None``.
+        """
         if handler is not None:
             self._handlers[event].append(handler)
             return None
