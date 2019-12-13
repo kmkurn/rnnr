@@ -1,4 +1,4 @@
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from rnnr import Event
 
@@ -34,7 +34,7 @@ class TestRun:
         runner.run(batch_fn, batches, max_epoch=max_epoch)
 
 
-class TestAppendHandler:
+class TestOn:
     def test_started(self, runner):
         batches, max_epoch = range(10), 5
 
@@ -44,7 +44,7 @@ class TestAppendHandler:
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
 
-        runner.append_handler(Event.STARTED, on_started)
+        runner.on(Event.STARTED, on_started)
         runner.run(Mock(), batches, max_epoch=max_epoch)
 
     def test_epoch_started(self, runner):
@@ -59,7 +59,7 @@ class TestAppendHandler:
             assert state['epoch'] == n_calls + 1
             n_calls += 1
 
-        runner.append_handler(Event.EPOCH_STARTED, on_epoch_started)
+        runner.on(Event.EPOCH_STARTED, on_epoch_started)
         runner.run(Mock(), batches, max_epoch=max_epoch)
 
     def test_batch_started(self, runner):
@@ -75,7 +75,7 @@ class TestAppendHandler:
             assert state['batch'] == batches[n_calls % len(batches)]
             n_calls += 1
 
-        runner.append_handler(Event.BATCH_STARTED, on_batch_started)
+        runner.on(Event.BATCH_STARTED, on_batch_started)
         runner.run(Mock(), batches, max_epoch=max_epoch)
 
     def test_batch_finished(self, runner):
@@ -95,7 +95,7 @@ class TestAppendHandler:
             assert state['output'] == state['batch']**2
             n_calls += 1
 
-        runner.append_handler(Event.BATCH_FINISHED, on_batch_finished)
+        runner.on(Event.BATCH_FINISHED, on_batch_finished)
         runner.run(batch_fn, batches, max_epoch=max_epoch)
 
     def test_epoch_finished(self, runner):
@@ -110,7 +110,7 @@ class TestAppendHandler:
             assert state['epoch'] == n_calls + 1
             n_calls += 1
 
-        runner.append_handler(Event.EPOCH_FINISHED, on_epoch_finished)
+        runner.on(Event.EPOCH_FINISHED, on_epoch_finished)
         runner.run(Mock(), batches, max_epoch=max_epoch)
 
     def test_finished(self, runner):
@@ -122,8 +122,19 @@ class TestAppendHandler:
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
 
-        runner.append_handler(Event.FINISHED, on_finished)
+        runner.on(Event.FINISHED, on_finished)
         runner.run(Mock(), batches, max_epoch=max_epoch)
+
+    def test_as_decorator(self, runner):
+        n_calls, max_epoch = 0, 10
+
+        @runner.on(Event.EPOCH_STARTED)
+        def increment(state):
+            nonlocal n_calls
+            n_calls += 1
+
+        runner.run(Mock(), range(5), max_epoch=max_epoch)
+        assert n_calls == max_epoch
 
 
 class TestStop:
@@ -166,13 +177,3 @@ class TestStop:
         assert mock_bshandler.call_count == 0
         assert mock_bfhandler.call_count == 0
         assert mock_efhandler.call_count == 1
-
-
-def test_on_decorator(runner):
-    with patch.object(runner, 'append_handler', autospec=True) as mock_append_handler:
-
-        @runner.on(Event.BATCH_STARTED)
-        def handler(state):
-            pass
-
-        mock_append_handler.assert_called_once_with(Event.BATCH_STARTED, handler)
