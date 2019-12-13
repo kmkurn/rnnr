@@ -76,7 +76,7 @@ class EarlyStopper(ImprovementHandlerMixin):
         ...     eval_state = evaluator.run(eval_fn, valid_losses)
         ...     state['loss'] = eval_state['mean']
         ...
-        >>> trainer.append_handler(Event.EPOCH_FINISHED, EarlyStopper(patience=2))
+        >>> trainer.on(Event.EPOCH_FINISHED, EarlyStopper(patience=2))
         >>> _ = trainer.run(batch_fn, batches, max_epoch=7)
         Epoch 1 started
         Epoch 2 started
@@ -137,7 +137,7 @@ class Checkpointer(ImprovementHandlerMixin):
         ... def store_checkpoint(state):
         ...     state['checkpoint'] = {'model.pkl': 'MODEL', 'optimizer.pkl': 'OPTIMIZER'}
         ...
-        >>> runner.append_handler(Event.EPOCH_FINISHED, Checkpointer(tmp_dir, max_saved=3))
+        >>> runner.on(Event.EPOCH_FINISHED, Checkpointer(tmp_dir, max_saved=3))
         >>> _ = runner.run(batch_fn, batches, max_epoch=7)
         >>> pprint(sorted(list(tmp_dir.glob('*.pkl'))))
         [PosixPath('/tmp/5_model.pkl'),

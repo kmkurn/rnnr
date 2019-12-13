@@ -23,6 +23,7 @@ from .runner import Runner
 
 class Attachment(abc.ABC):
     """An abstract base class for an attachment."""
+
     @abc.abstractmethod
     def attach_on(self, runner: Runner) -> None:
         """Attach to the given runner.
@@ -58,6 +59,7 @@ class ProgressBar(Attachment):
 
     .. _tqdm: https://github.com/tqdm/tqdm
     """
+
     def __init__(
             self,
             size_key: str = 'n_items',
@@ -76,9 +78,9 @@ class ProgressBar(Attachment):
         self._pbar: tqdm
 
     def attach_on(self, runner: Runner) -> None:
-        runner.append_handler(Event.EPOCH_STARTED, self._create)
-        runner.append_handler(Event.BATCH_FINISHED, self._update)
-        runner.append_handler(Event.EPOCH_FINISHED, self._close)
+        runner.on(Event.EPOCH_STARTED, self._create)
+        runner.on(Event.BATCH_FINISHED, self._update)
+        runner.on(Event.EPOCH_FINISHED, self._close)
 
     def _create(self, state: dict) -> None:
         self._pbar = self._tqdm_cls(state['batches'], **self._kwargs)
@@ -118,6 +120,7 @@ class LambdaReducer(Attachment):
             return their reduction result.
         value_key: Get the value of a batch from ``state[value_key]``.
     """
+
     def __init__(
             self,
             name: str,
@@ -129,9 +132,9 @@ class LambdaReducer(Attachment):
         self._value_key = value_key
 
     def attach_on(self, runner: Runner) -> None:
-        runner.append_handler(Event.EPOCH_STARTED, self._reset)
-        runner.append_handler(Event.BATCH_FINISHED, self._update)
-        runner.append_handler(Event.EPOCH_FINISHED, self._compute)
+        runner.on(Event.EPOCH_STARTED, self._reset)
+        runner.on(Event.BATCH_FINISHED, self._update)
+        runner.on(Event.EPOCH_FINISHED, self._compute)
 
     def _reset(self, state: dict) -> None:
         self._result = None
@@ -173,6 +176,7 @@ class MeanReducer(LambdaReducer):
             the state has no such key, the size defaults to 1. The sum of all these
             batch sizes is the divisor when computing the mean.
     """
+
     def __init__(
             self,
             name: str = 'mean',

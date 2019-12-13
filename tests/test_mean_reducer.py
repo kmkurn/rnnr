@@ -35,7 +35,7 @@ def test_more_than_one_epoch(runner):
 
     r = MeanReducer()
     r.attach_on(runner)
-    runner.append_handler(Event.EPOCH_FINISHED, efhandler)
+    runner.on(Event.EPOCH_FINISHED, efhandler)
     runner.run(batch_fn, batches, max_epoch=2)
 
 
