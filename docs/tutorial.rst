@@ -57,15 +57,15 @@ emits events and we can provide handler for them.
        print('Epoch', state['epoch'], 'started')
 
 Now, when ``trainer`` is run, these handlers will be invoked at the start of the run and the
-start of each epoch respectively. It is also possible to provide a handler using
-`~Runner.append_handler` method.
+start of each epoch respectively. The `~Runner.on` method can also be used not as a decorator
+by passing a handler as its second argument.
 
 .. code-block:: python
 
    def print_epoch_finished(state):
        print('Epoch', state['epoch'], 'of', state['max_epoch'], 'finished')
 
-   trainer.append_handler(Event.EPOCH_FINISHED, print_epoch_finished)
+   trainer.on(Event.EPOCH_FINISHED, print_epoch_finished)
 
 See `Runner` for more details. For more information on what events are available, see `Event`
 instead. Please check :ref:`Handlers` for some useful handlers.
