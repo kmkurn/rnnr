@@ -14,7 +14,7 @@
 
 from collections import defaultdict
 from datetime import timedelta
-from typing import Any, Callable, Dict, Iterable, List
+from typing import Any, Callable, Dict, Iterable, List, Optional
 import time
 import logging
 
@@ -73,7 +73,15 @@ class Runner:
             elapsed = timedelta(seconds=time.time() - self._epoch_start_time)
             logger.info('Epoch %d/%d done in %s', state['epoch'], state['max_epoch'], elapsed)
 
-    def on(self, event: Event) -> Callable[[Handler], Handler]:
+    def on(
+            self,
+            event: Event,
+            handler: Optional[Handler] = None,
+    ) -> Optional[Callable[[Handler], Handler]]:
+        if handler is not None:
+            self._handlers[event].append(handler)
+            return None
+
         def decorator(handler: Handler) -> Handler:
             self.append_handler(event, handler)
             return handler
