@@ -29,13 +29,13 @@ def test_more_than_one_epoch(runner):
         ix = (state['epoch'] - 1) * len(batches) + state['batch']
         state['output'] = values[ix]
 
-    def efhandler(state):
+    def efcallback(state):
         assert state[r.name] == pytest.approx(
             stat.mean(values[(state['epoch'] - 1) * len(batches) + b] for b in batches))
 
     r = MeanReducer()
     r.attach_on(runner)
-    runner.on(Event.EPOCH_FINISHED, efhandler)
+    runner.on(Event.EPOCH_FINISHED, efcallback)
     runner.run(batch_fn, batches, max_epoch=2)
 
 

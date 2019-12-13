@@ -2,7 +2,7 @@ from unittest.mock import call, patch
 
 import pytest
 
-from rnnr.handlers import EarlyStopper
+from rnnr.callbacks import EarlyStopper
 
 
 def test_ok(runner):
