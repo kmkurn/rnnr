@@ -148,10 +148,10 @@ class TestStop:
             if state['batch'] == 3:
                 runner.stop()
 
-        runner.append_handler(Event.EPOCH_STARTED, mock_eshandler)
-        runner.append_handler(Event.BATCH_STARTED, bshandler)
-        runner.append_handler(Event.BATCH_FINISHED, mock_bfhandler)
-        runner.append_handler(Event.EPOCH_FINISHED, mock_efhandler)
+        runner.on(Event.EPOCH_STARTED, mock_eshandler)
+        runner.on(Event.BATCH_STARTED, bshandler)
+        runner.on(Event.BATCH_FINISHED, mock_bfhandler)
+        runner.on(Event.EPOCH_FINISHED, mock_efhandler)
         runner.run(Mock(), batches, max_epoch=2)
 
         assert mock_eshandler.call_count == 1
@@ -168,10 +168,10 @@ class TestStop:
             if state['epoch'] == 1:
                 runner.stop()
 
-        runner.append_handler(Event.EPOCH_STARTED, eshandler)
-        runner.append_handler(Event.BATCH_STARTED, mock_bshandler)
-        runner.append_handler(Event.BATCH_FINISHED, mock_bfhandler)
-        runner.append_handler(Event.EPOCH_FINISHED, mock_efhandler)
+        runner.on(Event.EPOCH_STARTED, eshandler)
+        runner.on(Event.BATCH_STARTED, mock_bshandler)
+        runner.on(Event.BATCH_FINISHED, mock_bfhandler)
+        runner.on(Event.EPOCH_FINISHED, mock_efhandler)
         runner.run(Mock(), batches, max_epoch=7)
 
         assert mock_bshandler.call_count == 0

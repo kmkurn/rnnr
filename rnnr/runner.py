@@ -30,7 +30,7 @@ class Runner:
     A runner provides a thin abstraction of iterating over batches for several epochs,
     which is typically done in neural network training. To customize the behavior during
     a run, a runner provides a way to listen to events emitted during such run.
-    To listen to an event, call `Runner.append_handler` and provide the event handler.
+    To listen to an event, call `Runner.on` and provide the event handler.
     A handler is a callable that accepts a `dict` and returns nothing. The `dict` is
     the state of the run. By default, the state contains:
 
@@ -51,17 +51,8 @@ class Runner:
         self._running = False
         self._epoch_start_time = 0.
 
-        self.append_handler(Event.EPOCH_STARTED, self._print_start_epoch)
-        self.append_handler(Event.EPOCH_FINISHED, self._print_finish_epoch)
-
-    def append_handler(self, event: Event, handler: Handler) -> None:
-        """Append a handler for the given event.
-
-        Args:
-            event: Event to handle.
-            handler: Handler for the event.
-        """
-        self._handlers[event].append(handler)
+        self.on(Event.EPOCH_STARTED, self._print_start_epoch)
+        self.on(Event.EPOCH_FINISHED, self._print_finish_epoch)
 
     def _print_start_epoch(self, state: dict) -> None:
         if state['max_epoch'] > 1:
@@ -83,7 +74,7 @@ class Runner:
             return None
 
         def decorator(handler: Handler) -> Handler:
-            self.append_handler(event, handler)
+            self._handlers[event].append(handler)
             return handler
 
         return decorator
