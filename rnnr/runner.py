@@ -70,7 +70,7 @@ class Runner:
             event: Event,
             callback: Optional[Callback] = None,
     ) -> Optional[Callable[[Callback], Callback]]:
-        """Append a callback to listen to an event.
+        """Add a callback to listen to an event.
 
         When ``callback`` is ``None``, this method returns a decorator which accepts
         a callback for the event.
