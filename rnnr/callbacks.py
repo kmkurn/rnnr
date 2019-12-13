@@ -22,7 +22,7 @@ import warnings
 logger = logging.getLogger(__name__)
 
 
-class ImprovementHandlerMixin:
+class ImprovementCallbackMixin:
     def __init__(self, mode: str = 'min', *, eps: float = 1e-4) -> None:
         if mode not in ('min', 'max'):  # pragma: no cover
             warnings.warn("mode {mode!r} is unknown; will be interpreted as 'max'")
@@ -46,11 +46,11 @@ class ImprovementHandlerMixin:
         return value > self.best_value
 
 
-class EarlyStopper(ImprovementHandlerMixin):
-    """A handler for early stopping.
+class EarlyStopper(ImprovementCallbackMixin):
+    """A callback for early stopping.
 
-    This handler keeps track the number of times some value does not improve. If this
-    number is greater than the given patience, this handler stops the given runner.
+    This callback keeps track the number of times some value does not improve. If this
+    number is greater than the given patience, this callback stops the given runner.
 
     Example:
 
@@ -60,7 +60,7 @@ class EarlyStopper(ImprovementHandlerMixin):
         >>>
         >>> from rnnr import Event, Runner
         >>> from rnnr.attachments import MeanReducer
-        >>> from rnnr.handlers import EarlyStopper
+        >>> from rnnr.callbacks import EarlyStopper
         >>>
         >>> trainer = Runner()
         >>> @trainer.on(Event.EPOCH_STARTED)
@@ -117,8 +117,8 @@ class EarlyStopper(ImprovementHandlerMixin):
             state['runner'].stop()
 
 
-class Checkpointer(ImprovementHandlerMixin):
-    """A handler for checkpointing.
+class Checkpointer(ImprovementCallbackMixin):
+    """A callback for checkpointing.
 
     Checkpointing here means saving some objects (e.g., models) periodically during a run.
 
@@ -127,7 +127,7 @@ class Checkpointer(ImprovementHandlerMixin):
         >>> from pathlib import Path
         >>> from pprint import pprint
         >>> from rnnr import Event, Runner
-        >>> from rnnr.handlers import Checkpointer
+        >>> from rnnr.callbacks import Checkpointer
         >>>
         >>> batches = range(3)
         >>> batch_fn = lambda _: None
@@ -152,8 +152,8 @@ class Checkpointer(ImprovementHandlerMixin):
         checkpoint_key: Get the checkpoint from ``state[checkpoint_key]``. A checkpoint
             is a mapping whose keys are filenames and the values are the objects to checkpoint.
             The filenames in this dictionary's keys are prepended with the number of times
-            this handler is called to get the actual saved files' names. This allows the
-            actual filenames contain the e.g. epoch number if this handler is invoked at the
+            this callback is called to get the actual saved files' names. This allows the
+            actual filenames contain the e.g. epoch number if this callback is invoked at the
             end of each epoch.
         max_saved: Maximum number of checkpoints saved.
         save_fn: Function to invoke to save the checkpoints. If given, this must be a callable
@@ -161,7 +161,7 @@ class Checkpointer(ImprovementHandlerMixin):
             is to save the object using `pickle`.
         value_key: Get some value from ``state[value_key]``. Checkpoints are saved only
             when this value improves over the best value observed so far. The default
-            of ``None`` means checkpoints are always saved whenever this handler is called.
+            of ``None`` means checkpoints are always saved whenever this callback is called.
         mode: Whether to consider lower (``min``) or higher (``max``) value as improvement.
         eps: Improvement is considered only when the value improves by at least this amount.
             Only used if ``value_key`` is given and it is an instance of `float`.

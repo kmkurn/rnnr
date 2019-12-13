@@ -139,41 +139,41 @@ class TestOn:
 
 class TestStop:
     def test_on_batch_started(self, runner):
-        mock_eshandler = Mock()
-        mock_bfhandler = Mock()
-        mock_efhandler = Mock()
+        mock_escallback = Mock()
+        mock_bfcallback = Mock()
+        mock_efcallback = Mock()
         batches = range(10)
 
-        def bshandler(state):
+        def bscallback(state):
             if state['batch'] == 3:
                 runner.stop()
 
-        runner.on(Event.EPOCH_STARTED, mock_eshandler)
-        runner.on(Event.BATCH_STARTED, bshandler)
-        runner.on(Event.BATCH_FINISHED, mock_bfhandler)
-        runner.on(Event.EPOCH_FINISHED, mock_efhandler)
+        runner.on(Event.EPOCH_STARTED, mock_escallback)
+        runner.on(Event.BATCH_STARTED, bscallback)
+        runner.on(Event.BATCH_FINISHED, mock_bfcallback)
+        runner.on(Event.EPOCH_FINISHED, mock_efcallback)
         runner.run(Mock(), batches, max_epoch=2)
 
-        assert mock_eshandler.call_count == 1
-        assert mock_bfhandler.call_count == 4
-        assert mock_efhandler.call_count == 1
+        assert mock_escallback.call_count == 1
+        assert mock_bfcallback.call_count == 4
+        assert mock_efcallback.call_count == 1
 
     def test_on_epoch_started(self, runner):
-        mock_bshandler = Mock()
-        mock_bfhandler = Mock()
-        mock_efhandler = Mock()
+        mock_bscallback = Mock()
+        mock_bfcallback = Mock()
+        mock_efcallback = Mock()
         batches = range(10)
 
-        def eshandler(state):
+        def escallback(state):
             if state['epoch'] == 1:
                 runner.stop()
 
-        runner.on(Event.EPOCH_STARTED, eshandler)
-        runner.on(Event.BATCH_STARTED, mock_bshandler)
-        runner.on(Event.BATCH_FINISHED, mock_bfhandler)
-        runner.on(Event.EPOCH_FINISHED, mock_efhandler)
+        runner.on(Event.EPOCH_STARTED, escallback)
+        runner.on(Event.BATCH_STARTED, mock_bscallback)
+        runner.on(Event.BATCH_FINISHED, mock_bfcallback)
+        runner.on(Event.EPOCH_FINISHED, mock_efcallback)
         runner.run(Mock(), batches, max_epoch=7)
 
-        assert mock_bshandler.call_count == 0
-        assert mock_bfhandler.call_count == 0
-        assert mock_efhandler.call_count == 1
+        assert mock_bscallback.call_count == 0
+        assert mock_bfcallback.call_count == 0
+        assert mock_efcallback.call_count == 1

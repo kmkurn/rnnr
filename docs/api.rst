@@ -14,12 +14,12 @@ Runner
 .. autoclass:: Runner
    :members:
 
-.. _Handlers:
+.. _Callbacks:
 
-Handlers
---------
+Callbacks
+---------
 
-.. currentmodule:: rnnr.handlers
+.. currentmodule:: rnnr.callbacks
 
 .. autoclass:: EarlyStopper
    :members:

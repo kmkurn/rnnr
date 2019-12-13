@@ -20,7 +20,7 @@ import logging
 
 from rnnr.event import Event
 
-Handler = Callable[[dict], None]
+Callback = Callable[[dict], None]
 logger = logging.getLogger(__name__)
 
 
@@ -30,24 +30,25 @@ class Runner:
     A runner provides a thin abstraction of iterating over batches for several epochs,
     which is typically done in neural network training. To customize the behavior during
     a run, a runner provides a way to listen to events emitted during such run.
-    To listen to an event, call `Runner.on` and provide the event handler.
-    A handler is a callable that accepts a `dict` and returns nothing. The `dict` is
-    the state of the run. By default, the state contains:
+    To listen to an event, call `Runner.on` and provide a callback which will be called
+    when the event is emitted. An event callback is a callable that accepts a `dict`
+    and returns nothing. The `dict` is the state of the run. By default, the state contains:
 
     * ``runner`` - the runner object itself.
     * ``batches`` - iterable of batches which constitutes an epoch.
     * ``max_epoch`` - maximum number of epochs to run.
-    * ``epoch`` - current number of epoch. Not available to handlers of `Event.STARTED`
+    * ``epoch`` - current number of epoch. Not available to callbacks of `Event.STARTED`
       and `Event.FINISHED`.
     * ``batch`` - current batch retrieved from ``state['batches']``. Only available to
-      handlers of `Event.BATCH_STARTED` and `Event.BATCH_FINISHED`, as well as ``batch_fn``
+      callbacks of `Event.BATCH_STARTED` and `Event.BATCH_FINISHED`, as well as ``batch_fn``
       passed to `~Runner.run`.
 
-    Note that handlers for an event are called in the order they are passed to `~Runner.on`.
+    Note:
+        Callbacks for an event are called in the order they are passed to `~Runner.on`.
     """
 
     def __init__(self) -> None:
-        self._handlers: Dict[Event, List[Handler]] = defaultdict(list)
+        self._callbacks: Dict[Event, List[Callback]] = defaultdict(list)
         self._running = False
         self._epoch_start_time = 0.
 
@@ -67,27 +68,27 @@ class Runner:
     def on(
             self,
             event: Event,
-            handler: Optional[Handler] = None,
-    ) -> Optional[Callable[[Handler], Handler]]:
-        """Append a handler to listen to an event.
+            callback: Optional[Callback] = None,
+    ) -> Optional[Callable[[Callback], Callback]]:
+        """Append a callback to listen to an event.
 
-        When ``handler`` is ``None``, this method returns a decorator which accepts
-        a handler and append it for the event.
+        When ``callback`` is ``None``, this method returns a decorator which accepts
+        a callback for the event.
 
         Args:
             event: Event to listen.
-            handler: Handler for the event.
+            callback: Callback for the event.
 
         Returns:
-            A decorator which accepts a handler, if ``handler`` is ``None``.
+            A decorator which accepts a callback, if ``callback`` is ``None``.
         """
-        if handler is not None:
-            self._handlers[event].append(handler)
+        if callback is not None:
+            self._callbacks[event].append(callback)
             return None
 
-        def decorator(handler: Handler) -> Handler:
-            self._handlers[event].append(handler)
-            return handler
+        def decorator(callback: Callback) -> Callback:
+            self._callbacks[event].append(callback)
+            return callback
 
         return decorator
 
@@ -134,13 +135,13 @@ class Runner:
         return state
 
     def _emit(self, event: Event, state: dict) -> None:
-        for handler in self._handlers[event]:
-            handler(state)
+        for callback in self._callbacks[event]:
+            callback(state)
 
     def stop(self) -> None:
         """Stop the runner immediately after the current batch is finished.
 
-        Note that the appropriate handlers for ``Event.*_FINISHED`` events are still called
+        Note that the appropriate callbacks for ``Event.*_FINISHED`` events are still called
         before the run truly stops.
         """
         self._running = False

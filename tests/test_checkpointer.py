@@ -3,7 +3,7 @@ import pickle
 
 import pytest
 
-from rnnr.handlers import Checkpointer
+from rnnr.callbacks import Checkpointer
 
 
 def test_ok(tmp_path):

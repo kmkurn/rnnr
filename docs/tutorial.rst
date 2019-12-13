@@ -36,13 +36,13 @@ To run the trainer, simply invoke the `~Runner.run` method.
 
    trainer.run(batch_fn, batches, max_epoch=5)
 
-Handling events
----------------
+Listening for events
+--------------------
 
 The above example is the minimum requirement to use a `Runner`. However, usually we want to
 have some more control of what we do on the start of each epoch, end of each batch, and so on.
 Heavily inspired by Ignite_, **rnnr** also uses an event system: during a run, the runner
-emits events and we can provide handler for them.
+emits events and we can provide callbacks for them.
 
 .. code-block:: python
 
@@ -56,9 +56,9 @@ emits events and we can provide handler for them.
    def print_epoch(state):
        print('Epoch', state['epoch'], 'started')
 
-Now, when ``trainer`` is run, these handlers will be invoked at the start of the run and the
-start of each epoch respectively. The `~Runner.on` method can also be used not as a decorator
-by passing a handler as its second argument.
+Now, when ``trainer`` is run, these callbacks will be invoked at the start of the run and the
+start of each epoch respectively. The `~Runner.on` method can also be used *not* as a decorator
+by passing a callback as its second argument.
 
 .. code-block:: python
 
@@ -68,14 +68,14 @@ by passing a handler as its second argument.
    trainer.on(Event.EPOCH_FINISHED, print_epoch_finished)
 
 See `Runner` for more details. For more information on what events are available, see `Event`
-instead. Please check :ref:`Handlers` for some useful handlers.
+instead. Please check :ref:`Callbacks` for some useful callbacks.
 
-Handlers that work together: an attachment
-------------------------------------------
+Callbacks that work together: an attachment
+-------------------------------------------
 
-An attachment is a collection of handlers that work together to provide some functionality.
-For example, to compute a mean over batch statistics, we need to append handlers to many
-events, and these handlers work together to obtain the mean value. In **rnnr**, this concept
+An attachment is a collection of callbacks that work together to provide some functionality.
+For example, to compute a mean over batch statistics, we need to append callbacks to many
+events, and these callbacks work together to obtain the mean value. In **rnnr**, this concept
 is realized by the `~attachments.Attachment` abstract base class. We can create our own
 attachments, but some useful attachments are provided. See :ref:`Attachments` for more.
 
