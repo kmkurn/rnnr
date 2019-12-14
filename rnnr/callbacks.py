@@ -134,7 +134,7 @@ def checkpoint(
         to_dir: Optional[Path] = None,
         at_most: int = 1,
         when: Optional[str] = None,
-        using=None,
+        using: Optional[Callable[[Any, Path], None]] = None,
 ):
     if to_dir is None:  # pragma: no cover
         to_dir = Path.cwd()
