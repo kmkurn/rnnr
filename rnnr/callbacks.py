@@ -153,7 +153,9 @@ def checkpoint(
             using(state[what], path)
             q.append(path)
         while len(q) > at_most:
-            q.popleft().unlink()
+            p = q.popleft()
+            if p.exists():  # pragma: no cover
+                p.unlink()
         state[qkey] = q
 
     return callback
