@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import deque
-from typing import Any, Callable, Deque, Iterable, Mapping, Optional
+from typing import Any, Callable, Optional
 from pathlib import Path
 import logging
 import pickle
