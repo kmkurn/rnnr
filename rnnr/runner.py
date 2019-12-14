@@ -38,6 +38,8 @@ class Runner:
     * ``batches`` - iterable of batches which constitutes an epoch.
     * ``max_epoch`` - maximum number of epochs to run.
     * ``n_iters`` - current number of batch iterations.
+    * ``running`` - a boolean which equals ``True`` if the runner is still running. Only
+      equals ``False`` for callbacks of `Event.FINISHED`.
     * ``epoch`` - current number of epoch. Not available to callbacks of `Event.STARTED`
       and `Event.FINISHED`.
     * ``batch`` - current batch retrieved from ``state['batches']``. Only available to
@@ -112,7 +114,13 @@ class Runner:
             State of the run at the end.
         """
         self._running = True
-        state: dict = {'runner': self, 'max_epoch': max_epoch, 'batches': batches, 'n_iters': 0}
+        state: dict = {
+            'runner': self,
+            'max_epoch': max_epoch,
+            'batches': batches,
+            'n_iters': 0,
+            'running': True,
+        }
 
         self._emit(Event.STARTED, state)
         for epoch in range(1, max_epoch + 1):
@@ -134,6 +142,7 @@ class Runner:
             state.pop('batch', None)
             self._emit(Event.EPOCH_FINISHED, state)
         state.pop('epoch', None)
+        state['running'] = False
         self._emit(Event.FINISHED, state)
         return state
 
