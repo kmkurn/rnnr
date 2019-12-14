@@ -135,6 +135,8 @@ def checkpoint(
         at_most: int = 1,
         when: Optional[str] = None,
         using: Optional[Callable[[Any, Path], None]] = None,
+        ext: str = 'pkl',
+        prefix_fmt: str = '{epoch}_',
 ):
     if to_dir is None:  # pragma: no cover
         to_dir = Path.cwd()
@@ -143,10 +145,11 @@ def checkpoint(
 
     def callback(state):
         if when is None or state[when]:
-            fname = '{epoch}_{what}.pkl'.format(what=what, **state)
+            fmt = f'{prefix_fmt}{what}.{ext}'
+            fname = fmt.format(**state)
             using(state[what], to_dir / fname)
         ckpts = sorted(
-            to_dir.glob(f'*{what}.pkl'), key=lambda p: p.stat().st_mtime, reverse=True)
+            to_dir.glob(f'*{what}.{ext}'), key=lambda p: p.stat().st_mtime, reverse=True)
         while len(ckpts) > at_most:
             ckpts.pop().unlink()
 
