@@ -156,6 +156,10 @@ def checkpoint(
     return callback
 
 
+def save(*args, **kwargs):  # pragma: no cover
+    return checkpoint(*args, **kwargs)
+
+
 def _save_with_pickle(obj: Any, path: Path) -> None:
     with open(path, 'wb') as f:
         pickle.dump(obj, f)
