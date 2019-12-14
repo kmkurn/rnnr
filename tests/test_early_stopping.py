@@ -2,22 +2,22 @@ from rnnr.callbacks import maybe_stop_early
 
 
 def test_ok(runner):
-    patience = 7
-    callback, state = maybe_stop_early(patience=patience), {'running': True}
+    patience, counter, check, state = 7, 'cnt', 'check', {'running': True}
+    callback = maybe_stop_early(patience=patience, check=check, counter=counter)
 
     for i in range(patience):
-        state['better'] = False
+        state[check] = False
         callback(state)
         assert state['running']
-        assert state['n_bad_calls'] == i + 1
+        assert state[counter] == i + 1
 
-    state['better'] = True
+    state[check] = True
     callback(state)
     assert state['running']
-    assert state['n_bad_calls'] == 0
+    assert state[counter] == 0
 
     for i in range(patience + 1):
-        state['better'] = False
+        state[check] = False
         callback(state)
     assert not state['running']
-    assert state['n_bad_calls'] == patience + 1
+    assert state[counter] == patience + 1
