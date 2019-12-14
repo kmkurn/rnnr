@@ -16,33 +16,8 @@ from typing import Any, Callable, Optional
 from pathlib import Path
 import logging
 import pickle
-import warnings
 
 logger = logging.getLogger(__name__)
-
-
-class ImprovementCallbackMixin:
-    def __init__(self, mode: str = 'min', *, eps: float = 1e-4) -> None:
-        if mode not in ('min', 'max'):  # pragma: no cover
-            warnings.warn("mode {mode!r} is unknown; will be interpreted as 'max'")
-            mode = 'max'
-
-        self._mode = mode
-        self._eps = eps
-        self.best_value = None
-
-    def _improved(self, value: Any) -> bool:
-        if self.best_value is None:
-            return True
-
-        if self._mode == 'min':
-            if isinstance(self.best_value, float):
-                return value <= self.best_value - self._eps
-            return value < self.best_value
-
-        if isinstance(self.best_value, float):
-            return value >= self.best_value + self._eps
-        return value > self.best_value
 
 
 def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str = 'counter'):
