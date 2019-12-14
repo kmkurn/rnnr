@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import timedelta
 from typing import Any, Callable, Optional, Type
 import abc
+import logging
+import time
 
 from tqdm import tqdm
 
@@ -32,6 +35,33 @@ class Attachment(abc.ABC):
             runner: Runner to attach to.
         """
         pass
+
+
+class EpochTimer(Attachment):  # pragma: no cover
+    """An attachment to time epoch.
+
+    Epochs are only timed when ``state['max_epoch']`` is greater than 1. At the start and
+    end of every epoch, logging messages are printed with log level of INFO.
+    """
+    logger = logging.getLogger(f'{__name__}.epoch_timer')
+
+    def __init__(self):
+        self._epoch_start_time = 0
+
+    def attach_on(self, runner: Runner) -> None:
+        runner.on(Event.EPOCH_STARTED, self._start_timing)
+        runner.on(Event.EPOCH_FINISHED, self._finish_timing)
+
+    def _start_timing(self, state):
+        if state['max_epoch'] > 1:
+            self._epoch_start_time = time.time()
+            self.logger.info('Starting epoch %d/%d', state['epoch'], state['max_epoch'])
+
+    def _finish_timing(self, state):
+        if state['max_epoch'] > 1:
+            elapsed = timedelta(seconds=time.time() - self._epoch_start_time)
+            self.logger.info(
+                'Epoch %d/%d done in %s', state['epoch'], state['max_epoch'], elapsed)
 
 
 class ProgressBar(Attachment):
