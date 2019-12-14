@@ -39,7 +39,9 @@ class Runner:
     * ``max_epoch`` - maximum number of epochs to run.
     * ``n_iters`` - current number of batch iterations.
     * ``running`` - a boolean which equals ``True`` if the runner is still running. Only
-      equals ``False`` for callbacks of `Event.FINISHED`.
+      equals ``False`` for callbacks of `Event.FINISHED`. Can be set to ``False`` to stop
+      the runner earlier. Note that the appropriate callbacks for ``Event.*_FINISHED``
+      events are still called before the runner truly stops.
     * ``epoch`` - current number of epoch. Not available to callbacks of `Event.STARTED`
       and `Event.FINISHED`.
     * ``batch`` - current batch retrieved from ``state['batches']``. Only available to
@@ -124,14 +126,14 @@ class Runner:
 
         self._emit(Event.STARTED, state)
         for epoch in range(1, max_epoch + 1):
-            if not self._running:
+            if not (self._running and state['running']):
                 break
 
             state['epoch'] = epoch
             self._emit(Event.EPOCH_STARTED, state)
 
             for batch in batches:
-                if not self._running:
+                if not (self._running and state['running']):
                     break
                 state['n_iters'] += 1
                 state['batch'] = batch

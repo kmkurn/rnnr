@@ -175,7 +175,7 @@ class TestStop:
 
         def bscallback(state):
             if state['batch'] == 3:
-                runner.stop()
+                state['running'] = False
 
         runner.on(Event.EPOCH_STARTED, mock_escallback)
         runner.on(Event.BATCH_STARTED, bscallback)
@@ -195,7 +195,7 @@ class TestStop:
 
         def escallback(state):
             if state['epoch'] == 1:
-                runner.stop()
+                state['running'] = False
 
         runner.on(Event.EPOCH_STARTED, escallback)
         runner.on(Event.BATCH_STARTED, mock_bscallback)
