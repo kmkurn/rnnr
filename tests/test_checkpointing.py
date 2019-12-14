@@ -13,9 +13,11 @@ def test_ok(tmp_path):
 
     ckpt_name = 'ckpt'
     callback = checkpoint(ckpt_name, to_dir=tmp_path, at_most=max_saved)
+    state = {}
     for i in range(max_epoch):
         ckpt = {name: values[i] for name, values in objs_values.items()}
-        callback({ckpt_name: ckpt, 'epoch': i + 1})
+        state.update({ckpt_name: ckpt, 'epoch': i + 1})
+        callback(state)
 
     assert len(list(tmp_path.glob(f'*{ckpt_name}.pkl'))) == max_saved
     for i in range(max_saved):
@@ -38,9 +40,11 @@ def test_conditional(tmp_path):
 
     ckpt_name = 'ckpt'
     callback = checkpoint(ckpt_name, to_dir=tmp_path, at_most=max_saved, when='better')
+    state = {}
     for i in range(max_epoch):
         ckpt = {name: values[i] for name, values in objs_values.items()}
-        callback({ckpt_name: ckpt, 'epoch': i + 1, 'better': i + 1 in better_epochs})
+        state.update({ckpt_name: ckpt, 'epoch': i + 1, 'better': i + 1 in better_epochs})
+        callback(state)
 
     saved_epochs = [3, 5]  # the last 2
     assert {p.name for p in tmp_path.glob(f'*{ckpt_name}.pkl')} == \

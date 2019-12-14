@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import deque
 from typing import Any, Callable, Optional
 from pathlib import Path
 import logging
@@ -140,15 +141,16 @@ def checkpoint(
         using = _save_with_pickle
 
     def callback(state):
+        q = state.get(f'saved_{what}', deque())
         if when is None or state[when]:
             fmt = f'{prefix_fmt}{what}.{ext}'
             path = to_dir / fmt.format(**state)
             logger.info('Saving to %s', path)
             using(state[what], path)
-        ckpts = sorted(
-            to_dir.glob(f'*{what}.{ext}'), key=lambda p: p.stat().st_mtime, reverse=True)
-        while len(ckpts) > at_most:
-            ckpts.pop().unlink()
+            q.append(path)
+        while len(q) > at_most:
+            q.popleft().unlink()
+        state[f'saved_{what}'] = q
 
     return callback
 
