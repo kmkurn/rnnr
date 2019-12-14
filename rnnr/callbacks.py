@@ -88,11 +88,12 @@ def checkpoint(
         using: Optional[Callable[[Any, Path], None]] = None,
         ext: str = 'pkl',
         prefix_fmt: str = '{epoch}_',
+        queue_fmt: str = 'saved_{what}',
 ):
     """A callback factory for checkpointing.
 
-    Checkpointing means saving some object stored in ``state[what]`` during a run under ``to_dir``
-    directory with ``{prefix_fmt}{what}.{ext}`` as the filename.
+    Checkpointing means saving some object stored in ``state[what]`` during a run under
+    ``to_dir`` directory with ``{prefix_fmt}{what}.{ext}`` as the filename.
 
     Example:
 
@@ -134,14 +135,17 @@ def checkpoint(
         ext: Extension for the filename.
         prefix_fmt: Format for the filename prefix. Any string keys in ``state`` can be used
             as replacement fields.
+        queue_fmt: Keeps track of the saved files for the object with a queue stored in
+            ``state[queue_fmt.format(what=what)]``.
     """
     if to_dir is None:  # pragma: no cover
         to_dir = Path.cwd()
     if using is None:
         using = _save_with_pickle
+    qkey = queue_fmt.format(what=what)
 
     def callback(state):
-        q = state.get(f'saved_{what}', deque())
+        q = state.get(qkey, deque())
         if when is None or state[when]:
             fmt = f'{prefix_fmt}{what}.{ext}'
             path = to_dir / fmt.format(**state)
@@ -150,7 +154,7 @@ def checkpoint(
             q.append(path)
         while len(q) > at_most:
             q.popleft().unlink()
-        state[f'saved_{what}'] = q
+        state[qkey] = q
 
     return callback
 
