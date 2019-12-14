@@ -54,20 +54,6 @@ class Runner:
 
     def __init__(self) -> None:
         self._callbacks: Dict[Event, List[Callback]] = defaultdict(list)
-        self._epoch_start_time = 0.
-
-        self.on(Event.EPOCH_STARTED, self._print_start_epoch)
-        self.on(Event.EPOCH_FINISHED, self._print_finish_epoch)
-
-    def _print_start_epoch(self, state: dict) -> None:
-        if state['max_epoch'] > 1:
-            self._epoch_start_time = time.time()
-            logger.info('Starting epoch %d/%d', state['epoch'], state['max_epoch'])
-
-    def _print_finish_epoch(self, state: dict) -> None:
-        if state['max_epoch'] > 1:
-            elapsed = timedelta(seconds=time.time() - self._epoch_start_time)
-            logger.info('Epoch %d/%d done in %s', state['epoch'], state['max_epoch'], elapsed)
 
     def on(self, event: Event, callbacks=None):
         """Add single/multiple callback(s) to listen to an event.
