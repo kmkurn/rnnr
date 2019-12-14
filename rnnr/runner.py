@@ -54,7 +54,6 @@ class Runner:
 
     def __init__(self) -> None:
         self._callbacks: Dict[Event, List[Callback]] = defaultdict(list)
-        self._running = False
         self._epoch_start_time = 0.
 
         self.on(Event.EPOCH_STARTED, self._print_start_epoch)
@@ -115,7 +114,6 @@ class Runner:
         Returns:
             State of the run at the end.
         """
-        self._running = True
         state: dict = {
             'runner': self,
             'max_epoch': max_epoch,
@@ -126,14 +124,14 @@ class Runner:
 
         self._emit(Event.STARTED, state)
         for epoch in range(1, max_epoch + 1):
-            if not (self._running and state['running']):
+            if not state['running']:
                 break
 
             state['epoch'] = epoch
             self._emit(Event.EPOCH_STARTED, state)
 
             for batch in batches:
-                if not (self._running and state['running']):
+                if not state['running']:
                     break
                 state['n_iters'] += 1
                 state['batch'] = batch
@@ -151,11 +149,3 @@ class Runner:
     def _emit(self, event: Event, state: dict) -> None:
         for callback in self._callbacks[event]:
             callback(state)
-
-    def stop(self) -> None:
-        """Stop the runner immediately after the current batch is finished.
-
-        Note that the appropriate callbacks for ``Event.*_FINISHED`` events are still called
-        before the run truly stops.
-        """
-        self._running = False
