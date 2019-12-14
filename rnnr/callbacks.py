@@ -114,6 +114,52 @@ def checkpoint(
         ext: str = 'pkl',
         prefix_fmt: str = '{epoch}_',
 ):
+    """A callback factory for checkpointing.
+
+    Checkpointing means saving some object stored in ``state[what]`` during a run under ``to_dir``
+    directory with ``{prefix_fmt}{what}.{ext}`` as the filename.
+
+    Example:
+
+        >>> from pathlib import Path
+        >>> from pprint import pprint
+        >>> from rnnr import Event, Runner
+        >>> from rnnr.callbacks import checkpoint
+        >>>
+        >>> batches = range(3)
+        >>> batch_fn = lambda _: None
+        >>> tmp_dir = Path('/tmp')
+        >>> runner = Runner()
+        >>> @runner.on(Event.EPOCH_FINISHED)
+        ... def store_checkpoint(state):
+        ...     state['model'] = 'MODEL'
+        ...     state['optimizer'] = 'OPTIMIZER'
+        ...
+        >>> runner.on(Event.EPOCH_FINISHED, checkpoint('model', to_dir=tmp_dir, at_most=3))
+        >>> runner.on(Event.EPOCH_FINISHED, checkpoint('optimizer', to_dir=tmp_dir, at_most=3))
+        >>> _ = runner.run(batch_fn, batches, max_epoch=7)
+        >>> pprint(sorted(list(tmp_dir.glob('*.pkl'))))
+        [PosixPath('/tmp/5_model.pkl'),
+         PosixPath('/tmp/5_optimizer.pkl'),
+         PosixPath('/tmp/6_model.pkl'),
+         PosixPath('/tmp/6_optimizer.pkl'),
+         PosixPath('/tmp/7_model.pkl'),
+         PosixPath('/tmp/7_optimizer.pkl')]
+
+    Args:
+        what: Get the object to save from ``state[what]``.
+        to_dir: Save the object under this directory. Defaults to the current working directory
+            if not given.
+        at_most: Maximum number of files saved. When the number of files exceeds this number,
+            older files will be deleted.
+        when: If given, only save the object when ``state[when]`` is ``True``.
+        using: Function to invoke to save the object. If given, this must be a callable
+            accepting two arguments: an object to save and a `Path` to save it to. The default
+            is to save the object using `pickle`.
+        ext: Extension for the filename.
+        prefix_fmt: Format for the filename prefix. Any string keys in ``state`` can be used
+            as replacement fields.
+    """
     if to_dir is None:  # pragma: no cover
         to_dir = Path.cwd()
     if using is None:
@@ -134,6 +180,7 @@ def checkpoint(
 
 
 def save(*args, **kwargs):  # pragma: no cover
+    """An alias for `checkpoint`."""
     return checkpoint(*args, **kwargs)
 
 
