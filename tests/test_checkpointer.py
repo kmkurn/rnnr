@@ -1,139 +1,76 @@
 from unittest.mock import Mock, call
 import pickle
 
-import pytest
-
-from rnnr.callbacks import Checkpointer
+from rnnr.callbacks import checkpoint
 
 
 def test_ok(tmp_path):
-    n_calls = 5
+    max_epoch, max_saved = 5, 2
     objs_values = {
-        'model.pkl': [f'MODEL_{i}' for i in range(n_calls)],
-        'opt.pkl': [f'OPT_{i}' for i in range(n_calls)],
+        'model': [f'MODEL_{i}' for i in range(max_epoch)],
+        'opt': [f'OPT_{i}' for i in range(max_epoch)],
     }
 
-    ckptr = Checkpointer(tmp_path)
-    for i in range(n_calls):
+    ckpt_name = 'ckpt'
+    callback = checkpoint(ckpt_name, to_dir=tmp_path, at_most=max_saved)
+    for i in range(max_epoch):
         ckpt = {name: values[i] for name, values in objs_values.items()}
-        ckptr({'checkpoint': ckpt})
+        callback({ckpt_name: ckpt, 'epoch': i + 1})
 
-    for name in objs_values:
-        path = tmp_path / f'{n_calls}_{name}'
+    assert len(list(tmp_path.glob(f'*{ckpt_name}.pkl'))) == max_saved
+    for i in range(max_saved):
+        path = tmp_path / f'{max_epoch - i}_{ckpt_name}.pkl'
         assert path.exists()
         with open(path, 'rb') as f:
-            assert pickle.load(f) == objs_values[name][-1]
+            assert pickle.load(f) == {
+                name: values[max_epoch - i - 1]
+                for name, values in objs_values.items()
+            }
 
 
-def test_max_saved(tmp_path):
-    n_calls, max_saved = 5, 3
+def test_conditional(tmp_path):
+    max_epoch, max_saved = 5, 2
     objs_values = {
-        'model.pkl': [f'MODEL_{i}' for i in range(n_calls)],
-        'opt.pkl': [f'OPT_{i}' for i in range(n_calls)],
+        'model': [f'MODEL_{i}' for i in range(max_epoch)],
+        'opt': [f'OPT_{i}' for i in range(max_epoch)],
     }
+    better_epochs = {1, 3, 5}
 
-    ckptr = Checkpointer(tmp_path, max_saved=max_saved)
-    for i in range(n_calls):
+    ckpt_name = 'ckpt'
+    callback = checkpoint(ckpt_name, to_dir=tmp_path, at_most=max_saved, when='better')
+    for i in range(max_epoch):
         ckpt = {name: values[i] for name, values in objs_values.items()}
-        ckptr({'checkpoint': ckpt})
+        callback({ckpt_name: ckpt, 'epoch': i + 1, 'better': i + 1 in better_epochs})
 
-    for name in objs_values:
-        assert len(list(tmp_path.glob(f'*_{name}'))) == max_saved
-        for i in range(max_saved):
-            path = tmp_path / f'{n_calls - i}_{name}'
-            assert path.exists()
-            with open(path, 'rb') as f:
-                assert pickle.load(f) == objs_values[name][n_calls - i - 1]
-
-
-def test_value_key(tmp_path):
-    n_calls, max_saved = 5, 2
-    objs_values = {
-        'model.pkl': [f'MODEL_{i}' for i in range(n_calls)],
-        'opt.pkl': [f'OPT_{i}' for i in range(n_calls)],
-    }
-    # new best losses are call #1, #3, and #5
-    losses = [3, 4, 2, 4, 1]
-    min_losses = [3, 3, 2, 2, 1]
-
-    ckptr = Checkpointer(tmp_path, max_saved=max_saved, value_key='loss')
-    for i in range(n_calls):
-        ckpt = {name: values[i] for name, values in objs_values.items()}
-        ckptr({'loss': losses[i], 'checkpoint': ckpt})
-        assert ckptr.best_value == pytest.approx(min_losses[i])
-
-    # saved call are #3 and #5 (the last 2)
-    saved_calls = [3, 5]
-    for name in objs_values:
-        assert len(list(tmp_path.glob(f'*_{name}'))) == max_saved
-        for c in saved_calls:
-            path = tmp_path / f'{c}_{name}'
-            assert path.exists()
-            with open(path, 'rb') as f:
-                assert pickle.load(f) == objs_values[name][c - 1]
-
-
-def test_max_mode(tmp_path):
-    n_calls, max_saved = 5, 2
-    objs_values = {
-        'model.pkl': [f'MODEL_{i}' for i in range(n_calls)],
-        'opt.pkl': [f'OPT_{i}' for i in range(n_calls)],
-    }
-    # new best accs are call #1, #3, and #5
-    accs = [3, 2, 4, 4, 5]
-    max_accs = [3, 3, 4, 4, 5]
-
-    ckptr = Checkpointer(tmp_path, max_saved=max_saved, value_key='acc', mode='max')
-    for i in range(n_calls):
-        ckpt = {name: values[i] for name, values in objs_values.items()}
-        ckptr({'acc': accs[i], 'checkpoint': ckpt})
-        assert ckptr.best_value == pytest.approx(max_accs[i])
-
-    # saved call are #3 and #5 (the last 2)
-    saved_calls = [3, 5]
-    for name in objs_values:
-        assert len(list(tmp_path.glob(f'*_{name}'))) == max_saved
-        for c in saved_calls:
-            path = tmp_path / f'{c}_{name}'
-            assert path.exists()
-            with open(path, 'rb') as f:
-                assert pickle.load(f) == objs_values[name][c - 1]
-
-
-def test_checkpoint_key(tmp_path):
-    n_calls = 5
-    objs_values = {
-        'model.pkl': [f'MODEL_{i}' for i in range(n_calls)],
-        'opt.pkl': [f'OPT_{i}' for i in range(n_calls)],
-    }
-
-    ckptr = Checkpointer(tmp_path, checkpoint_key='foo')
-    for i in range(n_calls):
-        ckpt = {name: values[i] for name, values in objs_values.items()}
-        ckptr({'foo': ckpt})
-
-    for name in objs_values:
-        path = tmp_path / f'{n_calls}_{name}'
+    saved_epochs = [3, 5]  # the last 2
+    assert {p.name for p in tmp_path.glob(f'*{ckpt_name}.pkl')} == \
+        {f'{e}_{ckpt_name}.pkl' for e in saved_epochs}
+    for e in saved_epochs:
+        path = tmp_path / f'{e}_{ckpt_name}.pkl'
         assert path.exists()
         with open(path, 'rb') as f:
-            assert pickle.load(f) == objs_values[name][-1]
+            assert pickle.load(f) == {
+                name: values[e - 1]
+                for name, values in objs_values.items()
+            }
 
 
 def test_save_fn(tmp_path):
-    n_calls = 5
+    max_epoch = 5
     objs_values = {
-        'model.pkl': [f'MODEL_{i}' for i in range(n_calls)],
-        'opt.pkl': [f'OPT_{i}' for i in range(n_calls)],
+        'model': [f'MODEL_{i}' for i in range(max_epoch)],
+        'opt': [f'OPT_{i}' for i in range(max_epoch)],
     }
     mock_save_fn = Mock()
 
-    ckptr = Checkpointer(tmp_path, save_fn=mock_save_fn)
-    for i in range(n_calls):
+    ckpt_name = 'ckpt'
+    callback = checkpoint(ckpt_name, to_dir=tmp_path, using=mock_save_fn)
+    for i in range(max_epoch):
         ckpt = {name: values[i] for name, values in objs_values.items()}
-        ckptr({'checkpoint': ckpt})
+        callback({ckpt_name: ckpt, 'epoch': i + 1})
 
     assert mock_save_fn.mock_calls == [
-        call(objs_values[name][i], tmp_path / f'{i+1}_{name}')
-        for i in range(n_calls)
-        for name in objs_values
+        call({name: values[i]
+              for name, values in objs_values.items()}, tmp_path / f'{i+1}_{ckpt_name}.pkl')
+        for i in range(max_epoch)
     ]

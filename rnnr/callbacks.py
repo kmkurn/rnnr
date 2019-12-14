@@ -128,6 +128,36 @@ def maybe_stop_early(*, patience: int = 5):
     return callback
 
 
+def checkpoint(
+        what: str,
+        *,
+        to_dir: Optional[Path] = None,
+        at_most: int = 1,
+        when: Optional[str] = None,
+        using=None,
+):
+    if to_dir is None:  # pragma: no cover
+        to_dir = Path.cwd()
+    if using is None:
+        using = _save_with_pickle
+
+    def callback(state):
+        if when is None or state[when]:
+            fname = '{epoch}_{what}.pkl'.format(what=what, **state)
+            using(state[what], to_dir / fname)
+        ckpts = sorted(
+            to_dir.glob(f'*{what}.pkl'), key=lambda p: p.stat().st_mtime, reverse=True)
+        while len(ckpts) > at_most:
+            ckpts.pop().unlink()
+
+    return callback
+
+
+def _save_with_pickle(obj: Any, path: Path) -> None:
+    with open(path, 'wb') as f:
+        pickle.dump(obj, f)
+
+
 class Checkpointer(ImprovementCallbackMixin):
     """A callback for checkpointing.
 
