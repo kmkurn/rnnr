@@ -118,6 +118,53 @@ class EarlyStopper(ImprovementCallbackMixin):
 
 
 def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str = 'counter'):
+    """A callback factory for early stopping.
+
+    The returned calback keeps a counter in ``state[counter]`` for the number of times
+    ``state[check]`` is ``False``. If this counter exceeds ``patience``, the callback
+    stops the runner by setting ``state['running']=False``.
+
+    Example:
+
+        >>> valid_losses = [0.1, 0.2, 0.3]  # simulate validation batch losses
+        >>> batches = range(10)
+        >>> batch_fn = lambda _: None
+        >>>
+        >>> from rnnr import Event, Runner
+        >>> from rnnr.attachments import MeanReducer
+        >>> from rnnr.callbacks import maybe_stop_early
+        >>>
+        >>> trainer = Runner()
+        >>> @trainer.on(Event.EPOCH_STARTED)
+        ... def print_epoch(state):
+        ...     print('Epoch', state['epoch'], 'started')
+        ...
+        >>> @trainer.on(Event.EPOCH_FINISHED)
+        ... def eval_on_valid(state):
+        ...     def eval_fn(state):
+        ...         state['output'] = state['batch']
+        ...     evaluator = Runner()
+        ...     MeanReducer(name='mean').attach_on(evaluator)
+        ...     eval_state = evaluator.run(eval_fn, valid_losses)
+        ...     if state.get('best_loss', float('inf')) > eval_state['mean']:
+        ...         state['better'] = True
+        ...         state['best_loss'] = eval_state['mean']
+        ...     else:
+        ...         state['better'] = False
+        ...
+        >>> trainer.on(Event.EPOCH_FINISHED, maybe_stop_early(patience=2))
+        >>> _ = trainer.run(batch_fn, batches, max_epoch=7)
+        Epoch 1 started
+        Epoch 2 started
+        Epoch 3 started
+        Epoch 4 started
+
+    Args:
+        check: Increment counter if ``state[check]`` is ``False``.
+        patience: Stop the runner when the counter exceeds this number.
+        counter: Store the counter in ``state[counter]``.
+    """
+
     def callback(state):
         n = (state.get(counter, 0) + 1) if not state[check] else 0
         state[counter] = n
