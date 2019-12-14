@@ -117,12 +117,11 @@ class EarlyStopper(ImprovementCallbackMixin):
             state['runner'].stop()
 
 
-def maybe_stop_early(*, patience: int = 5):
+def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str = 'counter'):
     def callback(state):
-        assert 'better' in state, "state['better'] is required for maybe_stop_early callback"
-        n = (state.get('n_bad_calls', 0) + 1) if not state['better'] else 0
-        state['n_bad_calls'] = n
-        if state['n_bad_calls'] > patience:
+        n = (state.get(counter, 0) + 1) if not state[check] else 0
+        state[counter] = n
+        if state[counter] > patience:
             state['running'] = False
 
     return callback
