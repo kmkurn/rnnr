@@ -122,6 +122,7 @@ def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str =
         n = (state.get(counter, 0) + 1) if not state[check] else 0
         state[counter] = n
         if state[counter] > patience:
+            logger.info('Patience exceeded, stopping early')
             state['running'] = False
 
     return callback
@@ -145,8 +146,9 @@ def checkpoint(
     def callback(state):
         if when is None or state[when]:
             fmt = f'{prefix_fmt}{what}.{ext}'
-            fname = fmt.format(**state)
-            using(state[what], to_dir / fname)
+            path = to_dir / fmt.format(**state)
+            logger.info('Saving to %s', path)
+            using(state[what], path)
         ckpts = sorted(
             to_dir.glob(f'*{what}.{ext}'), key=lambda p: p.stat().st_mtime, reverse=True)
         while len(ckpts) > at_most:
