@@ -39,11 +39,12 @@ class TestOn:
         batches, max_epoch = range(10), 5
 
         def on_started(state):
-            assert set(state) == {'runner', 'batches', 'max_epoch', 'n_iters'}
+            assert set(state) == {'runner', 'batches', 'max_epoch', 'n_iters', 'running'}
             assert state['runner'] is runner
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['n_iters'] == 0
+            assert state['running']
 
         runner.on(Event.STARTED, on_started)
         runner.run(Mock(), batches, max_epoch=max_epoch)
@@ -53,12 +54,15 @@ class TestOn:
 
         def on_epoch_started(state):
             nonlocal n_calls
-            assert set(state) == {'runner', 'batches', 'max_epoch', 'epoch', 'n_iters'}
+            assert set(state) == {
+                'runner', 'batches', 'max_epoch', 'epoch', 'n_iters', 'running'
+            }
             assert state['runner'] is runner
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['epoch'] == n_calls + 1
             assert state['n_iters'] == n_calls * len(batches)
+            assert state['running']
             n_calls += 1
 
         runner.on(Event.EPOCH_STARTED, on_epoch_started)
@@ -69,13 +73,16 @@ class TestOn:
 
         def on_batch_started(state):
             nonlocal n_calls
-            assert set(state) == {'runner', 'batches', 'max_epoch', 'epoch', 'batch', 'n_iters'}
+            assert set(state) == {
+                'runner', 'batches', 'max_epoch', 'epoch', 'batch', 'n_iters', 'running'
+            }
             assert state['runner'] is runner
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['epoch'] == n_calls // len(batches) + 1
             assert state['batch'] == batches[n_calls % len(batches)]
             assert state['n_iters'] == n_calls + 1
+            assert state['running']
             n_calls += 1
 
         runner.on(Event.BATCH_STARTED, on_batch_started)
@@ -90,7 +97,8 @@ class TestOn:
         def on_batch_finished(state):
             nonlocal n_calls
             assert set(state) == {
-                'runner', 'batches', 'max_epoch', 'epoch', 'batch', 'output', 'n_iters'
+                'runner', 'batches', 'max_epoch', 'epoch', 'batch', 'output', 'n_iters',
+                'running'
             }
             assert state['runner'] is runner
             assert state['batches'] == batches
@@ -99,6 +107,7 @@ class TestOn:
             assert state['batch'] == batches[n_calls % len(batches)]
             assert state['output'] == state['batch']**2
             assert state['n_iters'] == n_calls + 1
+            assert state['running']
             n_calls += 1
 
         runner.on(Event.BATCH_FINISHED, on_batch_finished)
@@ -109,12 +118,15 @@ class TestOn:
 
         def on_epoch_finished(state):
             nonlocal n_calls
-            assert set(state) == {'runner', 'batches', 'max_epoch', 'epoch', 'n_iters'}
+            assert set(state) == {
+                'runner', 'batches', 'max_epoch', 'epoch', 'n_iters', 'running'
+            }
             assert state['runner'] is runner
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['epoch'] == n_calls + 1
             assert state['n_iters'] == (n_calls + 1) * len(batches)
+            assert state['running']
             n_calls += 1
 
         runner.on(Event.EPOCH_FINISHED, on_epoch_finished)
@@ -124,11 +136,12 @@ class TestOn:
         batches, max_epoch = range(10), 5
 
         def on_finished(state):
-            assert set(state) == {'runner', 'batches', 'max_epoch', 'n_iters'}
+            assert set(state) == {'runner', 'batches', 'max_epoch', 'n_iters', 'running'}
             assert state['runner'] is runner
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['n_iters'] == max_epoch * len(batches)
+            assert not state['running']
 
         runner.on(Event.FINISHED, on_finished)
         runner.run(Mock(), batches, max_epoch=max_epoch)
