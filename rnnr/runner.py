@@ -13,15 +13,11 @@
 # limitations under the License.
 
 from collections import defaultdict
-from datetime import timedelta
 from typing import Any, Callable, Dict, Iterable, List, Optional
-import time
-import logging
 
 from rnnr.event import Event
 
 Callback = Callable[[dict], None]
-logger = logging.getLogger(__name__)
 
 
 class Runner:
