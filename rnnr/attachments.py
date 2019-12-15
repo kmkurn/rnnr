@@ -75,7 +75,7 @@ class ProgressBar(Attachment):
         >>> from rnnr.attachments import ProgressBar
         >>> runner = Runner()
         >>> ProgressBar().attach_on(runner)
-        >>> _ = runner.run(lambda _: None, range(10), max_epoch=10)
+        >>> _ = runner.run(range(10), max_epoch=10)
 
     Args:
         size_key: Get the size of a batch from ``state[size_key]`` to update the
@@ -132,14 +132,15 @@ class LambdaReducer(Attachment):
 
     Example:
 
-        >>> from rnnr import Runner
+        >>> from rnnr import Event, Runner
         >>> from rnnr.attachments import LambdaReducer
         >>> runner = Runner()
         >>> LambdaReducer('product', lambda x, y: x * y).attach_on(runner)
-        >>> def batch_fn(state):
+        >>> @runner.on(Event.BATCH)
+        ... def on_batch(state):
         ...     state['output'] = state['batch']
         ...
-        >>> state = runner.run(batch_fn, [10, 20, 30])
+        >>> state = runner.run([10, 20, 30])
         >>> state['product']
         6000
 
@@ -187,14 +188,15 @@ class MeanReducer(LambdaReducer):
 
     Example:
 
-        >>> from rnnr import Runner
+        >>> from rnnr import Event, Runner
         >>> from rnnr.attachments import MeanReducer
         >>> runner = Runner()
         >>> MeanReducer().attach_on(runner)
-        >>> def batch_fn(state):
+        >>> @runner.on(Event.BATCH)
+        ... def on_batch(state):
         ...     state['output'] = state['batch']
         ...
-        >>> state = runner.run(batch_fn, [1, 2, 3])
+        >>> state = runner.run([1, 2, 3])
         >>> state['mean']
         2.0
 

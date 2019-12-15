@@ -32,7 +32,6 @@ def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str =
 
         >>> valid_losses = [0.1, 0.2, 0.3]  # simulate validation batch losses
         >>> batches = range(10)
-        >>> batch_fn = lambda _: None
         >>>
         >>> from rnnr import Event, Runner
         >>> from rnnr.attachments import MeanReducer
@@ -48,8 +47,9 @@ def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str =
         ...     def eval_fn(state):
         ...         state['output'] = state['batch']
         ...     evaluator = Runner()
+        ...     evaluator.on(Event.BATCH, eval_fn)
         ...     MeanReducer(name='mean').attach_on(evaluator)
-        ...     eval_state = evaluator.run(eval_fn, valid_losses)
+        ...     eval_state = evaluator.run(valid_losses)
         ...     if state.get('best_loss', float('inf')) > eval_state['mean']:
         ...         state['better'] = True
         ...         state['best_loss'] = eval_state['mean']
@@ -57,7 +57,7 @@ def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str =
         ...         state['better'] = False
         ...
         >>> trainer.on(Event.EPOCH_FINISHED, maybe_stop_early(patience=2))
-        >>> _ = trainer.run(batch_fn, batches, max_epoch=7)
+        >>> _ = trainer.run(batches, max_epoch=7)
         Epoch 1 started
         Epoch 2 started
         Epoch 3 started
@@ -103,7 +103,6 @@ def checkpoint(
         >>> from rnnr.callbacks import checkpoint
         >>>
         >>> batches = range(3)
-        >>> batch_fn = lambda _: None
         >>> tmp_dir = Path('/tmp')
         >>> runner = Runner()
         >>> @runner.on(Event.EPOCH_FINISHED)
@@ -113,7 +112,7 @@ def checkpoint(
         ...
         >>> runner.on(Event.EPOCH_FINISHED, checkpoint('model', to_dir=tmp_dir, at_most=3))
         >>> runner.on(Event.EPOCH_FINISHED, checkpoint('optimizer', to_dir=tmp_dir, at_most=3))
-        >>> _ = runner.run(batch_fn, batches, max_epoch=7)
+        >>> _ = runner.run(batches, max_epoch=7)
         >>> pprint(sorted(list(tmp_dir.glob('*.pkl'))))
         [PosixPath('/tmp/5_model.pkl'),
          PosixPath('/tmp/5_optimizer.pkl'),
