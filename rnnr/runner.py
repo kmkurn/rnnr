@@ -87,8 +87,6 @@ class Runner:
         """Run on the given batches for a number of epochs.
 
         Args:
-            batch_fn: Function to call for each batch. This function should accept
-                the state dict and may write to the state as well.
             batches: Batches to iterate over in an epoch.
             max_epoch: Maximum number of epochs to run.
 
