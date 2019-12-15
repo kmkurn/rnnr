@@ -46,6 +46,10 @@ class Runner:
 
     Note:
         Callbacks for an event are called in the order they are passed to `~Runner.on`.
+
+    Caution:
+        All the state contents above are required for a runner to function properly.
+        You are free to change their values to suit your use cases better, but be careful.
     """
 
     def __init__(self, initial_state: Optional[dict] = None) -> None:
@@ -102,11 +106,11 @@ class Runner:
         state.update(self._initial_state)
 
         self._emit(Event.STARTED, state)
-        for epoch in range(1, max_epoch + 1):
+        state['epoch'] += 1
+        while state['epoch'] <= state['max_epoch']:
             if not state['running']:
                 break
 
-            state['epoch'] = epoch
             self._emit(Event.EPOCH_STARTED, state)
 
             for batch in batches:
@@ -120,6 +124,7 @@ class Runner:
 
             state.pop('batch', None)
             self._emit(Event.EPOCH_FINISHED, state)
+            state['epoch'] += 1
         state.pop('epoch', None)
         state['running'] = False
         self._emit(Event.FINISHED, state)
