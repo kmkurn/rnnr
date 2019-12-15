@@ -30,15 +30,15 @@ class Runner:
     when the event is emitted. An event callback is a callable that accepts a `dict`
     and returns nothing. The `dict` is the state of the run. By default, the state contains:
 
-    * ``batches`` - iterable of batches which constitutes an epoch.
-    * ``max_epoch`` - maximum number of epochs to run.
-    * ``n_iters`` - current number of batch iterations.
-    * ``running`` - a boolean which equals ``True`` if the runner is still running. Only
+    * ``batches`` - Iterable of batches which constitutes an epoch.
+    * ``max_epoch`` - Maximum number of epochs to run.
+    * ``n_iters`` - Current number of batch iterations.
+    * ``running`` - A boolean which equals ``True`` if the runner is still running. Only
       equals ``False`` for callbacks of `Event.FINISHED`. Can be set to ``False`` to stop
       the runner earlier. Note that the appropriate callbacks for ``Event.*_FINISHED``
       events are still called before the runner truly stops.
-    * ``epoch`` - current number of epoch. Not available to callbacks of `Event.FINISHED`.
-    * ``batch`` - current batch retrieved from ``state['batches']``. Only available to
+    * ``epoch`` - Current number of epoch. Not available to callbacks of `Event.FINISHED`.
+    * ``batch`` - Current batch retrieved from ``state['batches']``. Only available to
       callbacks of `Event.BATCH_STARTED`, `Event.BATCH`, and `Event.BATCH_FINISHED`.
 
     Args:
