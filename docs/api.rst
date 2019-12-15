@@ -38,6 +38,8 @@ Attachments
    :members:
    :show-inheritance:
 
+.. autoclass:: EpochTimer
+
 .. autoclass:: ProgressBar
 
 .. autoclass:: LambdaReducer
