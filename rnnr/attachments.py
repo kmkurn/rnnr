@@ -12,8 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from datetime import timedelta
 from typing import Any, Callable, Optional, Type
 import abc
+import logging
+import time
 
 from tqdm import tqdm
 
@@ -34,6 +37,33 @@ class Attachment(abc.ABC):
         pass
 
 
+class EpochTimer(Attachment):  # pragma: no cover
+    """An attachment to time epoch.
+
+    Epochs are only timed when ``state['max_epoch']`` is greater than 1. At the start and
+    end of every epoch, logging messages are written with log level of INFO.
+    """
+    logger = logging.getLogger(f'{__name__}.epoch_timer')
+
+    def __init__(self):
+        self._epoch_start_time = 0
+
+    def attach_on(self, runner: Runner) -> None:
+        runner.on(Event.EPOCH_STARTED, self._start_timing)
+        runner.on(Event.EPOCH_FINISHED, self._finish_timing)
+
+    def _start_timing(self, state):
+        if state['max_epoch'] > 1:
+            self._epoch_start_time = time.time()
+            self.logger.info('Starting epoch %d/%d', state['epoch'], state['max_epoch'])
+
+    def _finish_timing(self, state):
+        if state['max_epoch'] > 1:
+            elapsed = timedelta(seconds=time.time() - self._epoch_start_time)
+            self.logger.info(
+                'Epoch %d/%d done in %s', state['epoch'], state['max_epoch'], elapsed)
+
+
 class ProgressBar(Attachment):
     """An attachment to display a progress bar.
 
@@ -45,7 +75,7 @@ class ProgressBar(Attachment):
         >>> from rnnr.attachments import ProgressBar
         >>> runner = Runner()
         >>> ProgressBar().attach_on(runner)
-        >>> _ = runner.run(lambda _: None, range(10), max_epoch=10)
+        >>> _ = runner.run(range(10), max_epoch=10)
 
     Args:
         size_key: Get the size of a batch from ``state[size_key]`` to update the
@@ -102,14 +132,15 @@ class LambdaReducer(Attachment):
 
     Example:
 
-        >>> from rnnr import Runner
+        >>> from rnnr import Event, Runner
         >>> from rnnr.attachments import LambdaReducer
         >>> runner = Runner()
         >>> LambdaReducer('product', lambda x, y: x * y).attach_on(runner)
-        >>> def batch_fn(state):
+        >>> @runner.on(Event.BATCH)
+        ... def on_batch(state):
         ...     state['output'] = state['batch']
         ...
-        >>> state = runner.run(batch_fn, [10, 20, 30])
+        >>> state = runner.run([10, 20, 30])
         >>> state['product']
         6000
 
@@ -157,14 +188,15 @@ class MeanReducer(LambdaReducer):
 
     Example:
 
-        >>> from rnnr import Runner
+        >>> from rnnr import Event, Runner
         >>> from rnnr.attachments import MeanReducer
         >>> runner = Runner()
         >>> MeanReducer().attach_on(runner)
-        >>> def batch_fn(state):
+        >>> @runner.on(Event.BATCH)
+        ... def on_batch(state):
         ...     state['output'] = state['batch']
         ...
-        >>> state = runner.run(batch_fn, [1, 2, 3])
+        >>> state = runner.run([1, 2, 3])
         >>> state['mean']
         2.0
 

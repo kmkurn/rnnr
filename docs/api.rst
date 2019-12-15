@@ -21,11 +21,11 @@ Callbacks
 
 .. currentmodule:: rnnr.callbacks
 
-.. autoclass:: EarlyStopper
-   :members:
+.. autofunction:: maybe_stop_early
 
-.. autoclass:: Checkpointer
-   :members:
+.. autofunction:: checkpoint
+
+.. autofunction:: save
 
 .. _Attachments:
 
@@ -37,6 +37,8 @@ Attachments
 .. autoclass:: Attachment
    :members:
    :show-inheritance:
+
+.. autoclass:: EpochTimer
 
 .. autoclass:: ProgressBar
 

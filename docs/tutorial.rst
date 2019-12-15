@@ -14,39 +14,38 @@ Once the batches are ready, we create a `Runner` object.
    from rnnr import Runner
    trainer = Runner()
 
-Next, we define ``batch_fn``, a function that is invoked on each batch of the run. For example,
-if PyTorch_ is used, we can define our ``batch_fn`` like:
+Next, we give the runner a function that is invoked on each batch of the run. For example,
+if PyTorch_ is used, we can do it like below:
 
 .. code-block:: python
 
+   from rnnr import Event
    import torch.nn.functional as F
 
-   def batch_fn(state):
+   @trainer.on(Event.BATCH)
+   def train_update(state):
        x, t = state['batch']
        y = model(x)
        loss = F.cross_entropy(y, t)
        optimizer.zero_grad()
        loss.backward()
        optimizer.step()
-       state['output'] = loss.item()
 
 To run the trainer, simply invoke the `~Runner.run` method.
 
 .. code-block:: python
 
-   trainer.run(batch_fn, batches, max_epoch=5)
+   trainer.run(batches, max_epoch=5)
 
-Listening for events
---------------------
+Listening to other events
+-------------------------
 
 The above example is the minimum requirement to use a `Runner`. However, usually we want to
 have some more control of what we do on the start of each epoch, end of each batch, and so on.
-Heavily inspired by Ignite_, **rnnr** also uses an event system: during a run, the runner
-emits events and we can provide callbacks for them.
+Heavily inspired by torchnet_ and Ignite_, **rnnr** also uses an event system: during a run,
+the runner emits events and we can provide callbacks for them.
 
 .. code-block:: python
-
-   from rnnr import Event
 
    @trainer.on(Event.STARTED)
    def print_training(state):
@@ -68,7 +67,7 @@ by passing a callback as its second argument.
    trainer.on(Event.EPOCH_FINISHED, print_epoch_finished)
 
 See `Runner` for more details. For more information on what events are available, see `Event`
-instead. Please check :ref:`Callbacks` for some useful callbacks.
+instead. Please check :ref:`Callbacks` for some useful callback factories.
 
 Callbacks that work together: an attachment
 -------------------------------------------
@@ -83,3 +82,4 @@ attachments, but some useful attachments are provided. See :ref:`Attachments` fo
 .. _PyTorch: https://pytorch.org
 .. _DataLoader: https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader
 .. _Ignite: https://pytorch.org/ignite/index.html
+.. _torchnet: https://github.com/pytorch/tnt/
