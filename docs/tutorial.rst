@@ -47,8 +47,6 @@ the runner emits events and we can provide callbacks for them.
 
 .. code-block:: python
 
-   from rnnr import Event
-
    @trainer.on(Event.STARTED)
    def print_training(state):
        print('Start training')

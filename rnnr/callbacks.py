@@ -26,7 +26,7 @@ def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str =
 
     The returned calback keeps a counter in ``state[counter]`` for the number of times
     ``state[check]`` is ``False``. If this counter exceeds ``patience``, the callback
-    stops the runner by setting ``state['running']=False``.
+    stops the runner by setting ``state['running'] = False``.
 
     Example:
 
@@ -67,6 +67,9 @@ def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str =
         check: Increment counter if ``state[check]`` is ``False``.
         patience: Stop the runner when the counter exceeds this number.
         counter: Store the counter in ``state[counter]``.
+
+    Returns:
+        Callback that does early stopping.
     """
 
     def callback(state):
@@ -136,6 +139,9 @@ def checkpoint(
             as replacement fields.
         queue_fmt: Keeps track of the saved files for the object with a queue stored in
             ``state[queue_fmt.format(what=what)]``.
+
+    Returns:
+        Callback that does checkpointing.
     """
     if to_dir is None:  # pragma: no cover
         to_dir = Path.cwd()
