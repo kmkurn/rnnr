@@ -41,7 +41,7 @@ class EpochTimer(Attachment):  # pragma: no cover
     """An attachment to time epoch.
 
     Epochs are only timed when ``state['max_epoch']`` is greater than 1. At the start and
-    end of every epoch, logging messages are printed with log level of INFO.
+    end of every epoch, logging messages are written with log level of INFO.
     """
     logger = logging.getLogger(f'{__name__}.epoch_timer')
 
