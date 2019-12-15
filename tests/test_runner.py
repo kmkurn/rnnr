@@ -1,6 +1,6 @@
 from unittest.mock import Mock
 
-from rnnr import Event
+from rnnr import Event, Runner
 
 
 def test_run(runner):
@@ -196,3 +196,15 @@ class TestStop:
         assert mock_bscallback.call_count == 0
         assert mock_bfcallback.call_count == 0
         assert mock_efcallback.call_count == 1
+
+
+def test_init_state():
+    init_state = {'batches': range(7)}
+    runner = Runner(init_state)
+
+    @runner.on(Event.STARTED)
+    def on_started(state):
+        for k, v in init_state.items():
+            assert state[k] == v
+
+    runner.run(range(5))

@@ -14,7 +14,7 @@
 
 from collections import defaultdict
 from datetime import timedelta
-from typing import Any, Callable, Dict, Iterable, List
+from typing import Any, Callable, Dict, Iterable, List, Optional
 import time
 import logging
 
@@ -51,7 +51,10 @@ class Runner:
         Callbacks for an event are called in the order they are passed to `~Runner.on`.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, initial_state: Optional[dict] = None) -> None:
+        if initial_state is None:
+            initial_state = {}
+        self._initial_state = initial_state
         self._callbacks: Dict[Event, List[Callback]] = defaultdict(list)
 
     def on(self, event: Event, callbacks=None):
@@ -98,6 +101,7 @@ class Runner:
             'n_iters': 0,
             'running': True,
         }
+        state.update(self._initial_state)
 
         self._emit(Event.STARTED, state)
         for epoch in range(1, max_epoch + 1):
