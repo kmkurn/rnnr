@@ -88,6 +88,27 @@ class TestOn:
         runner.on(Event.BATCH_STARTED, on_batch_started)
         runner.run(Mock(), batches, max_epoch=max_epoch)
 
+    def test_batch(self, runner):
+        batches, max_epoch, n_calls = range(10), 5, 0
+
+        def on_batch(state):
+            nonlocal n_calls
+            assert set(state) == {
+                'runner', 'batches', 'max_epoch', 'epoch', 'batch', 'n_iters', 'running'
+            }
+            assert state['runner'] is runner
+            assert state['batches'] == batches
+            assert state['max_epoch'] == max_epoch
+            assert state['epoch'] == n_calls // len(batches) + 1
+            assert state['batch'] == batches[n_calls % len(batches)]
+            assert state['n_iters'] == n_calls + 1
+            assert state['running']
+            n_calls += 1
+
+        runner.on(Event.BATCH, on_batch)
+        runner.run(Mock(), batches, max_epoch=max_epoch)
+        assert n_calls == len(batches) * max_epoch
+
     def test_batch_finished(self, runner):
         batches, max_epoch, n_calls = range(10), 5, 0
 
