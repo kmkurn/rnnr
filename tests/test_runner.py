@@ -7,8 +7,7 @@ def test_run(runner):
     batches, max_epoch = range(10), 5
     state = runner.run(batches, max_epoch=max_epoch)
 
-    assert set(state) == {'runner', 'batches', 'max_epoch', 'n_iters', 'running'}
-    assert state['runner'] is runner
+    assert set(state) == {'batches', 'max_epoch', 'n_iters', 'running'}
     assert state['batches'] == batches
     assert state['max_epoch'] == max_epoch
     assert state['n_iters'] == len(batches) * max_epoch
@@ -20,8 +19,7 @@ class TestOn:
         batches, max_epoch = range(10), 5
 
         def on_started(state):
-            assert set(state) == {'runner', 'batches', 'max_epoch', 'n_iters', 'running'}
-            assert state['runner'] is runner
+            assert set(state) == {'batches', 'max_epoch', 'n_iters', 'running'}
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['n_iters'] == 0
@@ -35,10 +33,7 @@ class TestOn:
 
         def on_epoch_started(state):
             nonlocal n_calls
-            assert set(state) == {
-                'runner', 'batches', 'max_epoch', 'epoch', 'n_iters', 'running'
-            }
-            assert state['runner'] is runner
+            assert set(state) == {'batches', 'max_epoch', 'epoch', 'n_iters', 'running'}
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['epoch'] == n_calls + 1
@@ -55,9 +50,8 @@ class TestOn:
         def on_batch_started(state):
             nonlocal n_calls
             assert set(state) == {
-                'runner', 'batches', 'max_epoch', 'epoch', 'batch', 'n_iters', 'running'
+                'batches', 'max_epoch', 'epoch', 'batch', 'n_iters', 'running'
             }
-            assert state['runner'] is runner
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['epoch'] == n_calls // len(batches) + 1
@@ -76,9 +70,8 @@ class TestOn:
         def on_batch(state):
             nonlocal n_calls
             assert set(state) == {
-                'runner', 'batches', 'max_epoch', 'epoch', 'batch', 'n_iters', 'running'
+                'batches', 'max_epoch', 'epoch', 'batch', 'n_iters', 'running'
             }
-            assert state['runner'] is runner
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['epoch'] == n_calls // len(batches) + 1
@@ -100,10 +93,8 @@ class TestOn:
         def on_batch_finished(state):
             nonlocal n_calls
             assert set(state) == {
-                'runner', 'batches', 'max_epoch', 'epoch', 'batch', 'output', 'n_iters',
-                'running'
+                'batches', 'max_epoch', 'epoch', 'batch', 'output', 'n_iters', 'running'
             }
-            assert state['runner'] is runner
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['epoch'] == n_calls // len(batches) + 1
@@ -121,10 +112,7 @@ class TestOn:
 
         def on_epoch_finished(state):
             nonlocal n_calls
-            assert set(state) == {
-                'runner', 'batches', 'max_epoch', 'epoch', 'n_iters', 'running'
-            }
-            assert state['runner'] is runner
+            assert set(state) == {'batches', 'max_epoch', 'epoch', 'n_iters', 'running'}
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['epoch'] == n_calls + 1
@@ -139,8 +127,7 @@ class TestOn:
         batches, max_epoch = range(10), 5
 
         def on_finished(state):
-            assert set(state) == {'runner', 'batches', 'max_epoch', 'n_iters', 'running'}
-            assert state['runner'] is runner
+            assert set(state) == {'batches', 'max_epoch', 'n_iters', 'running'}
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['n_iters'] == max_epoch * len(batches)

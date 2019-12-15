@@ -34,7 +34,6 @@ class Runner:
     when the event is emitted. An event callback is a callable that accepts a `dict`
     and returns nothing. The `dict` is the state of the run. By default, the state contains:
 
-    * ``runner`` - the runner object itself.
     * ``batches`` - iterable of batches which constitutes an epoch.
     * ``max_epoch`` - maximum number of epochs to run.
     * ``n_iters`` - current number of batch iterations.
@@ -94,7 +93,6 @@ class Runner:
             State of the run at the end.
         """
         state: dict = {
-            'runner': self,
             'max_epoch': max_epoch,
             'batches': batches,
             'n_iters': 0,
