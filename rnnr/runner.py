@@ -40,8 +40,10 @@ class Runner:
     * ``epoch`` - current number of epoch. Not available to callbacks of `Event.STARTED`
       and `Event.FINISHED`.
     * ``batch`` - current batch retrieved from ``state['batches']``. Only available to
-      callbacks of `Event.BATCH_STARTED`, `Event.BATCH`, and `Event.BATCH_FINISHED`, as
-      well as ``batch_fn`` passed to `~Runner.run`.
+      callbacks of `Event.BATCH_STARTED`, `Event.BATCH`, and `Event.BATCH_FINISHED`.
+
+    Args:
+        initial_state: Update the runner's state with this dict at the start of a run.
 
     Note:
         Callbacks for an event are called in the order they are passed to `~Runner.on`.
