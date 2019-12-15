@@ -19,11 +19,12 @@ class TestOn:
         batches, max_epoch = range(10), 5
 
         def on_started(state):
-            assert set(state) == {'batches', 'max_epoch', 'n_iters', 'running'}
+            assert set(state) == {'batches', 'max_epoch', 'n_iters', 'running', 'epoch'}
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['n_iters'] == 0
             assert state['running']
+            assert state['epoch'] == 0
 
         runner.on(Event.STARTED, on_started)
         runner.run(batches, max_epoch=max_epoch)

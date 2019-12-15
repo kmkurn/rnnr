@@ -37,8 +37,7 @@ class Runner:
       equals ``False`` for callbacks of `Event.FINISHED`. Can be set to ``False`` to stop
       the runner earlier. Note that the appropriate callbacks for ``Event.*_FINISHED``
       events are still called before the runner truly stops.
-    * ``epoch`` - current number of epoch. Not available to callbacks of `Event.STARTED`
-      and `Event.FINISHED`.
+    * ``epoch`` - current number of epoch. Not available to callbacks of `Event.FINISHED`.
     * ``batch`` - current batch retrieved from ``state['batches']``. Only available to
       callbacks of `Event.BATCH_STARTED`, `Event.BATCH`, and `Event.BATCH_FINISHED`.
 
@@ -98,6 +97,7 @@ class Runner:
             'batches': batches,
             'n_iters': 0,
             'running': True,
+            'epoch': 0,
         }
         state.update(self._initial_state)
 
