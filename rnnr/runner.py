@@ -83,12 +83,7 @@ class Runner:
 
         return decorator
 
-    def run(
-            self,
-            batch_fn: Callable[[dict], None],
-            batches: Iterable[Any],
-            max_epoch: int = 1,
-    ) -> dict:
+    def run(self, batches: Iterable[Any], max_epoch: int = 1) -> dict:
         """Run on the given batches for a number of epochs.
 
         Args:
@@ -123,7 +118,6 @@ class Runner:
                 state['batch'] = batch
                 self._emit(Event.BATCH_STARTED, state)
                 self._emit(Event.BATCH, state)
-                batch_fn(state)
                 self._emit(Event.BATCH_FINISHED, state)
 
             state.pop('batch', None)
