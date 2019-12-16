@@ -20,8 +20,6 @@ import logging
 import pickle
 import time
 
-logger = logging.getLogger(__name__)
-
 
 def start_epoch_timer(*, key: str = 'epoch_start_time'):  # pragma: no cover
     """A callback factory to record the start time of an epoch.
@@ -35,6 +33,7 @@ def start_epoch_timer(*, key: str = 'epoch_start_time'):  # pragma: no cover
     Returns:
         Callback that records starting time of epochs.
     """
+    logger = logging.getLogger(f'{__name__}.epoch_timer')
 
     def callback(state):
         state[key] = time.time()
@@ -58,6 +57,7 @@ def stop_epoch_timer(*, key: str = 'epoch_start_time'):  # pragma: no cover
     Returns:
         Callback that reports the elapsed time of epochs.
     """
+    logger = logging.getLogger(f'{__name__}.epoch_timer')
 
     def callback(state):
         elapsed = timedelta(seconds=time.time() - state[key])
@@ -119,6 +119,7 @@ def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str =
     Returns:
         Callback that does early stopping.
     """
+    logger = logging.getLogger(f'{__name__}.early_stopping')
 
     def callback(state):
         n = (state.get(counter, 0) + 1) if not state[check] else 0
@@ -196,6 +197,7 @@ def checkpoint(
     if using is None:
         using = _save_with_pickle
     qkey = queue_fmt.format(what=what)
+    logger = logging.getLogger(f'{__name__}.checkpointing')
 
     def callback(state):
         q = state.get(qkey, deque())
