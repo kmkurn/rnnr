@@ -42,6 +42,11 @@ class EpochTimer(Attachment):  # pragma: no cover
 
     Epochs are only timed when ``state['max_epoch']`` is greater than 1. At the start and
     end of every epoch, logging messages are written with log level of INFO.
+
+    Caution:
+        This attachment does not play nice when `ProgressBar` is also used. In that case,
+        please use `~rnnr.callbacks.start_epoch_timer` and `~rnnr.callbacks.stop_epoch_timer`
+        instead.
     """
     logger = logging.getLogger(f'{__name__}.epoch_timer')
 

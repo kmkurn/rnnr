@@ -13,12 +13,60 @@
 # limitations under the License.
 
 from collections import deque
+from datetime import timedelta
 from typing import Any, Callable, Optional
 from pathlib import Path
 import logging
 import pickle
+import time
 
 logger = logging.getLogger(__name__)
+
+
+def start_epoch_timer(*, key: str = 'epoch_start_time'):  # pragma: no cover
+    """A callback factory to record the start time of an epoch.
+
+    Together with `stop_epoch_timer`, this callback provides an alternative to
+    `~rnnr.attachments.EpochTimer` when `~rnnr.attachments.ProgressBar` is used.
+
+    Args:
+        key: Store epoch start time in ``state[key]``.
+
+    Returns:
+        Callback that records starting time of epochs.
+    """
+
+    def callback(state):
+        state[key] = time.time()
+        if state['max_epoch'] > 1:
+            logger.info('Starting epoch %d/%d', state['epoch'], state['max_epoch'])
+        else:
+            logger.info('Starting run')
+
+    return callback
+
+
+def stop_epoch_timer(*, key: str = 'epoch_start_time'):  # pragma: no cover
+    """A callback factory to report the elapsed time of an epoch.
+
+    Together with `start_epoch_timer`, this callback provides an alternative to
+    `~rnnr.attachments.EpochTimer` when `~rnnr.attachments.ProgressBar` is used.
+
+    Args:
+        key: Read epoch start time from ``state[key]``.
+
+    Returns:
+        Callback that reports the elapsed time of epochs.
+    """
+
+    def callback(state):
+        elapsed = timedelta(seconds=time.time() - state[key])
+        if state['max_epoch'] > 1:
+            logger.info('Epoch %d/%d done in %s', state['epoch'], state['max_epoch'], elapsed)
+        else:
+            logger.info('Run is done in %s', elapsed)
+
+    return callback
 
 
 def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str = 'counter'):
