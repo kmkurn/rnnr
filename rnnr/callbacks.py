@@ -85,7 +85,7 @@ def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str =
 def checkpoint(
         what: str,
         *,
-        to_dir: Optional[Path] = None,
+        under: Optional[Path] = None,
         at_most: int = 1,
         when: Optional[str] = None,
         using: Optional[Callable[[Any, Path], None]] = None,
@@ -96,7 +96,7 @@ def checkpoint(
     """A callback factory for checkpointing.
 
     Checkpointing means saving some object stored in ``state[what]`` during a run under
-    ``to_dir`` directory with ``{prefix_fmt}{what}.{ext}`` as the filename.
+    ``under`` directory with ``{prefix_fmt}{what}.{ext}`` as the filename.
 
     Example:
 
@@ -113,8 +113,8 @@ def checkpoint(
         ...     state['model'] = 'MODEL'
         ...     state['optimizer'] = 'OPTIMIZER'
         ...
-        >>> runner.on(Event.EPOCH_FINISHED, checkpoint('model', to_dir=tmp_dir, at_most=3))
-        >>> runner.on(Event.EPOCH_FINISHED, checkpoint('optimizer', to_dir=tmp_dir, at_most=3))
+        >>> runner.on(Event.EPOCH_FINISHED, checkpoint('model', under=tmp_dir, at_most=3))
+        >>> runner.on(Event.EPOCH_FINISHED, checkpoint('optimizer', under=tmp_dir, at_most=3))
         >>> _ = runner.run(batches, max_epoch=7)
         >>> pprint(sorted(list(tmp_dir.glob('*.pkl'))))
         [PosixPath('/tmp/5_model.pkl'),
@@ -126,7 +126,7 @@ def checkpoint(
 
     Args:
         what: Get the object to save from ``state[what]``.
-        to_dir: Save the object under this directory. Defaults to the current working directory
+        under: Save the object under this directory. Defaults to the current working directory
             if not given.
         at_most: Maximum number of files saved. When the number of files exceeds this number,
             older files will be deleted.
@@ -143,8 +143,8 @@ def checkpoint(
     Returns:
         Callback that does checkpointing.
     """
-    if to_dir is None:  # pragma: no cover
-        to_dir = Path.cwd()
+    if under is None:  # pragma: no cover
+        under = Path.cwd()
     if using is None:
         using = _save_with_pickle
     qkey = queue_fmt.format(what=what)
@@ -153,7 +153,7 @@ def checkpoint(
         q = state.get(qkey, deque())
         if when is None or state[when]:
             fmt = f'{prefix_fmt}{what}.{ext}'
-            path = to_dir / fmt.format(**state)
+            path = under / fmt.format(**state)
             logger.info('Saving to %s', path)
             using(state[what], path)
             q.append(path)

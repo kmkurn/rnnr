@@ -12,7 +12,7 @@ def test_ok(tmp_path):
     }
 
     ckpt_name = 'ckpt'
-    callback = checkpoint(ckpt_name, to_dir=tmp_path, at_most=max_saved)
+    callback = checkpoint(ckpt_name, under=tmp_path, at_most=max_saved)
     state = {}
     for i in range(max_epoch):
         ckpt = {name: values[i] for name, values in objs_values.items()}
@@ -39,7 +39,7 @@ def test_conditional(tmp_path):
     better_epochs = {1, 3, 5}
 
     ckpt_name = 'ckpt'
-    callback = checkpoint(ckpt_name, to_dir=tmp_path, at_most=max_saved, when='better')
+    callback = checkpoint(ckpt_name, under=tmp_path, at_most=max_saved, when='better')
     state = {}
     for i in range(max_epoch):
         ckpt = {name: values[i] for name, values in objs_values.items()}
@@ -68,7 +68,7 @@ def test_save_fn(tmp_path):
     mock_save_fn = Mock()
 
     ckpt_name = 'ckpt'
-    callback = checkpoint(ckpt_name, to_dir=tmp_path, using=mock_save_fn)
+    callback = checkpoint(ckpt_name, under=tmp_path, using=mock_save_fn)
     for i in range(max_epoch):
         ckpt = {name: values[i] for name, values in objs_values.items()}
         callback({ckpt_name: ckpt, 'epoch': i + 1})
