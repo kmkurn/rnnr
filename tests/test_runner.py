@@ -132,10 +132,12 @@ class TestOn:
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['n_iters'] == max_epoch * len(batches)
-            assert not state['running']
+            assert state['running']
+            state['cb_called'] = True
 
         runner.on(Event.FINISHED, on_finished)
-        runner.run(batches, max_epoch=max_epoch)
+        state = runner.run(batches, max_epoch=max_epoch)
+        assert state.get('cb_called', False)
 
     def test_as_decorator(self, runner):
         n_calls, max_epoch = 0, 10
