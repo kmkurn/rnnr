@@ -39,9 +39,6 @@ class Runner:
     * ``batch`` - Current batch retrieved from ``state['batches']``. Only available to
       callbacks of `Event.BATCH_STARTED`, `Event.BATCH`, and `Event.BATCH_FINISHED`.
 
-    Args:
-        initial_state: Update the runner's state with this dict at the start of a run.
-
     Attributes:
         state (dict): Runner's state that is passed to event callbacks.
 
