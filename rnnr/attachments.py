@@ -144,8 +144,8 @@ class LambdaReducer(Attachment):
         ... def on_batch(state):
         ...     state['output'] = state['batch']
         ...
-        >>> state = runner.run([10, 20, 30])
-        >>> state['product']
+        >>> runner.run([10, 20, 30])
+        >>> runner.state['product']
         6000
 
     Args:
@@ -200,8 +200,8 @@ class MeanReducer(LambdaReducer):
         ... def on_batch(state):
         ...     state['output'] = state['batch']
         ...
-        >>> state = runner.run([1, 2, 3])
-        >>> state['mean']
+        >>> runner.run([1, 2, 3])
+        >>> runner.state['mean']
         2.0
 
     Args:

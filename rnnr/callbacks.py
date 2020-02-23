@@ -97,15 +97,15 @@ def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str =
         ...     evaluator = Runner()
         ...     evaluator.on(Event.BATCH, eval_fn)
         ...     MeanReducer(name='mean').attach_on(evaluator)
-        ...     eval_state = evaluator.run(valid_losses)
-        ...     if state.get('best_loss', float('inf')) > eval_state['mean']:
+        ...     evaluator.run(valid_losses)
+        ...     if state.get('best_loss', float('inf')) > evaluator.state['mean']:
         ...         state['better'] = True
-        ...         state['best_loss'] = eval_state['mean']
+        ...         state['best_loss'] = evaluator.state['mean']
         ...     else:
         ...         state['better'] = False
         ...
         >>> trainer.on(Event.EPOCH_FINISHED, maybe_stop_early(patience=2))
-        >>> _ = trainer.run(batches, max_epoch=7)
+        >>> trainer.run(batches, max_epoch=7)
         Epoch 1 started
         Epoch 2 started
         Epoch 3 started

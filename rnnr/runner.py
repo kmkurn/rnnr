@@ -53,6 +53,7 @@ class Runner:
     def __init__(self, initial_state: Optional[dict] = None) -> None:
         if initial_state is None:
             initial_state = {}
+        self.state: dict = {}
         self._initial_state = initial_state
         self._callbacks: Dict[Event, List[Callback]] = defaultdict(list)
 
@@ -94,13 +95,14 @@ class Runner:
         Returns:
             State of the run at the end.
         """
-        state: dict = {
+        state = self.state
+        state.update({
             'max_epoch': max_epoch,
             'batches': batches,
             'n_iters': 0,
             'running': True,
             'epoch': 0,
-        }
+        })
         state.update(self._initial_state)
 
         self._emit(Event.STARTED, state)
@@ -126,7 +128,6 @@ class Runner:
         state.pop('epoch', None)
         self._emit(Event.FINISHED, state)
         state['running'] = False
-        return state
 
     def _emit(self, event: Event, state: dict) -> None:
         for callback in self._callbacks[event]:

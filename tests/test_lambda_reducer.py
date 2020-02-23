@@ -14,10 +14,10 @@ def test_ok(runner):
 
     r = LambdaReducer('product', lambda x, y: x * y)
     r.attach_on(runner)
-    state = runner.run(batches)
+    runner.run(batches)
 
     assert r.name == 'product'
-    assert state['product'] == reduce(lambda x, y: x * y, outputs)
+    assert runner.state['product'] == reduce(lambda x, y: x * y, outputs)
 
 
 def test_value_key(runner):
@@ -30,6 +30,6 @@ def test_value_key(runner):
 
     r = LambdaReducer('product', lambda x, y: x * y, value_key='value')
     r.attach_on(runner)
-    state = runner.run(batches)
+    runner.run(batches)
 
-    assert state['product'] == reduce(lambda x, y: x * y, outputs)
+    assert runner.state['product'] == reduce(lambda x, y: x * y, outputs)
