@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List
 
 from rnnr.event import Event
 
@@ -53,11 +53,8 @@ class Runner:
         You are free to change their values to suit your use cases better, but be careful.
     """
 
-    def __init__(self, initial_state: Optional[dict] = None) -> None:
-        if initial_state is None:
-            initial_state = {}
+    def __init__(self) -> None:
         self.state: dict = {}
-        self._initial_state = initial_state
         self._callbacks: Dict[Event, List[Callback]] = defaultdict(list)
 
     def on(self, event: Event, callbacks=None):
@@ -103,7 +100,6 @@ class Runner:
             'running': True,
             'epoch': 0,
         })
-        state.update(self._initial_state)
 
         self._emit(Event.STARTED, state)
         state['epoch'] += 1
