@@ -125,7 +125,7 @@ class TestOn:
         runner.run(batches, max_epoch=max_epoch)
 
     def test_finished(self, runner):
-        batches, max_epoch = range(10), 5
+        batches, max_epoch, n_calls = range(10), 5, 0
 
         def on_finished(state):
             assert set(state) == {'batches', 'max_epoch', 'n_iters', 'running'}
@@ -133,11 +133,12 @@ class TestOn:
             assert state['max_epoch'] == max_epoch
             assert state['n_iters'] == max_epoch * len(batches)
             assert state['running']
-            state['cb_called'] = True
+            nonlocal n_calls
+            n_calls += 1
 
         runner.on(Event.FINISHED, on_finished)
-        state = runner.run(batches, max_epoch=max_epoch)
-        assert state.get('cb_called', False)
+        runner.run(batches, max_epoch=max_epoch)
+        assert n_calls == 1
 
     def test_as_decorator(self, runner):
         n_calls, max_epoch = 0, 10
