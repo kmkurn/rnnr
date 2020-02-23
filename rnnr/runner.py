@@ -33,9 +33,8 @@ class Runner:
     * ``batches`` - Iterable of batches which constitutes an epoch.
     * ``max_epoch`` - Maximum number of epochs to run.
     * ``n_iters`` - Current number of batch iterations.
-    * ``running`` - A boolean which equals ``True`` if the runner is still running. Only
-      equals ``False`` for callbacks of `Event.FINISHED`. Can be set to ``False`` to stop
-      the runner earlier.
+    * ``running`` - A boolean which equals ``True`` if the runner is still running. Can
+      be set to ``False`` to stop the runner earlier.
     * ``epoch`` - Current number of epoch. Not available to callbacks of `Event.FINISHED`.
     * ``batch`` - Current batch retrieved from ``state['batches']``. Only available to
       callbacks of `Event.BATCH_STARTED`, `Event.BATCH`, and `Event.BATCH_FINISHED`.
