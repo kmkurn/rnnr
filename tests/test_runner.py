@@ -175,8 +175,8 @@ class TestStop:
         runner.run(batches, max_epoch=2)
 
         assert mock_escallback.call_count == 1
-        assert mock_bfcallback.call_count == 4
-        assert mock_efcallback.call_count == 1
+        assert mock_bfcallback.call_count == 3
+        assert mock_efcallback.call_count == 0
 
     def test_on_epoch_started(self, runner):
         mock_bscallback = Mock()
@@ -196,7 +196,7 @@ class TestStop:
 
         assert mock_bscallback.call_count == 0
         assert mock_bfcallback.call_count == 0
-        assert mock_efcallback.call_count == 1
+        assert mock_efcallback.call_count == 0
 
 
 def test_init_state():
