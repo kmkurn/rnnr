@@ -35,8 +35,7 @@ class Runner:
     * ``n_iters`` - Current number of batch iterations.
     * ``running`` - A boolean which equals ``True`` if the runner is still running. Only
       equals ``False`` for callbacks of `Event.FINISHED`. Can be set to ``False`` to stop
-      the runner earlier. Note that the appropriate callbacks for ``Event.*_FINISHED``
-      events are still called before the runner truly stops.
+      the runner earlier.
     * ``epoch`` - Current number of epoch. Not available to callbacks of `Event.FINISHED`.
     * ``batch`` - Current batch retrieved from ``state['batches']``. Only available to
       callbacks of `Event.BATCH_STARTED`, `Event.BATCH`, and `Event.BATCH_FINISHED`.
