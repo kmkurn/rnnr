@@ -42,6 +42,9 @@ class Runner:
     Args:
         initial_state: Update the runner's state with this dict at the start of a run.
 
+    Attributes:
+        state (dict): Runner's state that is passed to event callbacks.
+
     Note:
         Callbacks for an event are called in the order they are passed to `~Runner.on`.
 
@@ -85,15 +88,12 @@ class Runner:
 
         return decorator
 
-    def run(self, batches: Iterable[Any], max_epoch: int = 1) -> dict:
+    def run(self, batches: Iterable[Any], max_epoch: int = 1) -> None:
         """Run on the given batches for a number of epochs.
 
         Args:
             batches: Batches to iterate over in an epoch.
             max_epoch: Maximum number of epochs to run.
-
-        Returns:
-            State of the run at the end.
         """
         state = self.state
         state.update({
