@@ -3,9 +3,15 @@ from unittest.mock import Mock
 from rnnr import Event, Runner
 
 
+def test_init():
+    r = Runner()
+    assert len(r.state) == 0
+
+
 def test_run(runner):
     batches, max_epoch = range(10), 5
-    state = runner.run(batches, max_epoch=max_epoch)
+    runner.run(batches, max_epoch=max_epoch)
+    state = runner.state
 
     assert set(state) == {'batches', 'max_epoch', 'n_iters', 'running'}
     assert state['batches'] == batches

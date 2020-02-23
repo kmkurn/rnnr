@@ -16,10 +16,10 @@ def test_ok(runner):
 
     r = MeanReducer()
     r.attach_on(runner)
-    state = runner.run(batches)
+    runner.run(batches)
 
     assert r.name == 'mean'
-    assert state['mean'] == pytest.approx(stat.mean(values))
+    assert runner.state['mean'] == pytest.approx(stat.mean(values))
 
 
 def test_more_than_one_epoch(runner):
@@ -55,9 +55,9 @@ def test_value_key(runner):
 
     r = MeanReducer(value_key='value')
     r.attach_on(runner)
-    state = runner.run(batches)
+    runner.run(batches)
 
-    assert state[r.name] == pytest.approx(stat.mean(b**3 for b in batches))
+    assert runner.state[r.name] == pytest.approx(stat.mean(b**3 for b in batches))
 
 
 def test_size_key(runner):
@@ -71,6 +71,6 @@ def test_size_key(runner):
 
     r = MeanReducer(size_key='foo')
     r.attach_on(runner)
-    state = runner.run(batches)
+    runner.run(batches)
 
-    assert state[r.name] == pytest.approx(sum(batches) / sum(sizes))
+    assert runner.state[r.name] == pytest.approx(sum(batches) / sum(sizes))
