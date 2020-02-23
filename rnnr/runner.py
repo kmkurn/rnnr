@@ -125,8 +125,8 @@ class Runner:
             self._emit(Event.EPOCH_FINISHED, state)
             state['epoch'] += 1
         state.pop('epoch', None)
-        state['running'] = False
         self._emit(Event.FINISHED, state)
+        state['running'] = False
         return state
 
     def _emit(self, event: Event, state: dict) -> None:
