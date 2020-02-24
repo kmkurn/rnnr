@@ -112,9 +112,9 @@ class ProgressBar(Attachment):
         self._pbar: tqdm
 
     def attach_on(self, runner: Runner) -> None:
-        runner.on(Event.EPOCH_STARTED, self._create)
-        runner.on(Event._BATCH_FINISHED, self._update)
-        runner.on(Event.EPOCH_FINISHED, self._close)
+        runner.on(Event._PBAR_CREATED, self._create)
+        runner.on(Event._PBAR_UPDATED, self._update)
+        runner.on(Event._PBAR_CLOSED, self._close)
 
     def _create(self, state: dict) -> None:
         self._pbar = self._tqdm_cls(state['batches'], **self._kwargs)
