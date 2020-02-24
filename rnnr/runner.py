@@ -105,6 +105,7 @@ class Runner:
                 break
 
             self._emit(Event.EPOCH_STARTED, state)
+            self._emit(Event._REDUCER_RESET, state)
             self._emit(Event._PBAR_CREATED, state)
 
             for batch in batches:
@@ -115,10 +116,12 @@ class Runner:
                 self._emit(Event._BATCH_STARTED, state)
                 self._emit(Event.BATCH, state)
                 self._emit(Event._BATCH_FINISHED, state)
+                self._emit(Event._REDUCER_UPDATED, state)
                 self._emit(Event._PBAR_UPDATED, state)
 
             state.pop('batch', None)
             self._emit(Event._PBAR_CLOSED, state)
+            self._emit(Event._REDUCER_COMPUTED, state)
             self._emit(Event.EPOCH_FINISHED, state)
             state['epoch'] += 1
         state.pop('epoch', None)

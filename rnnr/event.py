@@ -39,3 +39,8 @@ class Event(Enum):
     _PBAR_CREATED = auto()
     _PBAR_UPDATED = auto()
     _PBAR_CLOSED = auto()
+
+    # Events for LambdaReducer attachment
+    _REDUCER_RESET = auto()
+    _REDUCER_UPDATED = auto()
+    _REDUCER_COMPUTED = auto()
