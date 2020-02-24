@@ -34,3 +34,8 @@ class Event(Enum):
     _BATCH_FINISHED = auto()
     EPOCH_FINISHED = auto()
     FINISHED = auto()
+
+    # Events for ProgressBar attachment
+    _PBAR_CREATED = auto()
+    _PBAR_UPDATED = auto()
+    _PBAR_CLOSED = auto()
