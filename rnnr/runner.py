@@ -104,6 +104,7 @@ class Runner:
             if not state['running']:
                 break
 
+            self._emit(Event._ETIMER_STARTED, state)
             self._emit(Event.EPOCH_STARTED, state)
             self._emit(Event._REDUCER_RESET, state)
             self._emit(Event._PBAR_CREATED, state)
@@ -123,6 +124,7 @@ class Runner:
             self._emit(Event._PBAR_CLOSED, state)
             self._emit(Event._REDUCER_COMPUTED, state)
             self._emit(Event.EPOCH_FINISHED, state)
+            self._emit(Event._ETIMER_FINISHED, state)
             state['epoch'] += 1
         state.pop('epoch', None)
         self._emit(Event.FINISHED, state)

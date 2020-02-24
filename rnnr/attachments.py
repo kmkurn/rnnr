@@ -53,8 +53,8 @@ class EpochTimer(Attachment):  # pragma: no cover
         self._epoch_start_time = 0
 
     def attach_on(self, runner: Runner) -> None:
-        runner.on(Event.EPOCH_STARTED, self._start_timing)
-        runner.on(Event.EPOCH_FINISHED, self._finish_timing)
+        runner.on(Event._ETIMER_STARTED, self._start_timing)
+        runner.on(Event._ETIMER_FINISHED, self._finish_timing)
 
     def _start_timing(self, state):
         if state['max_epoch'] > 1:
