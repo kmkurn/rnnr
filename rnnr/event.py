@@ -35,6 +35,10 @@ class Event(Enum):
     EPOCH_FINISHED = auto()
     FINISHED = auto()
 
+    # Events for EpochTimer attachment
+    _ETIMER_STARTED = auto()
+    _ETIMER_FINISHED = auto()
+
     # Events for ProgressBar attachment
     _PBAR_CREATED = auto()
     _PBAR_UPDATED = auto()
