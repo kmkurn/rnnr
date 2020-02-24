@@ -100,6 +100,7 @@ class Runner:
 
         self._emit(Event.STARTED, state)
         state['epoch'] += 1
+
         while state['epoch'] <= state['max_epoch']:
             if not state['running']:
                 break
@@ -114,9 +115,7 @@ class Runner:
                     break
                 state['n_iters'] += 1
                 state['batch'] = batch
-                self._emit(Event._BATCH_STARTED, state)
                 self._emit(Event.BATCH, state)
-                self._emit(Event._BATCH_FINISHED, state)
                 self._emit(Event._REDUCER_UPDATED, state)
                 self._emit(Event._PBAR_UPDATED, state)
 
@@ -126,6 +125,7 @@ class Runner:
             self._emit(Event.EPOCH_FINISHED, state)
             self._emit(Event._ETIMER_FINISHED, state)
             state['epoch'] += 1
+
         state.pop('epoch', None)
         self._emit(Event.FINISHED, state)
         state['running'] = False
