@@ -37,7 +37,7 @@ class Runner:
       be set to ``False`` to stop the runner earlier.
     * ``epoch`` - Current number of epoch. Not available to callbacks of `Event.FINISHED`.
     * ``batch`` - Current batch retrieved from ``state['batches']``. Only available to
-      callbacks of `Event.BATCH_STARTED`, `Event.BATCH`, and `Event.BATCH_FINISHED`.
+      callbacks of `Event.BATCH`.
 
     Attributes:
         state (dict): Runner's state that is passed to event callbacks.
