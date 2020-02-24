@@ -29,9 +29,7 @@ class Event(Enum):
     """
     STARTED = auto()
     EPOCH_STARTED = auto()
-    _BATCH_STARTED = auto()
     BATCH = auto()
-    _BATCH_FINISHED = auto()
     EPOCH_FINISHED = auto()
     FINISHED = auto()
 
