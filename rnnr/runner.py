@@ -111,9 +111,9 @@ class Runner:
                     break
                 state['n_iters'] += 1
                 state['batch'] = batch
-                self._emit(Event.BATCH_STARTED, state)
+                self._emit(Event._BATCH_STARTED, state)
                 self._emit(Event.BATCH, state)
-                self._emit(Event.BATCH_FINISHED, state)
+                self._emit(Event._BATCH_FINISHED, state)
 
             state.pop('batch', None)
             self._emit(Event.EPOCH_FINISHED, state)

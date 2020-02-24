@@ -113,7 +113,7 @@ class ProgressBar(Attachment):
 
     def attach_on(self, runner: Runner) -> None:
         runner.on(Event.EPOCH_STARTED, self._create)
-        runner.on(Event.BATCH_FINISHED, self._update)
+        runner.on(Event._BATCH_FINISHED, self._update)
         runner.on(Event.EPOCH_FINISHED, self._close)
 
     def _create(self, state: dict) -> None:
@@ -168,7 +168,7 @@ class LambdaReducer(Attachment):
 
     def attach_on(self, runner: Runner) -> None:
         runner.on(Event.EPOCH_STARTED, self._reset)
-        runner.on(Event.BATCH_FINISHED, self._update)
+        runner.on(Event._BATCH_FINISHED, self._update)
         runner.on(Event.EPOCH_FINISHED, self._compute)
 
     def _reset(self, state: dict) -> None:
