@@ -167,9 +167,9 @@ class LambdaReducer(Attachment):
         self._value_key = value_key
 
     def attach_on(self, runner: Runner) -> None:
-        runner.on(Event.EPOCH_STARTED, self._reset)
-        runner.on(Event._BATCH_FINISHED, self._update)
-        runner.on(Event.EPOCH_FINISHED, self._compute)
+        runner.on(Event._REDUCER_RESET, self._reset)
+        runner.on(Event._REDUCER_UPDATED, self._update)
+        runner.on(Event._REDUCER_COMPUTED, self._compute)
 
     def _reset(self, state: dict) -> None:
         self._result = None
