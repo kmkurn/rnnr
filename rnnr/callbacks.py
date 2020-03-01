@@ -164,7 +164,7 @@ def checkpoint(
         ...
         >>> runner.on(Event.EPOCH_FINISHED, checkpoint('model', under=tmp_dir, at_most=3))
         >>> runner.on(Event.EPOCH_FINISHED, checkpoint('optimizer', under=tmp_dir, at_most=3))
-        >>> _ = runner.run(batches, max_epoch=7)
+        >>> runner.run(batches, max_epoch=7)
         >>> pprint(sorted(list(tmp_dir.glob('*.pkl'))))
         [PosixPath('/tmp/5_model.pkl'),
          PosixPath('/tmp/5_optimizer.pkl'),

@@ -75,7 +75,7 @@ class ProgressBar(Attachment):
         >>> from rnnr.attachments import ProgressBar
         >>> runner = Runner()
         >>> ProgressBar().attach_on(runner)
-        >>> _ = runner.run(range(10), max_epoch=10)
+        >>> runner.run(range(10), max_epoch=10)
 
     Args:
         size_key: Get the size of a batch from ``state[size_key]`` to update the
