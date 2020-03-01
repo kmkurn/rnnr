@@ -15,7 +15,7 @@
 from collections import defaultdict
 from typing import Any, Callable, Dict, Iterable, List
 
-from rnnr.event import Event
+from .event import Event
 
 Callback = Callable[[dict], None]
 
