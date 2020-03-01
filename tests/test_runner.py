@@ -1,5 +1,7 @@
 from unittest.mock import Mock
 
+import pytest
+
 from rnnr import Event, Runner
 
 
@@ -144,11 +146,29 @@ class TestStop:
         assert mock_escallback.call_count == 1
         assert mock_efcallback.call_count == 0
         assert n_calls == 4
+        assert runner.state['n_iters'] == 4
+        assert runner.state['epoch'] == 1
+        assert runner.state['batch'] == 3
 
     def test_on_epoch_started(self, runner):
         mock_efcallback = Mock()
         mock_bcallback = Mock()
-        batches = range(10)
+
+        class MockBatches:
+            n = 0
+
+            def __iter__(self):
+                self.n = 0
+                return self
+
+            def __next__(self):
+                res = self.n
+                self.n += 1
+                if self.n >= 10:
+                    raise StopIteration
+                return res
+
+        batches = MockBatches()
 
         def escallback(state):
             if state['epoch'] == 1:
@@ -161,3 +181,27 @@ class TestStop:
 
         assert mock_efcallback.call_count == 0
         assert mock_bcallback.call_count == 0
+        assert batches.n == 0
+
+
+def test_resume():
+    runner = Runner()
+    batches, max_epoch, n_calls = list(range(5)), 3, 0
+
+    def bcallback(state):
+        nonlocal n_calls
+        n_calls += 1
+        if state['stage'] == 'first' and state['n_iters'] == 3:
+            state['running'] = False
+        elif state['stage'] == 'second' and state['n_iters'] == 7:
+            state['running'] = False
+
+    runner.state['stage'] = 'first'
+    runner.on(Event.BATCH, bcallback)
+    runner.run(batches, max_epoch)
+    runner.state['stage'] = 'second'
+    runner.resume()
+    runner.state['stage'] = 'third'
+    runner.resume()
+
+    assert n_calls == len(batches) * max_epoch

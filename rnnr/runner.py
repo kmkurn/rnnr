@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from .event import Event
 
@@ -82,7 +82,7 @@ class Runner:
 
         return decorator
 
-    def run(self, batches: Iterable[Any], max_epoch: int = 1) -> None:
+    def run(self, batches: Optional[Iterable[Any]] = None, max_epoch: int = 1) -> None:
         """Run on the given batches for a number of epochs.
 
         Args:
@@ -102,31 +102,97 @@ class Runner:
         state['epoch'] += 1
 
         while state['epoch'] <= state['max_epoch']:
-            if not state['running']:
-                break
-
             self._emit(Event._ETIMER_STARTED, state)
             self._emit(Event.EPOCH_STARTED, state)
             self._emit(Event._REDUCER_RESET, state)
             self._emit(Event._PBAR_CREATED, state)
 
-            for batch in batches:
-                if not state['running']:
+            if not state['running']:
+                break
+
+            state['batches_iter'] = iter(state['batches'])
+            while state['running']:
+                try:
+                    batch = next(state['batches_iter'])
+                except StopIteration:
                     break
                 state['n_iters'] += 1
                 state['batch'] = batch
                 self._emit(Event.BATCH, state)
                 self._emit(Event._REDUCER_UPDATED, state)
                 self._emit(Event._PBAR_UPDATED, state)
+            if state['running']:
+                state.pop('batch', None)
+                state.pop('batches_iter', None)
 
-            state.pop('batch', None)
             self._emit(Event._PBAR_CLOSED, state)
             self._emit(Event._REDUCER_COMPUTED, state)
             self._emit(Event.EPOCH_FINISHED, state)
             self._emit(Event._ETIMER_FINISHED, state)
-            state['epoch'] += 1
 
-        state.pop('epoch', None)
+            if state['running']:
+                state['epoch'] += 1
+
+        if state['running']:
+            state.pop('epoch', None)
+        self._emit(Event.FINISHED, state)
+        state['running'] = False
+
+    def resume(self) -> None:
+        state = self.state
+        state['running'] = True
+
+        # finish interrupted epoch
+        while state['running']:
+            try:
+                batch = next(state.get('batches_iter', iter([])))
+            except StopIteration:
+                break
+            state['n_iters'] += 1
+            state['batch'] = batch
+            self._emit(Event.BATCH, state)
+            self._emit(Event._REDUCER_UPDATED, state)
+            self._emit(Event._PBAR_UPDATED, state)
+        if state['running']:
+            state.pop('batch', None)
+            state.pop('batches_iter', None)
+
+        state['epoch'] += 1
+
+        while state['epoch'] <= state['max_epoch']:
+            self._emit(Event._ETIMER_STARTED, state)
+            self._emit(Event.EPOCH_STARTED, state)
+            self._emit(Event._REDUCER_RESET, state)
+            self._emit(Event._PBAR_CREATED, state)
+
+            if not state['running']:
+                break
+
+            state['batches_iter'] = iter(state['batches'])
+            while state['running']:
+                try:
+                    batch = next(state['batches_iter'])
+                except StopIteration:
+                    break
+                state['n_iters'] += 1
+                state['batch'] = batch
+                self._emit(Event.BATCH, state)
+                self._emit(Event._REDUCER_UPDATED, state)
+                self._emit(Event._PBAR_UPDATED, state)
+            if state['running']:
+                state.pop('batch', None)
+                state.pop('batches_iter', None)
+
+            self._emit(Event._PBAR_CLOSED, state)
+            self._emit(Event._REDUCER_COMPUTED, state)
+            self._emit(Event.EPOCH_FINISHED, state)
+            self._emit(Event._ETIMER_FINISHED, state)
+
+            if state['running']:
+                state['epoch'] += 1
+
+        if state['running']:
+            state.pop('epoch', None)
         self._emit(Event.FINISHED, state)
         state['running'] = False
 
