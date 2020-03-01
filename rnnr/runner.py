@@ -35,9 +35,8 @@ class Runner:
     * ``n_iters`` - Current number of batch iterations.
     * ``running`` - A boolean which equals ``True`` if the runner is still running. Can
       be set to ``False`` to stop the runner earlier.
-    * ``epoch`` - Current number of epoch. Not available to callbacks of `Event.FINISHED`.
-    * ``batch`` - Current batch retrieved from ``state['batches']``. Only available to
-      callbacks of `Event.BATCH`.
+    * ``epoch`` - Current number of epoch.
+    * ``batch`` - Current batch retrieved from ``state['batches']``.
 
     Attributes:
         state (dict): Runner's state that is passed to event callbacks.
@@ -83,7 +82,7 @@ class Runner:
         return decorator
 
     def run(self, batches: Iterable[Any], max_epoch: int = 1) -> None:
-        """Run on the given batches for a number of epochs.
+        """Run on batches for a number of epochs.
 
         Args:
             batches: Batches to iterate over in an epoch.
@@ -119,6 +118,7 @@ class Runner:
         state['running'] = False
 
     def resume(self) -> None:
+        """Resume runner starting from the current state."""
         state = self.state
         state['running'] = True
 

@@ -29,7 +29,7 @@ class Attachment(abc.ABC):
 
     @abc.abstractmethod
     def attach_on(self, runner: Runner) -> None:
-        """Attach to the given runner.
+        """Attach to a runner.
 
         Args:
             runner: Runner to attach to.
