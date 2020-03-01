@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List
 
 from .event import Event
 
@@ -82,7 +82,7 @@ class Runner:
 
         return decorator
 
-    def run(self, batches: Optional[Iterable[Any]] = None, max_epoch: int = 1) -> None:
+    def run(self, batches: Iterable[Any], max_epoch: int = 1) -> None:
         """Run on the given batches for a number of epochs.
 
         Args:
