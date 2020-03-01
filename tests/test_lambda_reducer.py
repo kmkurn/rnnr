@@ -20,7 +20,7 @@ def test_ok(runner):
     assert runner.state['product'] == reduce(lambda x, y: x * y, outputs)
 
 
-def test_value_key(runner):
+def test_value(runner):
     outputs = [4, 2, 1, 5, 6]
     batches = range(len(outputs))
 
@@ -28,7 +28,7 @@ def test_value_key(runner):
     def on_batch(state):
         state['value'] = outputs[state['batch']]
 
-    r = LambdaReducer('product', lambda x, y: x * y, value_key='value')
+    r = LambdaReducer('product', lambda x, y: x * y, value='value')
     r.attach_on(runner)
     runner.run(batches)
 
