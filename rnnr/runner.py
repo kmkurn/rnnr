@@ -118,16 +118,12 @@ class Runner:
                 self._emit(Event.BATCH, state)
                 self._emit(Event._REDUCER_UPDATED, state)
                 self._emit(Event._PBAR_UPDATED, state)
-            if state['running']:
-                state.pop('batch', None)
 
             self._emit(Event._PBAR_CLOSED, state)
             self._emit(Event._REDUCER_COMPUTED, state)
             self._emit(Event.EPOCH_FINISHED, state)
             self._emit(Event._ETIMER_FINISHED, state)
 
-        if state['running']:
-            state.pop('epoch', None)
         self._emit(Event.FINISHED, state)
         state['running'] = False
 
@@ -146,8 +142,6 @@ class Runner:
             self._emit(Event.BATCH, state)
             self._emit(Event._REDUCER_UPDATED, state)
             self._emit(Event._PBAR_UPDATED, state)
-        if state['running']:
-            state.pop('batch', None)
 
         while state['running'] and state['epoch'] < state['max_epoch']:
             state['epoch'] += 1
@@ -167,17 +161,12 @@ class Runner:
                 self._emit(Event.BATCH, state)
                 self._emit(Event._REDUCER_UPDATED, state)
                 self._emit(Event._PBAR_UPDATED, state)
-            if state['running']:
-                state.pop('batch', None)
-                state.pop('batches_iter', None)
 
             self._emit(Event._PBAR_CLOSED, state)
             self._emit(Event._REDUCER_COMPUTED, state)
             self._emit(Event.EPOCH_FINISHED, state)
             self._emit(Event._ETIMER_FINISHED, state)
 
-        if state['running']:
-            state.pop('epoch', None)
         self._emit(Event.FINISHED, state)
         state['running'] = False
 
