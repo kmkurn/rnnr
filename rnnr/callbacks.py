@@ -140,7 +140,7 @@ def checkpoint(
         using: Optional[Callable[[Any, Path], None]] = None,
         ext: str = 'pkl',
         prefix_fmt: str = '{epoch}_',
-        queue_fmt: str = 'saved_{what}',
+        queue_fmt: str = '_saved_{what}',
 ):
     """A callback factory for checkpointing.
 
