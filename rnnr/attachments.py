@@ -91,6 +91,7 @@ class ProgressBar(Attachment):
 
     def __init__(
             self,
+            *,
             n_items: str = 'n_items',
             stats: Optional[str] = None,
             tqdm_cls: Optional[Type[tqdm]] = None,
@@ -155,6 +156,7 @@ class LambdaReducer(Attachment):
             self,
             name: str,
             reduce_fn: Callable[[Any, Any], Any],
+            *,
             value: str = 'output',
     ) -> None:
         self.name = name
@@ -211,6 +213,7 @@ class MeanReducer(LambdaReducer):
     def __init__(
             self,
             name: str = 'mean',
+            *,
             value: str = 'output',
             size: str = 'size',
     ) -> None:
