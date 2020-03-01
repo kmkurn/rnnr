@@ -110,11 +110,10 @@ class Runner:
             state['_batches_iter'] = iter(state['batches'])
             while state['running']:
                 try:
-                    batch = next(state['_batches_iter'])
+                    state['batch'] = next(state['_batches_iter'])
                 except StopIteration:
                     break
                 state['n_iters'] += 1
-                state['batch'] = batch
                 self._emit(Event.BATCH, state)
                 self._emit(Event._REDUCER_UPDATED, state)
                 self._emit(Event._PBAR_UPDATED, state)
@@ -134,11 +133,10 @@ class Runner:
         # finish interrupted epoch
         while state['running']:
             try:
-                batch = next(state['_batches_iter'])
+                state['batch'] = next(state['_batches_iter'])
             except StopIteration:
                 break
             state['n_iters'] += 1
-            state['batch'] = batch
             self._emit(Event.BATCH, state)
             self._emit(Event._REDUCER_UPDATED, state)
             self._emit(Event._PBAR_UPDATED, state)
@@ -153,11 +151,10 @@ class Runner:
             state['_batches_iter'] = iter(state['batches'])
             while state['running']:
                 try:
-                    batch = next(state['_batches_iter'])
+                    state['batch'] = next(state['_batches_iter'])
                 except StopIteration:
                     break
                 state['n_iters'] += 1
-                state['batch'] = batch
                 self._emit(Event.BATCH, state)
                 self._emit(Event._REDUCER_UPDATED, state)
                 self._emit(Event._PBAR_UPDATED, state)
