@@ -78,10 +78,9 @@ class ProgressBar(Attachment):
         >>> runner.run(range(10), max_epoch=10)
 
     Args:
-        size_key: Get the size of a batch from ``state[size_key]`` to update the
-            progress bar with. If not given, the default is to always set 1 as the size of
-            a batch.
-        stats_key: Get the batch statistics from ``state[stats_key]`` and display it along
+        n_items: Get the number of items in a batch from ``state[n_items]`` to update the
+            progress bar with. If not given, the default is to always set it to 1.
+        stats: Get the batch statistics from ``state[stats]`` and display it along
             with the progress bar. The statistics dictionary has the names of the statistics
             as keys and the statistics as values.
         **kwargs: Keyword arguments to be passed to `tqdm`_ class.
@@ -92,8 +91,8 @@ class ProgressBar(Attachment):
 
     def __init__(
             self,
-            size_key: str = 'n_items',
-            stats_key: Optional[str] = None,
+            n_items: str = 'n_items',
+            stats: Optional[str] = None,
             tqdm_cls: Optional[Type[tqdm]] = None,
             **kwargs,
     ) -> None:
@@ -101,8 +100,8 @@ class ProgressBar(Attachment):
             tqdm_cls = tqdm
 
         self._tqdm_cls = tqdm_cls
-        self._size_key = size_key
-        self._stats_key = stats_key
+        self._n_items = n_items
+        self._stats = stats
         self._kwargs = kwargs
 
         self._pbar: tqdm
@@ -116,9 +115,9 @@ class ProgressBar(Attachment):
         self._pbar = self._tqdm_cls(state['batches'], **self._kwargs)
 
     def _update(self, state: dict) -> None:
-        if self._stats_key is not None:
-            self._pbar.set_postfix(**state[self._stats_key])
-        self._pbar.update(state.get(self._size_key, 1))
+        if self._stats is not None:
+            self._pbar.set_postfix(**state[self._stats])
+        self._pbar.update(state.get(self._n_items, 1))
 
     def _close(self, state: dict) -> None:
         self._pbar.close()

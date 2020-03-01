@@ -19,7 +19,7 @@ def test_ok(runner):
     mock_tqdm_cls.return_value.close.assert_called_once_with()
 
 
-def test_default_size_key(runner):
+def test_default_n_items(runner):
     batches = [list('foo'), list('quux')]
     mock_tqdm_cls = MagicMock(spec=tqdm)
 
@@ -34,7 +34,7 @@ def test_default_size_key(runner):
     assert mock_tqdm_cls.return_value.update.mock_calls == [call(len(b)) for b in batches]
 
 
-def test_size_key(runner):
+def test_n_items(runner):
     batches = [list('foo'), list('quux')]
     mock_tqdm_cls = MagicMock(spec=tqdm)
 
@@ -42,14 +42,14 @@ def test_size_key(runner):
     def on_batch(state):
         state['foo'] = len(state['batch'])
 
-    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, size_key='foo')
+    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, n_items='foo')
     pbar.attach_on(runner)
     runner.run(batches)
 
     assert mock_tqdm_cls.return_value.update.mock_calls == [call(len(b)) for b in batches]
 
 
-def test_stats_key(runner):
+def test_stats(runner):
     batches = range(10)
     mock_tqdm_cls = MagicMock(spec=tqdm)
 
@@ -57,7 +57,7 @@ def test_stats_key(runner):
     def on_batch(state):
         state['stats'] = {'loss': state['batch']**2}
 
-    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, stats_key='stats')
+    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, stats='stats')
     pbar.attach_on(runner)
     runner.run(batches)
 
