@@ -108,15 +108,7 @@ class Runner:
             self._emit(Event._PBAR_CREATED, state)
 
             state['_batches_iter'] = iter(state['batches'])
-            while state['running']:
-                try:
-                    state['batch'] = next(state['_batches_iter'])
-                except StopIteration:
-                    break
-                state['n_iters'] += 1
-                self._emit(Event.BATCH, state)
-                self._emit(Event._REDUCER_UPDATED, state)
-                self._emit(Event._PBAR_UPDATED, state)
+            self._run_epoch()
 
             self._emit(Event._PBAR_CLOSED, state)
             self._emit(Event._REDUCER_COMPUTED, state)
@@ -131,15 +123,7 @@ class Runner:
         state['running'] = True
 
         # finish interrupted epoch
-        while state['running']:
-            try:
-                state['batch'] = next(state['_batches_iter'])
-            except StopIteration:
-                break
-            state['n_iters'] += 1
-            self._emit(Event.BATCH, state)
-            self._emit(Event._REDUCER_UPDATED, state)
-            self._emit(Event._PBAR_UPDATED, state)
+        self._run_epoch()
 
         while state['running'] and state['epoch'] < state['max_epoch']:
             state['epoch'] += 1
@@ -149,15 +133,7 @@ class Runner:
             self._emit(Event._PBAR_CREATED, state)
 
             state['_batches_iter'] = iter(state['batches'])
-            while state['running']:
-                try:
-                    state['batch'] = next(state['_batches_iter'])
-                except StopIteration:
-                    break
-                state['n_iters'] += 1
-                self._emit(Event.BATCH, state)
-                self._emit(Event._REDUCER_UPDATED, state)
-                self._emit(Event._PBAR_UPDATED, state)
+            self._run_epoch()
 
             self._emit(Event._PBAR_CLOSED, state)
             self._emit(Event._REDUCER_COMPUTED, state)
@@ -166,6 +142,18 @@ class Runner:
 
         self._emit(Event.FINISHED, state)
         state['running'] = False
+
+    def _run_epoch(self) -> None:
+        state = self.state
+        while state['running']:
+            try:
+                state['batch'] = next(state['_batches_iter'])
+            except StopIteration:
+                break
+            state['n_iters'] += 1
+            self._emit(Event.BATCH, state)
+            self._emit(Event._REDUCER_UPDATED, state)
+            self._emit(Event._PBAR_UPDATED, state)
 
     def _emit(self, event: Event, state: dict) -> None:
         for callback in self._callbacks[event]:
