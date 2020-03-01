@@ -46,21 +46,21 @@ def test_custom_name(runner):
     assert r.name == 'avg'
 
 
-def test_value_key(runner):
+def test_value(runner):
     batches = range(10)
 
     @runner.on(Event.BATCH)
     def on_batch(state):
         state['value'] = state['batch']**3
 
-    r = MeanReducer(value_key='value')
+    r = MeanReducer(value='value')
     r.attach_on(runner)
     runner.run(batches)
 
     assert runner.state[r.name] == pytest.approx(stat.mean(b**3 for b in batches))
 
 
-def test_size_key(runner):
+def test_size(runner):
     batches = range(5)
     sizes = [3, 4, 9, 10, 2]
 
@@ -69,7 +69,7 @@ def test_size_key(runner):
         state['output'] = state['batch']
         state['foo'] = sizes[state['batch']]
 
-    r = MeanReducer(size_key='foo')
+    r = MeanReducer(size='foo')
     r.attach_on(runner)
     runner.run(batches)
 
