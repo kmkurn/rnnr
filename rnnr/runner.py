@@ -132,5 +132,6 @@ class Runner:
 
     def _emit(self, event: Event, state: dict) -> None:
         for callback in self._callbacks[event]:
-            if state['running']:
-                callback(state)
+            if not state['running']:
+                break
+            callback(state)
