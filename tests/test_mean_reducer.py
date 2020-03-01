@@ -14,7 +14,7 @@ def test_ok(runner):
     def on_batch(state):
         state['output'] = values[state['batch']]
 
-    r = MeanReducer()
+    r = MeanReducer('mean')
     r.attach_on(runner)
     runner.run(batches)
 
@@ -35,15 +35,10 @@ def test_more_than_one_epoch(runner):
         assert state[r.name] == pytest.approx(
             stat.mean(values[(state['epoch'] - 1) * len(batches) + b] for b in batches))
 
-    r = MeanReducer()
+    r = MeanReducer('mean')
     r.attach_on(runner)
     runner.on(Event.EPOCH_FINISHED, efcallback)
     runner.run(batches, max_epoch=2)
-
-
-def test_custom_name(runner):
-    r = MeanReducer(name='avg')
-    assert r.name == 'avg'
 
 
 def test_value(runner):
@@ -53,7 +48,7 @@ def test_value(runner):
     def on_batch(state):
         state['value'] = state['batch']**3
 
-    r = MeanReducer(value='value')
+    r = MeanReducer('mean', value='value')
     r.attach_on(runner)
     runner.run(batches)
 
@@ -69,7 +64,7 @@ def test_size(runner):
         state['output'] = state['batch']
         state['foo'] = sizes[state['batch']]
 
-    r = MeanReducer(size='foo')
+    r = MeanReducer('mean', size='foo')
     r.attach_on(runner)
     runner.run(batches)
 
