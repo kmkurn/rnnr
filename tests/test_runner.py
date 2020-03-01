@@ -13,7 +13,6 @@ def test_run(runner):
     runner.run(batches, max_epoch=max_epoch)
     state = runner.state
 
-    assert set(state) == {'batches', 'max_epoch', 'n_iters', 'running'}
     assert state['batches'] == batches
     assert state['max_epoch'] == max_epoch
     assert state['n_iters'] == len(batches) * max_epoch
@@ -25,7 +24,6 @@ class TestOn:
         batches, max_epoch = range(10), 5
 
         def on_started(state):
-            assert set(state) == {'batches', 'max_epoch', 'n_iters', 'running', 'epoch'}
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['n_iters'] == 0
@@ -40,7 +38,6 @@ class TestOn:
 
         def on_epoch_started(state):
             nonlocal n_calls
-            assert set(state) == {'batches', 'max_epoch', 'epoch', 'n_iters', 'running'}
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['epoch'] == n_calls + 1
@@ -57,15 +54,6 @@ class TestOn:
         @runner.on(Event.BATCH)
         def on_batch(state):
             nonlocal n_calls
-            assert set(state) == {
-                'batches',
-                'max_epoch',
-                'epoch',
-                'batch',
-                'n_iters',
-                'running',
-                'batches_iter',
-            }
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['epoch'] == n_calls // len(batches) + 1
@@ -82,7 +70,6 @@ class TestOn:
 
         def on_epoch_finished(state):
             nonlocal n_calls
-            assert set(state) == {'batches', 'max_epoch', 'epoch', 'n_iters', 'running'}
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['epoch'] == n_calls + 1
@@ -97,7 +84,6 @@ class TestOn:
         batches, max_epoch, n_calls = range(10), 5, 0
 
         def on_finished(state):
-            assert set(state) == {'batches', 'max_epoch', 'n_iters', 'running'}
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
             assert state['n_iters'] == max_epoch * len(batches)

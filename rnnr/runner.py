@@ -107,10 +107,10 @@ class Runner:
             self._emit(Event._REDUCER_RESET, state)
             self._emit(Event._PBAR_CREATED, state)
 
-            state['batches_iter'] = iter(state['batches'])
+            state['_batches_iter'] = iter(state['batches'])
             while state['running']:
                 try:
-                    batch = next(state['batches_iter'])
+                    batch = next(state['_batches_iter'])
                 except StopIteration:
                     break
                 state['n_iters'] += 1
@@ -120,7 +120,6 @@ class Runner:
                 self._emit(Event._PBAR_UPDATED, state)
             if state['running']:
                 state.pop('batch', None)
-                state.pop('batches_iter', None)
 
             self._emit(Event._PBAR_CLOSED, state)
             self._emit(Event._REDUCER_COMPUTED, state)
@@ -139,7 +138,7 @@ class Runner:
         # finish interrupted epoch
         while state['running']:
             try:
-                batch = next(state.get('batches_iter', iter([])))
+                batch = next(state['_batches_iter'])
             except StopIteration:
                 break
             state['n_iters'] += 1
@@ -149,7 +148,6 @@ class Runner:
             self._emit(Event._PBAR_UPDATED, state)
         if state['running']:
             state.pop('batch', None)
-            state.pop('batches_iter', None)
 
         while state['running'] and state['epoch'] < state['max_epoch']:
             state['epoch'] += 1
@@ -158,10 +156,10 @@ class Runner:
             self._emit(Event._REDUCER_RESET, state)
             self._emit(Event._PBAR_CREATED, state)
 
-            state['batches_iter'] = iter(state['batches'])
+            state['_batches_iter'] = iter(state['batches'])
             while state['running']:
                 try:
-                    batch = next(state['batches_iter'])
+                    batch = next(state['_batches_iter'])
                 except StopIteration:
                     break
                 state['n_iters'] += 1
