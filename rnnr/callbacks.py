@@ -21,7 +21,7 @@ import pickle
 import time
 
 
-def start_epoch_timer(*, key: str = 'epoch_start_time'):  # pragma: no cover
+def start_epoch_timer(*, key: str = '_epoch_start_time'):  # pragma: no cover
     """A callback factory to record the start time of an epoch.
 
     Together with `stop_epoch_timer`, this callback provides an alternative to
@@ -45,7 +45,7 @@ def start_epoch_timer(*, key: str = 'epoch_start_time'):  # pragma: no cover
     return callback
 
 
-def stop_epoch_timer(*, key: str = 'epoch_start_time'):  # pragma: no cover
+def stop_epoch_timer(*, key: str = '_epoch_start_time'):  # pragma: no cover
     """A callback factory to report the elapsed time of an epoch.
 
     Together with `start_epoch_timer`, this callback provides an alternative to
