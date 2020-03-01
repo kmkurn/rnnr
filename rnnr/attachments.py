@@ -192,7 +192,7 @@ class MeanReducer(LambdaReducer):
         >>> from rnnr import Event, Runner
         >>> from rnnr.attachments import MeanReducer
         >>> runner = Runner()
-        >>> MeanReducer().attach_on(runner)
+        >>> MeanReducer('mean').attach_on(runner)
         >>> @runner.on(Event.BATCH)
         ... def on_batch(state):
         ...     state['output'] = state['batch']
@@ -212,7 +212,7 @@ class MeanReducer(LambdaReducer):
 
     def __init__(
             self,
-            name: str = 'mean',
+            name: str,
             *,
             value: str = 'output',
             size: str = 'size',
