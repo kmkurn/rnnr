@@ -1,7 +1,5 @@
 from unittest.mock import Mock
 
-import pytest
-
 from rnnr import Event, Runner
 
 
@@ -60,7 +58,13 @@ class TestOn:
         def on_batch(state):
             nonlocal n_calls
             assert set(state) == {
-                'batches', 'max_epoch', 'epoch', 'batch', 'n_iters', 'running'
+                'batches',
+                'max_epoch',
+                'epoch',
+                'batch',
+                'n_iters',
+                'running',
+                'batches_iter',
             }
             assert state['batches'] == batches
             assert state['max_epoch'] == max_epoch
