@@ -202,30 +202,30 @@ class MeanReducer(LambdaReducer):
     Args:
         name: Name of this attachment to be used as the key in the runner's state
             dict to store the mean value.
-        value_key: Get the value of a batch from ``state[value_key]``.
-        size_key: Get the size of a batch from ``state[size_key]``. If
-            the state has no such key, the size defaults to 1. The sum of all these
-            batch sizes is the divisor when computing the mean.
+        value: Get the value of a batch from ``state[value]``.
+        size: Get the size of a batch from ``state[size]``. If the state has no such key,
+            the size defaults to 1. The sum of all these batch sizes is the divisor when
+            computing the mean.
     """
 
     def __init__(
             self,
             name: str = 'mean',
-            value_key: str = 'output',
-            size_key: str = 'size',
+            value: str = 'output',
+            size: str = 'size',
     ) -> None:
-        super().__init__(name, lambda x, y: x + y, value=value_key)
-        self._size_key = size_key
-        self._size = 0
+        super().__init__(name, lambda x, y: x + y, value=value)
+        self._size = size
+        self._total_size = 0
 
     def _reset(self, state: dict) -> None:
         super()._reset(state)
-        self._size = 0
+        self._total_size = 0
 
     def _update(self, state: dict) -> None:
         super()._update(state)
-        self._size += state.get(self._size_key, 1)
+        self._total_size += state.get(self._size, 1)
 
     def _compute(self, state: dict) -> None:
         super()._compute(state)
-        state[self.name] /= self._size
+        state[self.name] /= self._total_size
