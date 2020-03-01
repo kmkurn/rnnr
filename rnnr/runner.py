@@ -99,16 +99,13 @@ class Runner:
         })
 
         self._emit(Event.STARTED, state)
-        state['epoch'] += 1
 
-        while state['epoch'] <= state['max_epoch']:
+        while state['running'] and state['epoch'] < state['max_epoch']:
+            state['epoch'] += 1
             self._emit(Event._ETIMER_STARTED, state)
             self._emit(Event.EPOCH_STARTED, state)
             self._emit(Event._REDUCER_RESET, state)
             self._emit(Event._PBAR_CREATED, state)
-
-            if not state['running']:
-                break
 
             state['batches_iter'] = iter(state['batches'])
             while state['running']:
@@ -129,9 +126,6 @@ class Runner:
             self._emit(Event._REDUCER_COMPUTED, state)
             self._emit(Event.EPOCH_FINISHED, state)
             self._emit(Event._ETIMER_FINISHED, state)
-
-            if state['running']:
-                state['epoch'] += 1
 
         if state['running']:
             state.pop('epoch', None)
@@ -157,16 +151,12 @@ class Runner:
             state.pop('batch', None)
             state.pop('batches_iter', None)
 
-        state['epoch'] += 1
-
-        while state['epoch'] <= state['max_epoch']:
+        while state['running'] and state['epoch'] < state['max_epoch']:
+            state['epoch'] += 1
             self._emit(Event._ETIMER_STARTED, state)
             self._emit(Event.EPOCH_STARTED, state)
             self._emit(Event._REDUCER_RESET, state)
             self._emit(Event._PBAR_CREATED, state)
-
-            if not state['running']:
-                break
 
             state['batches_iter'] = iter(state['batches'])
             while state['running']:
@@ -187,9 +177,6 @@ class Runner:
             self._emit(Event._REDUCER_COMPUTED, state)
             self._emit(Event.EPOCH_FINISHED, state)
             self._emit(Event._ETIMER_FINISHED, state)
-
-            if state['running']:
-                state['epoch'] += 1
 
         if state['running']:
             state.pop('epoch', None)
