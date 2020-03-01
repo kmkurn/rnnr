@@ -148,18 +148,18 @@ class LambdaReducer(Attachment):
             state dict to store the reduction result.
         reduce_fn: Reduction function. It should accept two batch values and
             return their reduction result.
-        value_key: Get the value of a batch from ``state[value_key]``.
+        value: Get the value of a batch from ``state[value]``.
     """
 
     def __init__(
             self,
             name: str,
             reduce_fn: Callable[[Any, Any], Any],
-            value_key: str = 'output',
+            value: str = 'output',
     ) -> None:
         self.name = name
         self._reduce_fn = reduce_fn
-        self._value_key = value_key
+        self._value = value
 
     def attach_on(self, runner: Runner) -> None:
         runner.on(Event._REDUCER_RESET, self._reset)
@@ -171,9 +171,9 @@ class LambdaReducer(Attachment):
 
     def _update(self, state: dict) -> None:
         if self._result is None:
-            self._result = state[self._value_key]
+            self._result = state[self._value]
         else:
-            self._result = self._reduce_fn(self._result, state[self._value_key])
+            self._result = self._reduce_fn(self._result, state[self._value])
 
     def _compute(self, state: dict) -> None:
         state[self.name] = self._result
@@ -214,7 +214,7 @@ class MeanReducer(LambdaReducer):
             value_key: str = 'output',
             size_key: str = 'size',
     ) -> None:
-        super().__init__(name, lambda x, y: x + y, value_key=value_key)
+        super().__init__(name, lambda x, y: x + y, value=value_key)
         self._size_key = size_key
         self._size = 0
 
