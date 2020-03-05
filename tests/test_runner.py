@@ -1,4 +1,5 @@
 from unittest.mock import Mock
+import pickle
 
 from rnnr import Event, Runner
 
@@ -174,24 +175,32 @@ class TestStop:
         assert batches.n == 0
 
 
-def test_resume():
+def test_resume(tmp_path):
+    from rnnr.attachments import ProgressBar
+    batches, max_epoch, n_calls = list(range(5)), 2, 0
+
     runner = Runner()
-    batches, max_epoch, n_calls = list(range(5)), 3, 0
+    ProgressBar().attach_on(runner)
 
     def bcallback(state):
         nonlocal n_calls
         n_calls += 1
-        if state['stage'] == 'first' and state['n_iters'] == 3:
-            state['running'] = False
-        elif state['stage'] == 'second' and state['n_iters'] == 7:
+        if state['stage'] == 'first' and state['n_iters'] == 2:
             state['running'] = False
 
     runner.state['stage'] = 'first'
     runner.on(Event.BATCH, bcallback)
-    runner.run(batches, max_epoch)
+    runner.run(list(range(5)), max_epoch=2)
+    with open(tmp_path / 'ckpt.pkl', 'wb') as f:
+        pickle.dump(runner.state, f)
+
+    with open(tmp_path / 'ckpt.pkl', 'rb') as f:
+        ckpt = pickle.load(f)
+    runner = Runner()
+    ProgressBar().attach_on(runner)
+    runner.state.update(ckpt)
     runner.state['stage'] = 'second'
-    runner.resume()
-    runner.state['stage'] = 'third'
+    runner.on(Event.BATCH, bcallback)
     runner.resume()
 
     assert n_calls == len(batches) * max_epoch

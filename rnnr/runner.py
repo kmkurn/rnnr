@@ -123,7 +123,9 @@ class Runner:
         state['running'] = True
 
         # finish interrupted epoch
+        self._emit(Event._PBAR_CREATED, state)
         self._run_epoch()
+        self._emit(Event._PBAR_CLOSED, state)
 
         while state['running'] and state['epoch'] < state['max_epoch']:
             state['epoch'] += 1
