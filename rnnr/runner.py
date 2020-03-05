@@ -117,15 +117,22 @@ class Runner:
         self._emit(Event.FINISHED, state)
         state['running'] = False
 
-    def resume(self) -> None:
+    def resume(self, *, repeat_last_batch: bool = False) -> None:
         """Resume runner starting from the current state."""
         state = self.state
         state['running'] = True
+
+        if repeat_last_batch:
+            self._emit(Event.BATCH, state)
+            self._emit(Event._REDUCER_UPDATED, state)
+            self._emit(Event._PBAR_UPDATED, state)
 
         # finish interrupted epoch
         self._emit(Event._PBAR_CREATED, state)
         self._run_epoch()
         self._emit(Event._PBAR_CLOSED, state)
+        self._emit(Event._REDUCER_COMPUTED, state)
+        self._emit(Event.EPOCH_FINISHED, state)
 
         while state['running'] and state['epoch'] < state['max_epoch']:
             state['epoch'] += 1

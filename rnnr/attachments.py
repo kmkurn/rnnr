@@ -168,17 +168,22 @@ class LambdaReducer(Attachment):
         runner.on(Event._REDUCER_UPDATED, self._update)
         runner.on(Event._REDUCER_COMPUTED, self._compute)
 
+    @property
+    def _result(self) -> str:
+        return f'_{self.name}_reducer_result'
+
     def _reset(self, state: dict) -> None:
-        self._result = None
+        # TODO add warning if exists already
+        state[self._result] = None
 
     def _update(self, state: dict) -> None:
-        if self._result is None:
-            self._result = state[self._value]
+        if state[self._result] is None:
+            state[self._result] = state[self._value]
         else:
-            self._result = self._reduce_fn(self._result, state[self._value])
+            state[self._result] = self._reduce_fn(state[self._result], state[self._value])
 
     def _compute(self, state: dict) -> None:
-        state[self.name] = self._result
+        state[self.name] = state.pop(self._result)
 
 
 class MeanReducer(LambdaReducer):
@@ -219,16 +224,20 @@ class MeanReducer(LambdaReducer):
     ) -> None:
         super().__init__(name, lambda x, y: x + y, value=value)
         self._size = size
-        self._total_size = 0
+
+    @property
+    def _total_size(self) -> str:
+        return f'_{self.name}_reducer_total_size'
 
     def _reset(self, state: dict) -> None:
         super()._reset(state)
-        self._total_size = 0
+        # TODO add warning if exists already
+        state[self._total_size] = 0
 
     def _update(self, state: dict) -> None:
         super()._update(state)
-        self._total_size += state.get(self._size, 1)
+        state[self._total_size] += state.get(self._size, 1)
 
     def _compute(self, state: dict) -> None:
         super()._compute(state)
-        state[self.name] /= self._total_size
+        state[self.name] /= state.pop(self._total_size)
