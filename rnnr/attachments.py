@@ -14,6 +14,7 @@
 
 from datetime import timedelta
 from typing import Any, Callable, Optional, Type
+from warnings import warn
 import abc
 import logging
 import time
@@ -173,7 +174,10 @@ class LambdaReducer(Attachment):
         return f'_{self.name}_reducer_result'
 
     def _reset(self, state: dict) -> None:
-        # TODO add warning if exists already
+        if self._result in state:  # pragma: no cover
+            warn(
+                f'You may have multiple reducers with name={self.name!r}, so one might '
+                'overwrite the other. Is this what you want?')
         state[self._result] = None
 
     def _update(self, state: dict) -> None:
@@ -231,7 +235,6 @@ class MeanReducer(LambdaReducer):
 
     def _reset(self, state: dict) -> None:
         super()._reset(state)
-        # TODO add warning if exists already
         state[self._total_size] = 0
 
     def _update(self, state: dict) -> None:
