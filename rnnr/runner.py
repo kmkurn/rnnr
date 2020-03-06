@@ -122,17 +122,22 @@ class Runner:
         state = self.state
         state['running'] = True
 
+        interrupted_epoch_exists = state['n_iters'] % len(state['batches']) != 0
+
+        if repeat_last_batch or interrupted_epoch_exists:
+            self._emit(Event._PBAR_CREATED, state)
+
         if repeat_last_batch:
             self._emit(Event.BATCH, state)
             self._emit(Event._REDUCER_UPDATED, state)
             self._emit(Event._PBAR_UPDATED, state)
 
-        # finish interrupted epoch
-        self._emit(Event._PBAR_CREATED, state)
-        self._run_epoch()
-        self._emit(Event._PBAR_CLOSED, state)
-        self._emit(Event._REDUCER_COMPUTED, state)
-        self._emit(Event.EPOCH_FINISHED, state)
+        self._run_epoch()  # finish interrupted epoch
+
+        if repeat_last_batch or interrupted_epoch_exists:
+            self._emit(Event._PBAR_CLOSED, state)
+            self._emit(Event._REDUCER_COMPUTED, state)
+            self._emit(Event.EPOCH_FINISHED, state)
 
         while state['running'] and state['epoch'] < state['max_epoch']:
             state['epoch'] += 1

@@ -177,84 +177,131 @@ class TestStop:
         assert batches.n == 0
 
 
-def test_resume(tmp_path):
-    batches, max_epoch = list(range(5)), 2
-    bcallback_ncalls, efcallback_ncalls = 0, 0
+class TestResume:
+    def test_stopped_on_batch(self, tmp_path):
+        from rnnr.attachments import ProgressBar
+        batches, max_epoch = list(range(5)), 2
+        bcallback_ncalls, efcallback_ncalls = 0, 0
 
-    runner = Runner()
+        runner = Runner()
+        ProgressBar().attach_on(runner)
 
-    # TODO handle when progress bar is attached
+        def bcallback(state):
+            nonlocal bcallback_ncalls
+            bcallback_ncalls += 1
+            if state['stage'] == 'first' and state['n_iters'] == 2:
+                state['running'] = False
 
-    def bcallback(state):
-        nonlocal bcallback_ncalls
-        bcallback_ncalls += 1
-        if state['stage'] == 'first' and state['n_iters'] == 2:
-            state['running'] = False
+        def efcallback(state):
+            nonlocal efcallback_ncalls
+            efcallback_ncalls += 1
 
-    def efcallback(state):
-        nonlocal efcallback_ncalls
-        efcallback_ncalls += 1
+        runner.on(Event.BATCH, bcallback)
+        runner.on(Event.EPOCH_FINISHED, efcallback)
+        runner.state['stage'] = 'first'
+        runner.run(batches, max_epoch)
+        with open(tmp_path / 'ckpt.pkl', 'wb') as f:
+            pickle.dump(runner.state, f)
 
-    runner.on(Event.BATCH, bcallback)
-    runner.on(Event.EPOCH_FINISHED, efcallback)
-    runner.state['stage'] = 'first'
-    runner.run(batches, max_epoch)
-    with open(tmp_path / 'ckpt.pkl', 'wb') as f:
-        pickle.dump(runner.state, f)
+        with open(tmp_path / 'ckpt.pkl', 'rb') as f:
+            ckpt = pickle.load(f)
+        runner = Runner()
+        ProgressBar().attach_on(runner)
+        runner.on(Event.BATCH, bcallback)
+        runner.on(Event.EPOCH_FINISHED, efcallback)
+        runner.state.update(ckpt)
+        runner.state['stage'] = 'second'
+        runner.resume()
 
-    with open(tmp_path / 'ckpt.pkl', 'rb') as f:
-        ckpt = pickle.load(f)
-    runner = Runner()
-    runner.on(Event.BATCH, bcallback)
-    runner.on(Event.EPOCH_FINISHED, efcallback)
-    runner.state.update(ckpt)
-    runner.state['stage'] = 'second'
-    runner.resume()
+        assert bcallback_ncalls == len(batches) * max_epoch
+        assert efcallback_ncalls == max_epoch
 
-    assert bcallback_ncalls == len(batches) * max_epoch
-    assert efcallback_ncalls == max_epoch
+    def test_repeat_last_batch(self, tmp_path):
+        from rnnr.attachments import LambdaReducer, MeanReducer, ProgressBar
+        batches, max_epoch = list(range(5)), 2
+        bcallback_ncalls, efcallback_ncalls = 0, 0
 
+        runner = Runner()
+        ProgressBar().attach_on(runner)
+        LambdaReducer('total_output', lambda x, y: x + y).attach_on(runner)
+        MeanReducer('mean_output').attach_on(runner)
 
-def test_resume_repeat_last_batch(tmp_path):
-    from rnnr.attachments import LambdaReducer, MeanReducer
-    batches, max_epoch = list(range(5)), 2
-    bcallback_ncalls, efcallback_ncalls = 0, 0
+        def bcallback(state):
+            nonlocal bcallback_ncalls
+            bcallback_ncalls += 1
+            state['output'] = state['batch']
+            if state['stage'] == 'first' and state['n_iters'] == 2:
+                state['running'] = False
 
-    runner = Runner()
-    # TODO handle when progress bar is attached
-    LambdaReducer('total_output', lambda x, y: x + y).attach_on(runner)
-    MeanReducer('mean_output').attach_on(runner)
+        def efcallback(state):
+            nonlocal efcallback_ncalls
+            efcallback_ncalls += 1
+            assert state['total_output'] == sum(batches)
+            assert state['mean_output'] == pytest.approx(sum(batches) / len(batches))
 
-    def bcallback(state):
-        nonlocal bcallback_ncalls
-        bcallback_ncalls += 1
-        state['output'] = state['batch']
-        if state['stage'] == 'first' and state['n_iters'] == 2:
-            state['running'] = False
+        runner.on(Event.BATCH, bcallback)
+        runner.on(Event.EPOCH_FINISHED, efcallback)
+        runner.state['stage'] = 'first'
+        runner.run(batches, max_epoch)
+        with open(tmp_path / 'ckpt.pkl', 'wb') as f:
+            pickle.dump(runner.state, f)
 
-    def efcallback(state):
-        nonlocal efcallback_ncalls
-        efcallback_ncalls += 1
-        assert state['total_output'] == sum(batches)
-        assert state['mean_output'] == pytest.approx(sum(batches) / len(batches))
+        with open(tmp_path / 'ckpt.pkl', 'rb') as f:
+            ckpt = pickle.load(f)
+        runner = Runner()
+        ProgressBar().attach_on(runner)
+        LambdaReducer('total_output', lambda x, y: x + y).attach_on(runner)
+        MeanReducer('mean_output').attach_on(runner)
+        runner.on(Event.BATCH, bcallback)
+        runner.on(Event.EPOCH_FINISHED, efcallback)
+        runner.state.update(ckpt)
+        runner.state['stage'] = 'second'
+        runner.resume(repeat_last_batch=True)
 
-    runner.on(Event.BATCH, bcallback)
-    runner.on(Event.EPOCH_FINISHED, efcallback)
-    runner.state['stage'] = 'first'
-    runner.run(batches, max_epoch)
-    with open(tmp_path / 'ckpt.pkl', 'wb') as f:
-        pickle.dump(runner.state, f)
+        assert bcallback_ncalls == len(batches) * max_epoch + 1
+        assert efcallback_ncalls == max_epoch
 
-    with open(tmp_path / 'ckpt.pkl', 'rb') as f:
-        ckpt = pickle.load(f)
-    runner = Runner()
-    LambdaReducer('total_output', lambda x, y: x + y).attach_on(runner)
-    MeanReducer('mean_output').attach_on(runner)
-    runner.on(Event.BATCH, bcallback)
-    runner.on(Event.EPOCH_FINISHED, efcallback)
-    runner.state.update(ckpt)
-    runner.state['stage'] = 'second'
-    runner.resume(repeat_last_batch=True)
+    def test_stopped_on_epoch(self, tmp_path):
+        from rnnr.attachments import LambdaReducer, MeanReducer, ProgressBar
+        batches, max_epoch = list(range(5)), 2
+        bcallback_ncalls, efcallback_ncalls = 0, 0
 
-    assert bcallback_ncalls == len(batches) * max_epoch + 1
-    assert efcallback_ncalls == max_epoch
+        runner = Runner()
+        ProgressBar().attach_on(runner)
+        LambdaReducer('total_output', lambda x, y: x + y).attach_on(runner)
+        MeanReducer('mean_output').attach_on(runner)
+
+        def bcallback(state):
+            nonlocal bcallback_ncalls
+            bcallback_ncalls += 1
+            state['output'] = state['batch']
+
+        def efcallback(state):
+            nonlocal efcallback_ncalls
+            efcallback_ncalls += 1
+            assert state['total_output'] == sum(batches)
+            assert state['mean_output'] == pytest.approx(sum(batches) / len(batches))
+            if state['stage'] == 'first' and state['epoch'] == 1:
+                state['running'] = False
+
+        runner.on(Event.BATCH, bcallback)
+        runner.on(Event.EPOCH_FINISHED, efcallback)
+        runner.state['stage'] = 'first'
+        runner.run(batches, max_epoch)
+        with open(tmp_path / 'ckpt.pkl', 'wb') as f:
+            pickle.dump(runner.state, f)
+
+        with open(tmp_path / 'ckpt.pkl', 'rb') as f:
+            ckpt = pickle.load(f)
+        runner = Runner()
+        ProgressBar().attach_on(runner)
+        LambdaReducer('total_output', lambda x, y: x + y).attach_on(runner)
+        MeanReducer('mean_output').attach_on(runner)
+        runner.on(Event.BATCH, bcallback)
+        runner.on(Event.EPOCH_FINISHED, efcallback)
+        runner.state.update(ckpt)
+        runner.state['stage'] = 'second'
+        runner.resume()
+
+        assert bcallback_ncalls == len(batches) * max_epoch
+        assert efcallback_ncalls == max_epoch
