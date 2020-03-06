@@ -89,6 +89,7 @@ class ProgressBar(Attachment):
 
     .. _tqdm: https://github.com/tqdm/tqdm
     """
+    _n_items_so_far = '_pbar_n_items_so_far'
 
     def __init__(
             self,
@@ -114,15 +115,21 @@ class ProgressBar(Attachment):
         runner.on(Event._PBAR_CLOSED, self._close)
 
     def _create(self, state: dict) -> None:
-        self._pbar = self._tqdm_cls(state['batches'], **self._kwargs)
+        n_items_so_far = state.get(self._n_items_so_far, 0)
+        self._pbar = self._tqdm_cls(state['batches'], initial=n_items_so_far, **self._kwargs)
+        if self._n_items_so_far not in state:
+            state[self._n_items_so_far] = n_items_so_far
 
     def _update(self, state: dict) -> None:
         if self._stats is not None:
             self._pbar.set_postfix(**state[self._stats])
-        self._pbar.update(state.get(self._n_items, 1))
+        n_items = state.get(self._n_items, 1)
+        self._pbar.update(n_items)
+        state[self._n_items_so_far] += n_items
 
     def _close(self, state: dict) -> None:
         self._pbar.close()
+        state.pop(self._n_items_so_far)
 
 
 class LambdaReducer(Attachment):
@@ -176,8 +183,8 @@ class LambdaReducer(Attachment):
     def _reset(self, state: dict) -> None:
         if self._result in state:  # pragma: no cover
             warn(
-                f'You may have multiple reducers with name={self.name!r}, so one might '
-                'overwrite the other. Is this what you want?')
+                f'You may have multiple reducers with name={self.name!r}, so one will '
+                'overwrite the other.')
         state[self._result] = None
 
     def _update(self, state: dict) -> None:
