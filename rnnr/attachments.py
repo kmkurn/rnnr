@@ -117,8 +117,7 @@ class ProgressBar(Attachment):
     def _create(self, state: dict) -> None:
         n_items_so_far = state.get(self._n_items_so_far, 0)
         self._pbar = self._tqdm_cls(state['batches'], initial=n_items_so_far, **self._kwargs)
-        if self._n_items_so_far not in state:
-            state[self._n_items_so_far] = n_items_so_far
+        state[self._n_items_so_far] = n_items_so_far
 
     def _update(self, state: dict) -> None:
         if self._stats is not None:
