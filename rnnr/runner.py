@@ -118,7 +118,12 @@ class Runner:
         state['running'] = False
 
     def resume(self, *, repeat_last_batch: bool = False) -> None:
-        """Resume runner starting from the current state."""
+        """Resume runner starting from the current state.
+
+        Args:
+            repeat_last_batch: Whether to repeat processing the last batch. Ignored if the
+                last epoch is finished (i.e. the batches have been exhausted).
+        """
         state = self.state
         state['running'] = True
 
