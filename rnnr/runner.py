@@ -130,6 +130,7 @@ class Runner:
         last_epoch_finished = state['n_iters'] % len(state['batches']) == 0
 
         if not last_epoch_finished:
+            self._emit(Event._ETIMER_STARTED, state)
             self._emit(Event._PBAR_CREATED, state)
 
             if repeat_last_batch:
@@ -142,6 +143,7 @@ class Runner:
             self._emit(Event._PBAR_CLOSED, state)
             self._emit(Event._REDUCER_COMPUTED, state)
             self._emit(Event.EPOCH_FINISHED, state)
+            self._emit(Event._ETIMER_FINISHED, state)
 
         while state['running'] and state['epoch'] < state['max_epoch']:
             state['epoch'] += 1
