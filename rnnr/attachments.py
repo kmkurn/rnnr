@@ -45,22 +45,24 @@ class EpochTimer(Attachment):  # pragma: no cover
     end of every epoch, logging messages are written with log level of INFO.
     """
     logger = logging.getLogger(f'{__name__}.epoch_timer')
-
-    def __init__(self):
-        self._epoch_start_time = 0
+    _epoch_start_time = '_epoch_start_time'
 
     def attach_on(self, runner: Runner) -> None:
-        runner.on(Event._ETIMER_STARTED, self._start_timing)
-        runner.on(Event._ETIMER_FINISHED, self._finish_timing)
+        runner.on(Event._ETIMER_STARTED, self._start)
+        runner.on(Event._ETIMER_FINISHED, self._finish)
 
-    def _start_timing(self, state):
+    def _start(self, state):
         if state['max_epoch'] > 1:
-            self._epoch_start_time = time.time()
-            self.logger.info('Starting epoch %d/%d', state['epoch'], state['max_epoch'])
+            if self._epoch_start_time not in state:
+                state[self._epoch_start_time] = time.time()
+                msg = 'Starting epoch %d/%d'
+            else:
+                msg = 'Resuming epoch %d/%d'
+            self.logger.info(msg, state['epoch'], state['max_epoch'])
 
-    def _finish_timing(self, state):
+    def _finish(self, state):
         if state['max_epoch'] > 1:
-            elapsed = timedelta(seconds=time.time() - self._epoch_start_time)
+            elapsed = timedelta(seconds=time.time() - state.pop(self._epoch_start_time))
             self.logger.info(
                 'Epoch %d/%d done in %s', state['epoch'], state['max_epoch'], elapsed)
 
