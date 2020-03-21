@@ -44,4 +44,6 @@ Attachments
 
 .. autoclass:: LambdaReducer
 
+.. autoclass:: SumReducer
+
 .. autoclass:: MeanReducer

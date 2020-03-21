@@ -252,3 +252,19 @@ class MeanReducer(LambdaReducer):
     def _compute(self, state: dict) -> None:
         super()._compute(state)
         state[self.name] /= state.pop(self._total_size)
+
+
+class SumReducer(LambdaReducer):  # pragma: no cover
+    """An attachment to compute a sum over batch statistics.
+
+    This attachment gets the value from each batch and compute their sum at the end of
+    every epoch.
+
+    Args:
+        name: Name of this attachment to be used as the key in the runner's state
+            dict to store the mean value.
+        value: Get the value of a batch from ``state[value]``.
+    """
+
+    def __init__(self, name: str, *, value: str = 'output') -> None:
+        super().__init__(name, lambda x, y: x + y, value=value)
