@@ -127,9 +127,9 @@ class Runner:
         state = self.state
         state['running'] = True
 
-        last_epoch_finished = state['n_iters'] % len(state['batches']) == 0
+        finished_last_epoch = state['n_iters'] % len(state['batches']) == 0
 
-        if not last_epoch_finished:
+        if not finished_last_epoch:
             self._emit(Event._ETIMER_STARTED, state)
             self._emit(Event._PBAR_CREATED, state)
 
