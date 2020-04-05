@@ -71,7 +71,7 @@ def stop_epoch_timer(*, key: str = '_epoch_start_time'):  # pragma: no cover
     return callback
 
 
-def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str = '_counter'):
+def maybe_stop_early(patience: int = 5, *, check: str = 'better', counter: str = '_counter'):
     """A callback factory for early stopping.
 
     The returned calback keeps a counter in ``state[counter]`` for the number of times
@@ -114,8 +114,8 @@ def maybe_stop_early(*, check: str = 'better', patience: int = 5, counter: str =
         Epoch 4 started
 
     Args:
-        check: Increment counter if ``state[check]`` is ``False``.
         patience: Stop the runner when the counter exceeds this number.
+        check: Increment counter if ``state[check]`` is ``False``.
         counter: Store the counter in ``state[counter]``.
 
     Returns:

@@ -3,7 +3,7 @@ from rnnr.callbacks import maybe_stop_early
 
 def test_ok(runner):
     patience, counter, check, state = 7, 'cnt', 'check', {'running': True}
-    callback = maybe_stop_early(patience=patience, check=check, counter=counter)
+    callback = maybe_stop_early(patience, check=check, counter=counter)
 
     for i in range(patience):
         state[check] = False
