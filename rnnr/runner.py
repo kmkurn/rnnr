@@ -117,7 +117,7 @@ class Runner:
         self._emit(Event.FINISHED, state)
         state['running'] = False
 
-    def resume(self, *, repeat_last_batch: bool = False) -> None:
+    def resume(self, repeat_last_batch: bool = False) -> None:
         """Resume runner starting from the current state.
 
         Args:
