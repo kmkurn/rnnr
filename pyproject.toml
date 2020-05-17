@@ -23,7 +23,10 @@ classifiers = [
 [tool.flit.metadata.requires-extra]
 test = ["pytest ~=4.3.0", "pytest-cov"]
 doc = ["Sphinx ~=1.8.5", "sphinx_rtd_theme", "sphinx-autodoc-typehints ~=1.6.0"]
-dev = ["flake8", "yapf", "mypy ~=0.770"]
+dev = ["flake8", "mypy ~=0.770", "black ~=19.10b0"]
 
 [tool.flit.metadata.urls]
 Documentation = "https://rnnr.readthedocs.io"
+
+[tool.black]
+line-length = 96
