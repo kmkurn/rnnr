@@ -20,12 +20,12 @@ def test_ok(runner):
 
 
 def test_default_n_items(runner):
-    batches = [list('foo'), list('quux')]
+    batches = [list("foo"), list("quux")]
     mock_tqdm_cls = MagicMock(spec=tqdm)
 
     @runner.on(Event.BATCH)
     def on_batch(state):
-        state['n_items'] = len(state['batch'])
+        state["n_items"] = len(state["batch"])
 
     pbar = ProgressBar(tqdm_cls=mock_tqdm_cls)
     pbar.attach_on(runner)
@@ -35,14 +35,14 @@ def test_default_n_items(runner):
 
 
 def test_n_items(runner):
-    batches = [list('foo'), list('quux')]
+    batches = [list("foo"), list("quux")]
     mock_tqdm_cls = MagicMock(spec=tqdm)
 
     @runner.on(Event.BATCH)
     def on_batch(state):
-        state['foo'] = len(state['batch'])
+        state["foo"] = len(state["batch"])
 
-    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, n_items='foo')
+    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, n_items="foo")
     pbar.attach_on(runner)
     runner.run(batches)
 
@@ -55,21 +55,21 @@ def test_stats(runner):
 
     @runner.on(Event.BATCH)
     def on_batch(state):
-        state['stats'] = {'loss': state['batch']**2}
+        state["stats"] = {"loss": state["batch"] ** 2}
 
-    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, stats='stats')
+    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, stats="stats")
     pbar.attach_on(runner)
     runner.run(batches)
 
     assert mock_tqdm_cls.return_value.set_postfix.mock_calls == [
-        call(loss=b**2) for b in batches
+        call(loss=b ** 2) for b in batches
     ]
 
 
 def test_with_kwargs(runner):
     batches = range(10)
     mock_tqdm_cls = MagicMock(spec=tqdm)
-    kwargs = {'foo': 'bar', 'baz': 'quux'}
+    kwargs = {"foo": "bar", "baz": "quux"}
 
     ProgressBar(tqdm_cls=mock_tqdm_cls, **kwargs).attach_on(runner)
     runner.run(batches)

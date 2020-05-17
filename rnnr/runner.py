@@ -89,24 +89,26 @@ class Runner:
             max_epoch: Maximum number of epochs to run.
         """
         state = self.state
-        state.update({
-            'max_epoch': max_epoch,
-            'batches': batches,
-            'n_iters': 0,
-            'running': True,
-            'epoch': 0,
-        })
+        state.update(
+            {
+                "max_epoch": max_epoch,
+                "batches": batches,
+                "n_iters": 0,
+                "running": True,
+                "epoch": 0,
+            }
+        )
 
         self._emit(Event.STARTED, state)
 
-        while state['running'] and state['epoch'] < state['max_epoch']:
-            state['epoch'] += 1
+        while state["running"] and state["epoch"] < state["max_epoch"]:
+            state["epoch"] += 1
             self._emit(Event._ETIMER_STARTED, state)
             self._emit(Event.EPOCH_STARTED, state)
             self._emit(Event._REDUCER_RESET, state)
             self._emit(Event._PBAR_CREATED, state)
 
-            state['_batches_iter'] = iter(state['batches'])
+            state["_batches_iter"] = iter(state["batches"])
             self._run_epoch()
 
             self._emit(Event._PBAR_CLOSED, state)
@@ -115,7 +117,7 @@ class Runner:
             self._emit(Event._ETIMER_FINISHED, state)
 
         self._emit(Event.FINISHED, state)
-        state['running'] = False
+        state["running"] = False
 
     def resume(self, repeat_last_batch: bool = False) -> None:
         """Resume runner starting from the current state.
@@ -125,9 +127,9 @@ class Runner:
                 last epoch is finished (i.e. the batches have been exhausted).
         """
         state = self.state
-        state['running'] = True
+        state["running"] = True
 
-        finished_last_epoch = state['n_iters'] % len(state['batches']) == 0
+        finished_last_epoch = state["n_iters"] % len(state["batches"]) == 0
 
         if not finished_last_epoch:
             self._emit(Event._ETIMER_STARTED, state)
@@ -145,14 +147,14 @@ class Runner:
             self._emit(Event.EPOCH_FINISHED, state)
             self._emit(Event._ETIMER_FINISHED, state)
 
-        while state['running'] and state['epoch'] < state['max_epoch']:
-            state['epoch'] += 1
+        while state["running"] and state["epoch"] < state["max_epoch"]:
+            state["epoch"] += 1
             self._emit(Event._ETIMER_STARTED, state)
             self._emit(Event.EPOCH_STARTED, state)
             self._emit(Event._REDUCER_RESET, state)
             self._emit(Event._PBAR_CREATED, state)
 
-            state['_batches_iter'] = iter(state['batches'])
+            state["_batches_iter"] = iter(state["batches"])
             self._run_epoch()
 
             self._emit(Event._PBAR_CLOSED, state)
@@ -161,22 +163,22 @@ class Runner:
             self._emit(Event._ETIMER_FINISHED, state)
 
         self._emit(Event.FINISHED, state)
-        state['running'] = False
+        state["running"] = False
 
     def _run_epoch(self) -> None:
         state = self.state
-        while state['running']:
+        while state["running"]:
             try:
-                state['batch'] = next(state['_batches_iter'])
+                state["batch"] = next(state["_batches_iter"])
             except StopIteration:
                 break
-            state['n_iters'] += 1
+            state["n_iters"] += 1
             self._emit(Event.BATCH, state)
             self._emit(Event._REDUCER_UPDATED, state)
             self._emit(Event._PBAR_UPDATED, state)
 
     def _emit(self, event: Event, state: dict) -> None:
         for callback in self._callbacks[event]:
-            if not state['running']:
+            if not state["running"]:
                 break
             callback(state)

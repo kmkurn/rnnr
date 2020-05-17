@@ -22,7 +22,7 @@ import time
 
 
 # TODO maybe remove this if EpochTimer works fine
-def start_epoch_timer(*, key: str = '_epoch_start_time'):  # pragma: no cover
+def start_epoch_timer(*, key: str = "_epoch_start_time"):  # pragma: no cover
     """A callback factory to record the start time of an epoch.
 
     Together with `stop_epoch_timer`, this callback provides an alternative to
@@ -34,20 +34,20 @@ def start_epoch_timer(*, key: str = '_epoch_start_time'):  # pragma: no cover
     Returns:
         Callback that records starting time of epochs.
     """
-    logger = logging.getLogger(f'{__name__}.epoch_timer')
+    logger = logging.getLogger(f"{__name__}.epoch_timer")
 
     def callback(state):
         state[key] = time.time()
-        if state['max_epoch'] > 1:
-            logger.info('Starting epoch %d/%d', state['epoch'], state['max_epoch'])
+        if state["max_epoch"] > 1:
+            logger.info("Starting epoch %d/%d", state["epoch"], state["max_epoch"])
         else:
-            logger.info('Starting run')
+            logger.info("Starting run")
 
     return callback
 
 
 # TODO maybe remove this if EpochTimer works fine
-def stop_epoch_timer(*, key: str = '_epoch_start_time'):  # pragma: no cover
+def stop_epoch_timer(*, key: str = "_epoch_start_time"):  # pragma: no cover
     """A callback factory to report the elapsed time of an epoch.
 
     Together with `start_epoch_timer`, this callback provides an alternative to
@@ -59,19 +59,19 @@ def stop_epoch_timer(*, key: str = '_epoch_start_time'):  # pragma: no cover
     Returns:
         Callback that reports the elapsed time of epochs.
     """
-    logger = logging.getLogger(f'{__name__}.epoch_timer')
+    logger = logging.getLogger(f"{__name__}.epoch_timer")
 
     def callback(state):
         elapsed = timedelta(seconds=time.time() - state[key])
-        if state['max_epoch'] > 1:
-            logger.info('Epoch %d/%d done in %s', state['epoch'], state['max_epoch'], elapsed)
+        if state["max_epoch"] > 1:
+            logger.info("Epoch %d/%d done in %s", state["epoch"], state["max_epoch"], elapsed)
         else:
-            logger.info('Run is done in %s', elapsed)
+            logger.info("Run is done in %s", elapsed)
 
     return callback
 
 
-def maybe_stop_early(patience: int = 5, *, check: str = 'better', counter: str = '_counter'):
+def maybe_stop_early(patience: int = 5, *, check: str = "better", counter: str = "_counter"):
     """A callback factory for early stopping.
 
     The returned calback keeps a counter in ``state[counter]`` for the number of times
@@ -121,28 +121,28 @@ def maybe_stop_early(patience: int = 5, *, check: str = 'better', counter: str =
     Returns:
         Callback that does early stopping.
     """
-    logger = logging.getLogger(f'{__name__}.early_stopping')
+    logger = logging.getLogger(f"{__name__}.early_stopping")
 
     def callback(state):
         n = (state.get(counter, 0) + 1) if not state[check] else 0
         state[counter] = n
         if state[counter] > patience:
-            logger.info('Patience exceeded, stopping early')
-            state['running'] = False
+            logger.info("Patience exceeded, stopping early")
+            state["running"] = False
 
     return callback
 
 
 def checkpoint(
-        what: str,
-        *,
-        under: Optional[Path] = None,
-        at_most: int = 1,
-        when: Optional[str] = None,
-        using: Optional[Callable[[Any, Path], None]] = None,
-        ext: str = 'pkl',
-        prefix_fmt: str = '{epoch}_',
-        queue_fmt: str = '_saved_{what}',
+    what: str,
+    *,
+    under: Optional[Path] = None,
+    at_most: int = 1,
+    when: Optional[str] = None,
+    using: Optional[Callable[[Any, Path], None]] = None,
+    ext: str = "pkl",
+    prefix_fmt: str = "{epoch}_",
+    queue_fmt: str = "_saved_{what}",
 ):
     """A callback factory for checkpointing.
 
@@ -199,14 +199,14 @@ def checkpoint(
     if using is None:
         using = _save_with_pickle
     qkey = queue_fmt.format(what=what)
-    logger = logging.getLogger(f'{__name__}.checkpointing')
+    logger = logging.getLogger(f"{__name__}.checkpointing")
 
     def callback(state):
         q = state.get(qkey, deque())
         if when is None or state[when]:
-            fmt = f'{prefix_fmt}{what}.{ext}'
+            fmt = f"{prefix_fmt}{what}.{ext}"
             path = under / fmt.format(**state)
-            logger.info('Saving to %s', path)
+            logger.info("Saving to %s", path)
             using(state[what], path)
             q.append(path)
         while len(q) > at_most:
@@ -224,5 +224,5 @@ def save(*args, **kwargs):  # pragma: no cover
 
 
 def _save_with_pickle(obj: Any, path: Path) -> None:
-    with open(path, 'wb') as f:
+    with open(path, "wb") as f:
         pickle.dump(obj, f)

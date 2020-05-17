@@ -10,14 +10,14 @@ def test_ok(runner):
 
     @runner.on(Event.BATCH)
     def on_batch(state):
-        state['output'] = outputs[state['batch']]
+        state["output"] = outputs[state["batch"]]
 
-    r = LambdaReducer('product', lambda x, y: x * y)
+    r = LambdaReducer("product", lambda x, y: x * y)
     r.attach_on(runner)
     runner.run(batches)
 
-    assert r.name == 'product'
-    assert runner.state['product'] == reduce(lambda x, y: x * y, outputs)
+    assert r.name == "product"
+    assert runner.state["product"] == reduce(lambda x, y: x * y, outputs)
 
 
 def test_value(runner):
@@ -26,10 +26,10 @@ def test_value(runner):
 
     @runner.on(Event.BATCH)
     def on_batch(state):
-        state['value'] = outputs[state['batch']]
+        state["value"] = outputs[state["batch"]]
 
-    r = LambdaReducer('product', lambda x, y: x * y, value='value')
+    r = LambdaReducer("product", lambda x, y: x * y, value="value")
     r.attach_on(runner)
     runner.run(batches)
 
-    assert runner.state['product'] == reduce(lambda x, y: x * y, outputs)
+    assert runner.state["product"] == reduce(lambda x, y: x * y, outputs)

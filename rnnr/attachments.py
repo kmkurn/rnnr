@@ -44,27 +44,29 @@ class EpochTimer(Attachment):  # pragma: no cover
     Epochs are only timed when ``state['max_epoch']`` is greater than 1. At the start and
     end of every epoch, logging messages are written with log level of INFO.
     """
-    logger = logging.getLogger(f'{__name__}.epoch_timer')
-    _epoch_start_time = '_epoch_start_time'
+
+    logger = logging.getLogger(f"{__name__}.epoch_timer")
+    _epoch_start_time = "_epoch_start_time"
 
     def attach_on(self, runner: Runner) -> None:
         runner.on(Event._ETIMER_STARTED, self._start)
         runner.on(Event._ETIMER_FINISHED, self._finish)
 
     def _start(self, state):
-        if state['max_epoch'] > 1:
+        if state["max_epoch"] > 1:
             if self._epoch_start_time not in state:
                 state[self._epoch_start_time] = time.time()
-                msg = 'Starting epoch %d/%d'
+                msg = "Starting epoch %d/%d"
             else:
-                msg = 'Resuming epoch %d/%d'
-            self.logger.info(msg, state['epoch'], state['max_epoch'])
+                msg = "Resuming epoch %d/%d"
+            self.logger.info(msg, state["epoch"], state["max_epoch"])
 
     def _finish(self, state):
-        if state['max_epoch'] > 1:
+        if state["max_epoch"] > 1:
             elapsed = timedelta(seconds=time.time() - state.pop(self._epoch_start_time))
             self.logger.info(
-                'Epoch %d/%d done in %s', state['epoch'], state['max_epoch'], elapsed)
+                "Epoch %d/%d done in %s", state["epoch"], state["max_epoch"], elapsed
+            )
 
 
 class ProgressBar(Attachment):
@@ -91,15 +93,16 @@ class ProgressBar(Attachment):
 
     .. _tqdm: https://github.com/tqdm/tqdm
     """
-    _n_items_so_far = '_pbar_n_items_so_far'
+
+    _n_items_so_far = "_pbar_n_items_so_far"
 
     def __init__(
-            self,
-            *,
-            n_items: str = 'n_items',
-            stats: Optional[str] = None,
-            tqdm_cls: Optional[Type[tqdm]] = None,
-            **kwargs,
+        self,
+        *,
+        n_items: str = "n_items",
+        stats: Optional[str] = None,
+        tqdm_cls: Optional[Type[tqdm]] = None,
+        **kwargs,
     ) -> None:
         if tqdm_cls is None:  # pragma: no cover
             tqdm_cls = tqdm
@@ -118,7 +121,7 @@ class ProgressBar(Attachment):
 
     def _create(self, state: dict) -> None:
         n_items_so_far = state.get(self._n_items_so_far, 0)
-        self._pbar = self._tqdm_cls(state['batches'], initial=n_items_so_far, **self._kwargs)
+        self._pbar = self._tqdm_cls(state["batches"], initial=n_items_so_far, **self._kwargs)
         state[self._n_items_so_far] = n_items_so_far
 
     def _update(self, state: dict) -> None:
@@ -162,11 +165,7 @@ class LambdaReducer(Attachment):
     """
 
     def __init__(
-            self,
-            name: str,
-            reduce_fn: Callable[[Any, Any], Any],
-            *,
-            value: str = 'output',
+        self, name: str, reduce_fn: Callable[[Any, Any], Any], *, value: str = "output",
     ) -> None:
         self.name = name
         self._reduce_fn = reduce_fn
@@ -179,13 +178,14 @@ class LambdaReducer(Attachment):
 
     @property
     def _result(self) -> str:
-        return f'_{self.name}_reducer_result'
+        return f"_{self.name}_reducer_result"
 
     def _reset(self, state: dict) -> None:
         if self._result in state:  # pragma: no cover
             warn(
-                f'You may have multiple reducers with name={self.name!r}, so one will '
-                'overwrite the other.')
+                f"You may have multiple reducers with name={self.name!r}, so one will "
+                "overwrite the other."
+            )
         state[self._result] = None
 
     def _update(self, state: dict) -> None:
@@ -227,19 +227,13 @@ class MeanReducer(LambdaReducer):
             computing the mean.
     """
 
-    def __init__(
-            self,
-            name: str,
-            *,
-            value: str = 'output',
-            size: str = 'size',
-    ) -> None:
+    def __init__(self, name: str, *, value: str = "output", size: str = "size",) -> None:
         super().__init__(name, lambda x, y: x + y, value=value)
         self._size = size
 
     @property
     def _total_size(self) -> str:
-        return f'_{self.name}_reducer_total_size'
+        return f"_{self.name}_reducer_total_size"
 
     def _reset(self, state: dict) -> None:
         super()._reset(state)
@@ -266,5 +260,5 @@ class SumReducer(LambdaReducer):  # pragma: no cover
         value: Get the value of a batch from ``state[value]``.
     """
 
-    def __init__(self, name: str, *, value: str = 'output') -> None:
+    def __init__(self, name: str, *, value: str = "output") -> None:
         super().__init__(name, lambda x, y: x + y, value=value)

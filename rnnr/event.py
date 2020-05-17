@@ -25,6 +25,7 @@ class Event(Enum):
         EPOCH_FINISHED: Emitted at the end of every epoch.
         FINISHED: Emitted once at the end of a run.
     """
+
     STARTED = auto()
     EPOCH_STARTED = auto()
     BATCH = auto()
