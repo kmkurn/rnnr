@@ -61,8 +61,8 @@ Lastly, setup the pre-commit hook.
 
     ln -s ../../pre-commit.sh .git/hooks/pre-commit
 
-Tests and the linter can be run with ``pytest`` and ``flake8`` respectively. The latter also
-runs ``mypy`` for type checking.
+Tests, the linter, and the type checker can be run with ``pytest``, ``flake8``, and ``mypy``
+respectively.
 
 License
 =======
