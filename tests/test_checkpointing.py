@@ -79,3 +79,18 @@ def test_save_fn(tmp_path):
         )
         for i in range(max_epoch)
     ]
+
+
+def test_obj(tmp_path):
+    max_epoch = 5
+    obj = {"foo": "bar"}
+
+    ckpt_name = "ckpt"
+    callback = checkpoint(ckpt_name, obj, under=tmp_path)
+    for i in range(max_epoch):
+        callback({"epoch": i + 1})
+
+    path = tmp_path / f"{max_epoch}_{ckpt_name}.pkl"
+    assert path.exists()
+    with open(path, "rb") as f:
+        assert pickle.load(f) == obj

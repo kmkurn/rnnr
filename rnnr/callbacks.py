@@ -135,6 +135,7 @@ def maybe_stop_early(patience: int = 5, *, check: str = "better", counter: str =
 
 def checkpoint(
     what: str,
+    obj: Optional[Any] = None,
     *,
     under: Optional[Path] = None,
     at_most: int = 1,
@@ -146,8 +147,8 @@ def checkpoint(
 ):
     """A callback factory for checkpointing.
 
-    Checkpointing means saving some object stored in ``state[what]`` during a run under
-    ``under`` directory with ``{prefix_fmt}{what}.{ext}`` as the filename.
+    Checkpointing means saving ``obj`` (or ``state[what]`` if ``obj`` is ``None``) during a
+    run under ``under`` directory with ``{prefix_fmt}{what}.{ext}`` as the filename.
 
     Example:
 
@@ -176,7 +177,8 @@ def checkpoint(
          PosixPath('/tmp/7_optimizer.pkl')]
 
     Args:
-        what: Get the object to save from ``state[what]``.
+        what: Name of the object to save.
+        obj: Object to save. If ``None``, will be obtained from ``state[what]``.
         under: Save the object under this directory. Defaults to the current working directory
             if not given.
         at_most: Maximum number of files saved. When the number of files exceeds this number,
@@ -207,7 +209,7 @@ def checkpoint(
             fmt = f"{prefix_fmt}{what}.{ext}"
             path = under / fmt.format(**state)
             logger.info("Saving to %s", path)
-            using(state[what], path)
+            using(state[what] if obj is None else obj, path)
             q.append(path)
         while len(q) > at_most:
             p = q.popleft()
