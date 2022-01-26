@@ -11,8 +11,8 @@ rnnr
    :target: https://pypi.org/project/rnnr
    :alt: PyPI project
 
-.. image:: https://img.shields.io/travis/kmkurn/rnnr.svg?style=flat
-   :target: https://travis-ci.org/kmkurn/rnnr
+.. image:: https://github.com/kmkurn/rnnr/actions/workflows/run_tests.yml/badge.svg
+   :target: https://github.com/kmkurn/rnnr/actions/workflows/run_tests.yml
    :alt: Build status
 
 .. image:: https://img.shields.io/readthedocs/rnnr.svg?style=flat
