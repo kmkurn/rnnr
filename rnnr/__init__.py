@@ -13,8 +13,8 @@
 # limitations under the License.
 """rnnr: neural network runner"""
 
-__all__ = ["Event", "Runner"]
+__all__ = ["Event", "IterationBasedRunner", "Runner"]
 __version__ = "0.4.0"
 
 from .event import Event
-from .runner import Runner
+from .runner import IterationBasedRunner, Runner

@@ -182,3 +182,16 @@ class Runner:
             if not state["running"]:
                 break
             callback(state)
+
+
+class IterationBasedRunner:
+    def __init__(self, on_batch) -> None:
+        pass
+
+    def run(self, batches: Iterable[Any], max_iter: int = 1) -> None:
+        self.state = {
+            "batches": batches,
+            "max_iter": max_iter,
+            "n_iters": max_iter,
+            "running": False,
+        }
