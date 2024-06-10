@@ -49,6 +49,7 @@ class Runner:
         You are free to change their values to suit your use cases better, but be careful.
     """
 
+    # TODO use typevar for int epoch and int batch_idx
     def __init__(self, on_batch: Callable[[int, int, Any], Any], max_epoch: int = 1) -> None:
         self.on_batch = on_batch
         self.state: dict = {}
