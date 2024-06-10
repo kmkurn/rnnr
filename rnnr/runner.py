@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List
+from typing import Any, Callable, Dict, Iterable, Iterator, List
 
 from .event import Event
 
@@ -122,37 +122,15 @@ class Runner:
             batches: Batches to iterate over in an epoch.
             max_epoch: Maximum number of epochs to run.
         """
-        state = self.state
-        max_epoch = self._max_epoch
-        state.update(
-            {
-                "max_epoch": max_epoch,
-                "batches": batches,
-                "n_iters": 0,
-                "running": True,
-                "epoch": 0,
-            }
-        )
-
         self._run_callbacks_on_started()
-
-        while state["running"] and state["epoch"] < state["max_epoch"]:
-            state["epoch"] += 1
-            self._emit(Event._ETIMER_STARTED, state)
-            self._run_callbacks_on_epoch_started(state["epoch"])
-            self._emit(Event._REDUCER_RESET, state)
-            self._emit(Event._PBAR_CREATED, state)
-
-            state["_batches_iter"] = iter(state["batches"])
-            self._run_epoch()
-
-            self._emit(Event._PBAR_CLOSED, state)
-            self._emit(Event._REDUCER_COMPUTED, state)
-            self._run_callbacks_on_epoch_finished(state["epoch"])
-            self._emit(Event._ETIMER_FINISHED, state)
-
+        for epoch in range(1, self._max_epoch + 1):
+            self._run_callbacks_on_epoch_started(epoch)
+            for batch_idx, batch in enumerate(batches):
+                batch = self._run_callbacks_on_batch_started(epoch, batch_idx, batch)
+                boutput = self.on_batch(epoch, batch_idx, batch)
+                self._run_callbacks_on_batch_finished(epoch, batch_idx, batch, boutput)
+            self._run_callbacks_on_epoch_finished(epoch)
         self._run_callbacks_on_finished()
-        state["running"] = False
 
     def resume(self, repeat_last_batch: bool = False) -> None:
         """Resume runner starting from the current state.
@@ -199,28 +177,6 @@ class Runner:
 
         self._emit(Event.FINISHED, state)
         state["running"] = False
-
-    def _run_epoch(self) -> None:
-        state = self.state
-        state["batch_idx"] = 0
-        while state["running"]:
-            try:
-                state["batch"] = next(state["_batches_iter"])
-            except StopIteration:
-                break
-            state["n_iters"] += 1
-            state["batch"] = self._run_callbacks_on_batch_started(
-                state["epoch"], state["batch_idx"], state["batch"]
-            )
-            state["_batch_output"] = self.on_batch(
-                state["epoch"], state["batch_idx"], state["batch"]
-            )
-            self._run_callbacks_on_batch_finished(
-                state["epoch"], state["batch_idx"], state["batch"], state["_batch_output"]
-            )
-            self._emit(Event._REDUCER_UPDATED, state)
-            self._emit(Event._PBAR_UPDATED, state)
-            state["batch_idx"] += 1
 
     def _emit(self, event: Event, state: dict) -> None:
         for callback in self._callbacks[event]:
