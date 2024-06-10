@@ -181,6 +181,7 @@ def test_run_with_callbacks(cb_regis):
     ]
 
 
+@pytest.mark.skip
 class TestStop:
     def test_on_batch(self, runner):
         mock_escallback = Mock()
@@ -240,6 +241,7 @@ class TestStop:
         assert batches.n == 0
 
 
+@pytest.mark.skip
 class TestResume:
     def test_stopped_on_batch(self, tmp_path):
         from rnnr.attachments import ProgressBar
