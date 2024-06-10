@@ -7,115 +7,178 @@ from rnnr import Event, Runner
 
 
 def test_init():
-    r = Runner()
-    assert len(r.state) == 0
+    def do_nothing(*args, **kwargs):
+        pass
+
+    runner = Runner(do_nothing)
+
+    assert runner.on_batch == do_nothing
 
 
-def test_run(runner):
-    batches, max_epoch = range(10), 5
-    runner.run(batches, max_epoch=max_epoch)
-    state = runner.state
+@pytest.mark.parametrize("cb_regis", ["single", "multi", "decorator"])
+def test_run_with_callbacks(cb_regis):
+    call_hist = []
 
-    assert state["batches"] == batches
-    assert state["max_epoch"] == max_epoch
-    assert state["n_iters"] == len(batches) * max_epoch
-    assert not state["running"]
+    def on_batch(epoch, batch_idx, batch):
+        call_hist.append(("on_batch", (epoch, batch_idx, batch)))
+        return epoch, batch_idx
 
+    max_epoch = 2
+    runner = Runner(on_batch, max_epoch)
 
-class TestOn:
-    def test_started(self, runner):
-        batches, max_epoch = range(10), 5
+    if cb_regis == "decorator":
 
-        def on_started(state):
-            assert state["batches"] == batches
-            assert state["max_epoch"] == max_epoch
-            assert state["n_iters"] == 0
-            assert state["running"]
-            assert state["epoch"] == 0
+        @runner.on(Event.STARTED)
+        def on_started1():
+            call_hist.append(("on_started1", ()))
 
-        runner.on(Event.STARTED, on_started)
-        runner.run(batches, max_epoch=max_epoch)
-
-    def test_epoch_started(self, runner):
-        batches, max_epoch, n_calls = range(10), 5, 0
-
-        def on_epoch_started(state):
-            nonlocal n_calls
-            assert state["batches"] == batches
-            assert state["max_epoch"] == max_epoch
-            assert state["epoch"] == n_calls + 1
-            assert state["n_iters"] == n_calls * len(batches)
-            assert state["running"]
-            n_calls += 1
-
-        runner.on(Event.EPOCH_STARTED, on_epoch_started)
-        runner.run(batches, max_epoch=max_epoch)
-
-    def test_batch(self, runner):
-        batches, max_epoch, n_calls = range(10), 5, 0
-
-        @runner.on(Event.BATCH)
-        def on_batch(state):
-            nonlocal n_calls
-            assert state["batches"] == batches
-            assert state["max_epoch"] == max_epoch
-            assert state["epoch"] == n_calls // len(batches) + 1
-            assert state["batch"] == batches[n_calls % len(batches)]
-            assert state["n_iters"] == n_calls + 1
-            assert state["running"]
-            n_calls += 1
-
-        runner.run(batches, max_epoch=max_epoch)
-        assert n_calls == len(batches) * max_epoch
-
-    def test_epoch_finished(self, runner):
-        batches, max_epoch, n_calls = range(10), 5, 0
-
-        def on_epoch_finished(state):
-            nonlocal n_calls
-            assert state["batches"] == batches
-            assert state["max_epoch"] == max_epoch
-            assert state["epoch"] == n_calls + 1
-            assert state["n_iters"] == (n_calls + 1) * len(batches)
-            assert state["running"]
-            n_calls += 1
-
-        runner.on(Event.EPOCH_FINISHED, on_epoch_finished)
-        runner.run(batches, max_epoch=max_epoch)
-
-    def test_finished(self, runner):
-        batches, max_epoch, n_calls = range(10), 5, 0
-
-        def on_finished(state):
-            assert state["batches"] == batches
-            assert state["max_epoch"] == max_epoch
-            assert state["n_iters"] == max_epoch * len(batches)
-            assert state["running"]
-            nonlocal n_calls
-            n_calls += 1
-
-        runner.on(Event.FINISHED, on_finished)
-        runner.run(batches, max_epoch=max_epoch)
-        assert n_calls == 1
-
-    def test_as_decorator(self, runner):
-        n_calls, max_epoch = 0, 10
+        @runner.on(Event.STARTED)
+        def on_started2():
+            call_hist.append(("on_started2", ()))
 
         @runner.on(Event.EPOCH_STARTED)
-        def increment(state):
-            nonlocal n_calls
-            n_calls += 1
+        def on_epoch_started1(epoch):
+            call_hist.append(("on_epoch_started1", (epoch,)))
 
-        runner.run(range(5), max_epoch=max_epoch)
-        assert n_calls == max_epoch
+        @runner.on(Event.EPOCH_STARTED)
+        def on_epoch_started2(epoch):
+            call_hist.append(("on_epoch_started2", (epoch,)))
 
-    def test_multiple_callbacks(self, runner):
-        mock_escb1, mock_escb2, max_epoch = Mock(), Mock(), 10
-        runner.on(Event.EPOCH_STARTED, [mock_escb1, mock_escb2])
-        runner.run(range(5), max_epoch=max_epoch)
+        @runner.on(Event.BATCH_STARTED)
+        def on_batch_started1(epoch, batch_idx, batch):
+            call_hist.append(("on_batch_started1", (epoch, batch_idx, batch)))
+            return batch + 1
 
-        assert mock_escb1.call_count == max_epoch
-        assert mock_escb2.call_count == max_epoch
+        @runner.on(Event.BATCH_STARTED)
+        def on_batch_started2(epoch, batch_idx, batch):
+            call_hist.append(("on_batch_started2", (epoch, batch_idx, batch)))
+            return batch ** 2
+
+        @runner.on(Event.BATCH_FINISHED)
+        def on_batch_finished1(epoch, batch_idx, batch, output):
+            call_hist.append(("on_batch_finished1", (epoch, batch_idx, batch, output)))
+
+        @runner.on(Event.BATCH_FINISHED)
+        def on_batch_finished2(epoch, batch_idx, batch, output):
+            call_hist.append(("on_batch_finished2", (epoch, batch_idx, batch, output)))
+
+        @runner.on(Event.EPOCH_FINISHED)
+        def on_epoch_finished1(epoch):
+            call_hist.append(("on_epoch_finished1", (epoch,)))
+
+        @runner.on(Event.EPOCH_FINISHED)
+        def on_epoch_finished2(epoch):
+            call_hist.append(("on_epoch_finished2", (epoch,)))
+
+        @runner.on(Event.FINISHED)
+        def on_finished1():
+            call_hist.append(("on_finished1", ()))
+
+        @runner.on(Event.FINISHED)
+        def on_finished2():
+            call_hist.append(("on_finished2", ()))
+
+    else:
+
+        def on_started1():
+            call_hist.append(("on_started1", ()))
+
+        def on_started2():
+            call_hist.append(("on_started2", ()))
+
+        def on_epoch_started1(epoch):
+            call_hist.append(("on_epoch_started1", (epoch,)))
+
+        def on_epoch_started2(epoch):
+            call_hist.append(("on_epoch_started2", (epoch,)))
+
+        def on_batch_started1(epoch, batch_idx, batch):
+            call_hist.append(("on_batch_started1", (epoch, batch_idx, batch)))
+            return batch + 1
+
+        def on_batch_started2(epoch, batch_idx, batch):
+            call_hist.append(("on_batch_started2", (epoch, batch_idx, batch)))
+            return batch ** 2
+
+        def on_batch_finished1(epoch, batch_idx, batch, output):
+            call_hist.append(("on_batch_finished1", (epoch, batch_idx, batch, output)))
+
+        def on_batch_finished2(epoch, batch_idx, batch, output):
+            call_hist.append(("on_batch_finished2", (epoch, batch_idx, batch, output)))
+
+        def on_epoch_finished1(epoch):
+            call_hist.append(("on_epoch_finished1", (epoch,)))
+
+        def on_epoch_finished2(epoch):
+            call_hist.append(("on_epoch_finished2", (epoch,)))
+
+        def on_finished1():
+            call_hist.append(("on_finished1", ()))
+
+        def on_finished2():
+            call_hist.append(("on_finished2", ()))
+
+    if cb_regis == "multi":
+        runner.on(Event.STARTED, [on_started1, on_started2])
+        runner.on(Event.EPOCH_STARTED, [on_epoch_started1, on_epoch_started2])
+        runner.on(Event.BATCH_STARTED, [on_batch_started1, on_batch_started2])
+        runner.on(Event.BATCH_FINISHED, [on_batch_finished1, on_batch_finished2])
+        runner.on(Event.EPOCH_FINISHED, [on_epoch_finished1, on_epoch_finished2])
+        runner.on(Event.FINISHED, [on_finished1, on_finished2])
+    elif cb_regis == "single":
+        runner.on(Event.STARTED, on_started1)
+        runner.on(Event.STARTED, on_started2)
+        runner.on(Event.EPOCH_STARTED, on_epoch_started1)
+        runner.on(Event.EPOCH_STARTED, on_epoch_started2)
+        runner.on(Event.BATCH_STARTED, on_batch_started1)
+        runner.on(Event.BATCH_STARTED, on_batch_started2)
+        runner.on(Event.BATCH_FINISHED, on_batch_finished1)
+        runner.on(Event.BATCH_FINISHED, on_batch_finished2)
+        runner.on(Event.EPOCH_FINISHED, on_epoch_finished1)
+        runner.on(Event.EPOCH_FINISHED, on_epoch_finished2)
+        runner.on(Event.FINISHED, on_finished1)
+        runner.on(Event.FINISHED, on_finished2)
+    batches = [3, 5]
+
+    runner.run(batches)
+
+    assert call_hist == [
+        ("on_started1", ()),
+        ("on_started2", ()),
+        # Epoch 1
+        ("on_epoch_started1", (1,)),
+        ("on_epoch_started2", (1,)),
+        ("on_batch_started1", (1, 0, batches[0])),
+        ("on_batch_started2", (1, 0, batches[0] + 1)),
+        ("on_batch", (1, 0, (batches[0] + 1) ** 2)),
+        ("on_batch_finished1", (1, 0, (batches[0] + 1) ** 2, (1, 0))),
+        ("on_batch_finished2", (1, 0, (batches[0] + 1) ** 2, (1, 0))),
+        ("on_batch_started1", (1, 1, batches[1])),
+        ("on_batch_started2", (1, 1, batches[1] + 1)),
+        ("on_batch", (1, 1, (batches[1] + 1) ** 2)),
+        ("on_batch_finished1", (1, 1, (batches[1] + 1) ** 2, (1, 1))),
+        ("on_batch_finished2", (1, 1, (batches[1] + 1) ** 2, (1, 1))),
+        ("on_epoch_finished1", (1,)),
+        ("on_epoch_finished2", (1,)),
+        # Epoch 2
+        ("on_epoch_started1", (2,)),
+        ("on_epoch_started2", (2,)),
+        ("on_batch_started1", (2, 0, batches[0])),
+        ("on_batch_started2", (2, 0, batches[0] + 1)),
+        ("on_batch", (2, 0, (batches[0] + 1) ** 2)),
+        ("on_batch_finished1", (2, 0, (batches[0] + 1) ** 2, (2, 0))),
+        ("on_batch_finished2", (2, 0, (batches[0] + 1) ** 2, (2, 0))),
+        ("on_batch_started1", (2, 1, batches[1])),
+        ("on_batch_started2", (2, 1, batches[1] + 1)),
+        ("on_batch", (2, 1, (batches[1] + 1) ** 2)),
+        ("on_batch_finished1", (2, 1, (batches[1] + 1) ** 2, (2, 1))),
+        ("on_batch_finished2", (2, 1, (batches[1] + 1) ** 2, (2, 1))),
+        ("on_epoch_finished1", (2,)),
+        ("on_epoch_finished2", (2,)),
+        # Finish
+        ("on_finished1", ()),
+        ("on_finished2", ()),
+    ]
 
 
 class TestStop:

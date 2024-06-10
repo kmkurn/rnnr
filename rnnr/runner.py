@@ -49,9 +49,12 @@ class Runner:
         You are free to change their values to suit your use cases better, but be careful.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, on_batch: Callable[[int, int, Any], Any], max_epoch: int = 1) -> None:
+        self.on_batch = on_batch
         self.state: dict = {}
+        self._max_epoch = max_epoch
         self._callbacks: Dict[Event, List[Callback]] = defaultdict(list)
+        self.on(Event.BATCH, on_batch)
 
     def on(self, event: Event, callbacks=None):
         """Add single/multiple callback(s) to listen to an event.
@@ -81,7 +84,7 @@ class Runner:
 
         return decorator
 
-    def run(self, batches: Iterable[Any], max_epoch: int = 1) -> None:
+    def run(self, batches: Iterable[Any]) -> None:
         """Run on batches for a number of epochs.
 
         Args:
@@ -89,6 +92,7 @@ class Runner:
             max_epoch: Maximum number of epochs to run.
         """
         state = self.state
+        max_epoch = self._max_epoch
         state.update(
             {
                 "max_epoch": max_epoch,
@@ -167,18 +171,37 @@ class Runner:
 
     def _run_epoch(self) -> None:
         state = self.state
+        state["batch_idx"] = 0
         while state["running"]:
             try:
                 state["batch"] = next(state["_batches_iter"])
             except StopIteration:
                 break
             state["n_iters"] += 1
+            self._emit(Event.BATCH_STARTED, state)
             self._emit(Event.BATCH, state)
+            self._emit(Event.BATCH_FINISHED, state)
             self._emit(Event._REDUCER_UPDATED, state)
             self._emit(Event._PBAR_UPDATED, state)
+            state["batch_idx"] += 1
 
     def _emit(self, event: Event, state: dict) -> None:
         for callback in self._callbacks[event]:
             if not state["running"]:
                 break
-            callback(state)
+            if event in (Event.STARTED, Event.FINISHED):
+                callback()
+            elif event in (Event.EPOCH_STARTED, Event.EPOCH_FINISHED):
+                callback(state["epoch"])
+            elif event == Event.BATCH_STARTED:
+                state["batch"] = callback(state["epoch"], state["batch_idx"], state["batch"])
+            elif event == Event.BATCH:
+                state["_batch_output"] = callback(
+                    state["epoch"], state["batch_idx"], state["batch"]
+                )
+            elif event == Event.BATCH_FINISHED:
+                callback(
+                    state["epoch"], state["batch_idx"], state["batch"], state["_batch_output"]
+                )
+            else:
+                callback(state)
