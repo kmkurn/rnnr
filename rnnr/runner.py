@@ -55,6 +55,37 @@ class Runner:
         self.state: dict = {}
         self._max_epoch = max_epoch
         self._callbacks: Dict[Event, List[Callback]] = defaultdict(list)
+        self._callbacks_on_started: List[Callable[[], None]] = []
+        self._callbacks_on_epoch_started: List[Callable[[int], None]] = []
+        self._callbacks_on_batch_started: List[Callable[[int, int, Any], Any]] = []
+        self._callbacks_on_batch_finished: List[Callable[[int, int, Any, Any], None]] = []
+        self._callbacks_on_epoch_finished: List[Callable[[int], None]] = []
+        self._callbacks_on_finished: List[Callable[[], None]] = []
+
+    # TODO use generics to capture batch and batch output types
+    def on_started(self, cb: Callable[[], None]):
+        self._callbacks_on_started.append(cb)
+        return cb
+
+    def on_epoch_started(self, cb: Callable[[int], None]):
+        self._callbacks_on_epoch_started.append(cb)
+        return cb
+
+    def on_batch_started(self, cb: Callable[[int, int, Any], Any]):
+        self._callbacks_on_batch_started.append(cb)
+        return cb
+
+    def on_batch_finished(self, cb: Callable[[int, int, Any, Any], None]):
+        self._callbacks_on_batch_finished.append(cb)
+        return cb
+
+    def on_epoch_finished(self, cb: Callable[[int], None]):
+        self._callbacks_on_epoch_finished.append(cb)
+        return cb
+
+    def on_finished(self, cb: Callable[[], None]):
+        self._callbacks_on_finished.append(cb)
+        return cb
 
     def on(self, event: Event, callbacks=None):
         """Add single/multiple callback(s) to listen to an event.
@@ -103,12 +134,12 @@ class Runner:
             }
         )
 
-        self._emit(Event.STARTED, state)
+        self._run_callbacks_on_started()
 
         while state["running"] and state["epoch"] < state["max_epoch"]:
             state["epoch"] += 1
             self._emit(Event._ETIMER_STARTED, state)
-            self._emit(Event.EPOCH_STARTED, state)
+            self._run_callbacks_on_epoch_started(state["epoch"])
             self._emit(Event._REDUCER_RESET, state)
             self._emit(Event._PBAR_CREATED, state)
 
@@ -117,10 +148,10 @@ class Runner:
 
             self._emit(Event._PBAR_CLOSED, state)
             self._emit(Event._REDUCER_COMPUTED, state)
-            self._emit(Event.EPOCH_FINISHED, state)
+            self._run_callbacks_on_epoch_finished(state["epoch"])
             self._emit(Event._ETIMER_FINISHED, state)
 
-        self._emit(Event.FINISHED, state)
+        self._run_callbacks_on_finished()
         state["running"] = False
 
     def resume(self, repeat_last_batch: bool = False) -> None:
@@ -178,11 +209,15 @@ class Runner:
             except StopIteration:
                 break
             state["n_iters"] += 1
-            self._emit(Event.BATCH_STARTED, state)
+            state["batch"] = self._run_callbacks_on_batch_started(
+                state["epoch"], state["batch_idx"], state["batch"]
+            )
             state["_batch_output"] = self.on_batch(
                 state["epoch"], state["batch_idx"], state["batch"]
             )
-            self._emit(Event.BATCH_FINISHED, state)
+            self._run_callbacks_on_batch_finished(
+                state["epoch"], state["batch_idx"], state["batch"], state["_batch_output"]
+            )
             self._emit(Event._REDUCER_UPDATED, state)
             self._emit(Event._PBAR_UPDATED, state)
             state["batch_idx"] += 1
@@ -191,15 +226,31 @@ class Runner:
         for callback in self._callbacks[event]:
             if not state["running"]:
                 break
-            if event in (Event.STARTED, Event.FINISHED):
-                callback()
-            elif event in (Event.EPOCH_STARTED, Event.EPOCH_FINISHED):
-                callback(state["epoch"])
-            elif event == Event.BATCH_STARTED:
-                state["batch"] = callback(state["epoch"], state["batch_idx"], state["batch"])
-            elif event == Event.BATCH_FINISHED:
-                callback(
-                    state["epoch"], state["batch_idx"], state["batch"], state["_batch_output"]
-                )
-            else:
-                callback(state)
+            callback(state)
+
+    def _run_callbacks_on_started(self) -> None:
+        for cb in self._callbacks_on_started:
+            cb()
+
+    def _run_callbacks_on_epoch_started(self, epoch: int) -> None:
+        for cb in self._callbacks_on_epoch_started:
+            cb(epoch)
+
+    def _run_callbacks_on_batch_started(self, epoch: int, batch_idx: int, batch: Any) -> Any:
+        for cb in self._callbacks_on_batch_started:
+            batch = cb(epoch, batch_idx, batch)
+        return batch
+
+    def _run_callbacks_on_batch_finished(
+        self, epoch: int, batch_idx: int, batch: Any, batch_output: Any
+    ) -> None:
+        for cb in self._callbacks_on_batch_finished:
+            cb(epoch, batch_idx, batch, batch_output)
+
+    def _run_callbacks_on_epoch_finished(self, epoch: int) -> None:
+        for cb in self._callbacks_on_epoch_finished:
+            cb(epoch)
+
+    def _run_callbacks_on_finished(self) -> None:
+        for cb in self._callbacks_on_finished:
+            cb()

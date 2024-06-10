@@ -15,8 +15,7 @@ def test_init():
     assert runner.on_batch == do_nothing
 
 
-@pytest.mark.parametrize("cb_regis", ["single", "multi", "decorator"])
-def test_run_with_callbacks(cb_regis):
+def test_run_with_callbacks():
     call_hist = []
 
     def on_batch(epoch, batch_idx, batch):
@@ -26,118 +25,56 @@ def test_run_with_callbacks(cb_regis):
     max_epoch = 2
     runner = Runner(on_batch, max_epoch)
 
-    if cb_regis == "decorator":
+    @runner.on_started
+    def on_started1():
+        call_hist.append(("on_started1", ()))
 
-        @runner.on(Event.STARTED)
-        def on_started1():
-            call_hist.append(("on_started1", ()))
+    @runner.on_started
+    def on_started2():
+        call_hist.append(("on_started2", ()))
 
-        @runner.on(Event.STARTED)
-        def on_started2():
-            call_hist.append(("on_started2", ()))
+    @runner.on_epoch_started
+    def on_epoch_started1(epoch):
+        call_hist.append(("on_epoch_started1", (epoch,)))
 
-        @runner.on(Event.EPOCH_STARTED)
-        def on_epoch_started1(epoch):
-            call_hist.append(("on_epoch_started1", (epoch,)))
+    @runner.on_epoch_started
+    def on_epoch_started2(epoch):
+        call_hist.append(("on_epoch_started2", (epoch,)))
 
-        @runner.on(Event.EPOCH_STARTED)
-        def on_epoch_started2(epoch):
-            call_hist.append(("on_epoch_started2", (epoch,)))
+    @runner.on_batch_started
+    def on_batch_started1(epoch, batch_idx, batch):
+        call_hist.append(("on_batch_started1", (epoch, batch_idx, batch)))
+        return batch + 1
 
-        @runner.on(Event.BATCH_STARTED)
-        def on_batch_started1(epoch, batch_idx, batch):
-            call_hist.append(("on_batch_started1", (epoch, batch_idx, batch)))
-            return batch + 1
+    @runner.on_batch_started
+    def on_batch_started2(epoch, batch_idx, batch):
+        call_hist.append(("on_batch_started2", (epoch, batch_idx, batch)))
+        return batch ** 2
 
-        @runner.on(Event.BATCH_STARTED)
-        def on_batch_started2(epoch, batch_idx, batch):
-            call_hist.append(("on_batch_started2", (epoch, batch_idx, batch)))
-            return batch ** 2
+    @runner.on_batch_finished
+    def on_batch_finished1(epoch, batch_idx, batch, output):
+        call_hist.append(("on_batch_finished1", (epoch, batch_idx, batch, output)))
 
-        @runner.on(Event.BATCH_FINISHED)
-        def on_batch_finished1(epoch, batch_idx, batch, output):
-            call_hist.append(("on_batch_finished1", (epoch, batch_idx, batch, output)))
+    @runner.on_batch_finished
+    def on_batch_finished2(epoch, batch_idx, batch, output):
+        call_hist.append(("on_batch_finished2", (epoch, batch_idx, batch, output)))
 
-        @runner.on(Event.BATCH_FINISHED)
-        def on_batch_finished2(epoch, batch_idx, batch, output):
-            call_hist.append(("on_batch_finished2", (epoch, batch_idx, batch, output)))
+    @runner.on_epoch_finished
+    def on_epoch_finished1(epoch):
+        call_hist.append(("on_epoch_finished1", (epoch,)))
 
-        @runner.on(Event.EPOCH_FINISHED)
-        def on_epoch_finished1(epoch):
-            call_hist.append(("on_epoch_finished1", (epoch,)))
+    @runner.on_epoch_finished
+    def on_epoch_finished2(epoch):
+        call_hist.append(("on_epoch_finished2", (epoch,)))
 
-        @runner.on(Event.EPOCH_FINISHED)
-        def on_epoch_finished2(epoch):
-            call_hist.append(("on_epoch_finished2", (epoch,)))
+    @runner.on_finished
+    def on_finished1():
+        call_hist.append(("on_finished1", ()))
 
-        @runner.on(Event.FINISHED)
-        def on_finished1():
-            call_hist.append(("on_finished1", ()))
+    @runner.on_finished
+    def on_finished2():
+        call_hist.append(("on_finished2", ()))
 
-        @runner.on(Event.FINISHED)
-        def on_finished2():
-            call_hist.append(("on_finished2", ()))
-
-    else:
-
-        def on_started1():
-            call_hist.append(("on_started1", ()))
-
-        def on_started2():
-            call_hist.append(("on_started2", ()))
-
-        def on_epoch_started1(epoch):
-            call_hist.append(("on_epoch_started1", (epoch,)))
-
-        def on_epoch_started2(epoch):
-            call_hist.append(("on_epoch_started2", (epoch,)))
-
-        def on_batch_started1(epoch, batch_idx, batch):
-            call_hist.append(("on_batch_started1", (epoch, batch_idx, batch)))
-            return batch + 1
-
-        def on_batch_started2(epoch, batch_idx, batch):
-            call_hist.append(("on_batch_started2", (epoch, batch_idx, batch)))
-            return batch ** 2
-
-        def on_batch_finished1(epoch, batch_idx, batch, output):
-            call_hist.append(("on_batch_finished1", (epoch, batch_idx, batch, output)))
-
-        def on_batch_finished2(epoch, batch_idx, batch, output):
-            call_hist.append(("on_batch_finished2", (epoch, batch_idx, batch, output)))
-
-        def on_epoch_finished1(epoch):
-            call_hist.append(("on_epoch_finished1", (epoch,)))
-
-        def on_epoch_finished2(epoch):
-            call_hist.append(("on_epoch_finished2", (epoch,)))
-
-        def on_finished1():
-            call_hist.append(("on_finished1", ()))
-
-        def on_finished2():
-            call_hist.append(("on_finished2", ()))
-
-    if cb_regis == "multi":
-        runner.on(Event.STARTED, [on_started1, on_started2])
-        runner.on(Event.EPOCH_STARTED, [on_epoch_started1, on_epoch_started2])
-        runner.on(Event.BATCH_STARTED, [on_batch_started1, on_batch_started2])
-        runner.on(Event.BATCH_FINISHED, [on_batch_finished1, on_batch_finished2])
-        runner.on(Event.EPOCH_FINISHED, [on_epoch_finished1, on_epoch_finished2])
-        runner.on(Event.FINISHED, [on_finished1, on_finished2])
-    elif cb_regis == "single":
-        runner.on(Event.STARTED, on_started1)
-        runner.on(Event.STARTED, on_started2)
-        runner.on(Event.EPOCH_STARTED, on_epoch_started1)
-        runner.on(Event.EPOCH_STARTED, on_epoch_started2)
-        runner.on(Event.BATCH_STARTED, on_batch_started1)
-        runner.on(Event.BATCH_STARTED, on_batch_started2)
-        runner.on(Event.BATCH_FINISHED, on_batch_finished1)
-        runner.on(Event.BATCH_FINISHED, on_batch_finished2)
-        runner.on(Event.EPOCH_FINISHED, on_epoch_finished1)
-        runner.on(Event.EPOCH_FINISHED, on_epoch_finished2)
-        runner.on(Event.FINISHED, on_finished1)
-        runner.on(Event.FINISHED, on_finished2)
     batches = [3, 5]
 
     runner.run(batches)
