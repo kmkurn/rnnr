@@ -55,7 +55,6 @@ class Runner:
         self.state: dict = {}
         self._max_epoch = max_epoch
         self._callbacks: Dict[Event, List[Callback]] = defaultdict(list)
-        self.on(Event.BATCH, on_batch)
 
     def on(self, event: Event, callbacks=None):
         """Add single/multiple callback(s) to listen to an event.
@@ -180,7 +179,9 @@ class Runner:
                 break
             state["n_iters"] += 1
             self._emit(Event.BATCH_STARTED, state)
-            self._emit(Event.BATCH, state)
+            state["_batch_output"] = self.on_batch(
+                state["epoch"], state["batch_idx"], state["batch"]
+            )
             self._emit(Event.BATCH_FINISHED, state)
             self._emit(Event._REDUCER_UPDATED, state)
             self._emit(Event._PBAR_UPDATED, state)
@@ -196,10 +197,6 @@ class Runner:
                 callback(state["epoch"])
             elif event == Event.BATCH_STARTED:
                 state["batch"] = callback(state["epoch"], state["batch_idx"], state["batch"])
-            elif event == Event.BATCH:
-                state["_batch_output"] = callback(
-                    state["epoch"], state["batch_idx"], state["batch"]
-                )
             elif event == Event.BATCH_FINISHED:
                 callback(
                     state["epoch"], state["batch_idx"], state["batch"], state["_batch_output"]
