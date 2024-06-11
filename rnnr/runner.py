@@ -13,16 +13,17 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List, NewType
+from typing import Any, Callable, Dict, Generic, Iterable, List, NewType, TypeVar
 
 from .event import Event
 
 Callback = Callable[[dict], None]
 EpochId = NewType("EpochId", int)
 BatchIndex = NewType("BatchIndex", int)
+T = TypeVar("T")
 
 
-class Runner:
+class Runner(Generic[T]):
     """A neural network runner.
 
     A runner provides a thin abstraction of iterating over batches for several epochs,
@@ -52,7 +53,7 @@ class Runner:
     """
 
     def __init__(
-        self, on_batch: Callable[[EpochId, BatchIndex, Any], Any], max_epoch: int = 1
+        self, on_batch: Callable[[EpochId, BatchIndex, Any], T], max_epoch: int = 1
     ) -> None:
         self.on_batch = on_batch
         self.state: dict = {}
@@ -62,12 +63,11 @@ class Runner:
         self._callbacks_on_epoch_started: List[Callable[[EpochId], None]] = []
         self._callbacks_on_batch_started: List[Callable[[EpochId, BatchIndex, Any], Any]] = []
         self._callbacks_on_batch_finished: List[
-            Callable[[EpochId, BatchIndex, Any, Any], None]
+            Callable[[EpochId, BatchIndex, Any, T], None]
         ] = []
         self._callbacks_on_epoch_finished: List[Callable[[EpochId], None]] = []
         self._callbacks_on_finished: List[Callable[[], None]] = []
 
-    # TODO use generics to capture batch and batch output types
     def on_started(self, cb: Callable[[], None]):
         self._callbacks_on_started.append(cb)
         return cb
@@ -80,7 +80,7 @@ class Runner:
         self._callbacks_on_batch_started.append(cb)
         return cb
 
-    def on_batch_finished(self, cb: Callable[[EpochId, BatchIndex, Any, Any], None]):
+    def on_batch_finished(self, cb: Callable[[EpochId, BatchIndex, Any, T], None]):
         self._callbacks_on_batch_finished.append(cb)
         return cb
 
@@ -205,7 +205,7 @@ class Runner:
         return b
 
     def _run_callbacks_on_batch_finished(
-        self, e: EpochId, bi: BatchIndex, b: Any, bo: Any
+        self, e: EpochId, bi: BatchIndex, b: Any, bo: T
     ) -> None:
         for cb in self._callbacks_on_batch_finished:
             cb(e, bi, b, bo)
