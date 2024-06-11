@@ -13,11 +13,13 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import Any, Callable, Dict, Iterable, List
+from typing import Any, Callable, Dict, Iterable, List, NewType
 
 from .event import Event
 
 Callback = Callable[[dict], None]
+EpochId = NewType("EpochId", int)
+BatchIndex = NewType("BatchIndex", int)
 
 
 class Runner:
@@ -49,17 +51,20 @@ class Runner:
         You are free to change their values to suit your use cases better, but be careful.
     """
 
-    # TODO use typevar for int epoch and int batch_idx
-    def __init__(self, on_batch: Callable[[int, int, Any], Any], max_epoch: int = 1) -> None:
+    def __init__(
+        self, on_batch: Callable[[EpochId, BatchIndex, Any], Any], max_epoch: int = 1
+    ) -> None:
         self.on_batch = on_batch
         self.state: dict = {}
         self._max_epoch = max_epoch
         self._callbacks: Dict[Event, List[Callback]] = defaultdict(list)
         self._callbacks_on_started: List[Callable[[], None]] = []
-        self._callbacks_on_epoch_started: List[Callable[[int], None]] = []
-        self._callbacks_on_batch_started: List[Callable[[int, int, Any], Any]] = []
-        self._callbacks_on_batch_finished: List[Callable[[int, int, Any, Any], None]] = []
-        self._callbacks_on_epoch_finished: List[Callable[[int], None]] = []
+        self._callbacks_on_epoch_started: List[Callable[[EpochId], None]] = []
+        self._callbacks_on_batch_started: List[Callable[[EpochId, BatchIndex, Any], Any]] = []
+        self._callbacks_on_batch_finished: List[
+            Callable[[EpochId, BatchIndex, Any, Any], None]
+        ] = []
+        self._callbacks_on_epoch_finished: List[Callable[[EpochId], None]] = []
         self._callbacks_on_finished: List[Callable[[], None]] = []
 
     # TODO use generics to capture batch and batch output types
@@ -67,19 +72,19 @@ class Runner:
         self._callbacks_on_started.append(cb)
         return cb
 
-    def on_epoch_started(self, cb: Callable[[int], None]):
+    def on_epoch_started(self, cb: Callable[[EpochId], None]):
         self._callbacks_on_epoch_started.append(cb)
         return cb
 
-    def on_batch_started(self, cb: Callable[[int, int, Any], Any]):
+    def on_batch_started(self, cb: Callable[[EpochId, BatchIndex, Any], Any]):
         self._callbacks_on_batch_started.append(cb)
         return cb
 
-    def on_batch_finished(self, cb: Callable[[int, int, Any, Any], None]):
+    def on_batch_finished(self, cb: Callable[[EpochId, BatchIndex, Any, Any], None]):
         self._callbacks_on_batch_finished.append(cb)
         return cb
 
-    def on_epoch_finished(self, cb: Callable[[int], None]):
+    def on_epoch_finished(self, cb: Callable[[EpochId], None]):
         self._callbacks_on_epoch_finished.append(cb)
         return cb
 
@@ -123,9 +128,11 @@ class Runner:
             max_epoch: Maximum number of epochs to run.
         """
         self._run_callbacks_on_started()
-        for epoch in range(1, self._max_epoch + 1):
+        for i in range(1, self._max_epoch + 1):
+            epoch = EpochId(i)
             self._run_callbacks_on_epoch_started(epoch)
-            for batch_idx, batch in enumerate(batches):
+            for j, batch in enumerate(batches):
+                batch_idx = BatchIndex(j)
                 batch = self._run_callbacks_on_batch_started(epoch, batch_idx, batch)
                 boutput = self.on_batch(epoch, batch_idx, batch)
                 self._run_callbacks_on_batch_finished(epoch, batch_idx, batch, boutput)
@@ -188,24 +195,24 @@ class Runner:
         for cb in self._callbacks_on_started:
             cb()
 
-    def _run_callbacks_on_epoch_started(self, epoch: int) -> None:
+    def _run_callbacks_on_epoch_started(self, e: EpochId) -> None:
         for cb in self._callbacks_on_epoch_started:
-            cb(epoch)
+            cb(e)
 
-    def _run_callbacks_on_batch_started(self, epoch: int, batch_idx: int, batch: Any) -> Any:
+    def _run_callbacks_on_batch_started(self, e: EpochId, bi: BatchIndex, b: Any) -> Any:
         for cb in self._callbacks_on_batch_started:
-            batch = cb(epoch, batch_idx, batch)
-        return batch
+            b = cb(e, bi, b)
+        return b
 
     def _run_callbacks_on_batch_finished(
-        self, epoch: int, batch_idx: int, batch: Any, batch_output: Any
+        self, e: EpochId, bi: BatchIndex, b: Any, bo: Any
     ) -> None:
         for cb in self._callbacks_on_batch_finished:
-            cb(epoch, batch_idx, batch, batch_output)
+            cb(e, bi, b, bo)
 
-    def _run_callbacks_on_epoch_finished(self, epoch: int) -> None:
+    def _run_callbacks_on_epoch_finished(self, e: EpochId) -> None:
         for cb in self._callbacks_on_epoch_finished:
-            cb(epoch)
+            cb(e)
 
     def _run_callbacks_on_finished(self) -> None:
         for cb in self._callbacks_on_finished:
