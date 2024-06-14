@@ -233,7 +233,7 @@ class MeanReducer(LambdaReducer):
         state[self.name] /= state.pop(self._total_size)
 
 
-class SumReducer(LambdaReducer):  # pragma: no cover
+class SumReducer(LambdaReducer[OT, RT]):
     """An attachment to compute a sum over batch statistics.
 
     This attachment gets the value from each batch and compute their sum at the end of
@@ -245,5 +245,5 @@ class SumReducer(LambdaReducer):  # pragma: no cover
         value: Get the value of a batch from ``state[value]``.
     """
 
-    def __init__(self, name: str, *, value: str = "output") -> None:
-        super().__init__(name, lambda x, y: x + y, value=value)
+    def __init__(self, value: Callable[[OT], RT]) -> None:
+        super().__init__(lambda x, y: x + y, value)  # type: ignore
