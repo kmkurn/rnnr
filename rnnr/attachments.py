@@ -27,11 +27,11 @@ OT = TypeVar("OT")
 RT = TypeVar("RT")
 
 
-class Attachment(abc.ABC):
+class Attachment(abc.ABC, Generic[OT]):
     """An abstract base class for an attachment."""
 
     @abc.abstractmethod
-    def attach_on(self, runner: Runner) -> None:
+    def attach_on(self, runner: Runner[OT]) -> None:
         """Attach to a runner.
 
         Args:
@@ -138,7 +138,7 @@ class ProgressBar(Attachment):
         state.pop(self._n_items_so_far)
 
 
-class LambdaReducer(Attachment, Generic[OT, RT]):
+class LambdaReducer(Attachment[OT], Generic[OT, RT]):
     """An attachment to compute a reduction over batches.
 
     This attachment gets the value of each batch and compute a reduction over them
