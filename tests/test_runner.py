@@ -7,15 +7,6 @@ import pytest
 from rnnr import Event, Runner
 
 
-def test_init():
-    def do_nothing(*args, **kwargs):
-        pass
-
-    runner = Runner(do_nothing)
-
-    assert runner.on_batch == do_nothing
-
-
 def test_run_with_callbacks():
     call_hist = []
 

@@ -55,8 +55,8 @@ class Runner(Generic[T]):
     def __init__(
         self, on_batch: Callable[[EpochId, BatchIndex, Any], T], max_epoch: int = 1
     ) -> None:
-        self.on_batch = on_batch
         self.state: dict = {}
+        self._on_batch = on_batch
         self._max_epoch = max_epoch
         self._callbacks: Dict[Event, List[Callback]] = defaultdict(list)
         self._callbacks_on_started: List[Callable[[], None]] = []
@@ -134,7 +134,7 @@ class Runner(Generic[T]):
             for j, batch in enumerate(batches):
                 batch_idx = BatchIndex(j)
                 batch = self._run_callbacks_on_batch_started(epoch, batch_idx, batch)
-                boutput = self.on_batch(epoch, batch_idx, batch)
+                boutput = self._on_batch(epoch, batch_idx, batch)
                 self._run_callbacks_on_batch_finished(epoch, batch_idx, batch, boutput)
             self._run_callbacks_on_epoch_finished(epoch)
         self._run_callbacks_on_finished()
