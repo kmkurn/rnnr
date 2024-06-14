@@ -13,8 +13,7 @@
 # limitations under the License.
 
 from datetime import timedelta
-from typing import Any, Callable, Optional, Type
-from warnings import warn
+from typing import Any, Callable, Generic, Optional, Type, TypeVar
 import abc
 import logging
 import time
@@ -22,7 +21,10 @@ import time
 from tqdm import tqdm
 
 from .event import Event
-from .runner import Runner
+from .runner import BatchIndex, EpochId, Runner
+
+OT = TypeVar("OT")
+RT = TypeVar("RT")
 
 
 class Attachment(abc.ABC):
@@ -136,7 +138,7 @@ class ProgressBar(Attachment):
         state.pop(self._n_items_so_far)
 
 
-class LambdaReducer(Attachment):
+class LambdaReducer(Attachment, Generic[OT, RT]):
     """An attachment to compute a reduction over batches.
 
     This attachment gets the value of each batch and compute a reduction over them
@@ -164,38 +166,21 @@ class LambdaReducer(Attachment):
         value: Get the value of a batch from ``state[value]``.
     """
 
-    def __init__(
-        self, name: str, reduce_fn: Callable[[Any, Any], Any], *, value: str = "output",
-    ) -> None:
-        self.name = name
-        self._reduce_fn = reduce_fn
-        self._value = value
+    def __init__(self, lambda_: Callable[[RT, RT], RT], value: Callable[[OT], RT]) -> None:
+        self._lambda = lambda_
+        self._get_value = value
+        self.result: Any = None
 
-    def attach_on(self, runner: Runner) -> None:
-        runner.on(Event._REDUCER_RESET, self._reset)
-        runner.on(Event._REDUCER_UPDATED, self._update)
-        runner.on(Event._REDUCER_COMPUTED, self._compute)
+    def attach_on(self, runner: Runner[OT]) -> None:
+        runner.on_epoch_started(self._reset)
+        runner.on_batch_finished(self._update)
 
-    @property
-    def _result(self) -> str:
-        return f"_{self.name}_reducer_result"
+    def _reset(self, e: EpochId) -> None:
+        self.result = None
 
-    def _reset(self, state: dict) -> None:
-        if self._result in state:  # pragma: no cover
-            warn(
-                f"You may have multiple reducers with name={self.name!r}, so one will "
-                "overwrite the other."
-            )
-        state[self._result] = None
-
-    def _update(self, state: dict) -> None:
-        if state[self._result] is None:
-            state[self._result] = state[self._value]
-        else:
-            state[self._result] = self._reduce_fn(state[self._result], state[self._value])
-
-    def _compute(self, state: dict) -> None:
-        state[self.name] = state.pop(self._result)
+    def _update(self, e: EpochId, bi: BatchIndex, b: Any, bo: OT) -> None:
+        val = self._get_value(bo)
+        self.result = val if self.result is None else self._lambda(self.result, val)
 
 
 class MeanReducer(LambdaReducer):
