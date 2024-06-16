@@ -67,6 +67,7 @@ class Runner(Generic[T]):
         ] = []
         self._callbacks_on_epoch_finished: List[Callable[[EpochId], None]] = []
         self._callbacks_on_finished: List[Callable[[], None]] = []
+        self._stopped = False
 
     def on_started(self, cb: Callable[[], None]):
         self._callbacks_on_started.append(cb)
@@ -128,8 +129,9 @@ class Runner(Generic[T]):
             max_epoch: Maximum number of epochs to run.
         """
         self._run_callbacks_on_started()
-        for i in range(1, self._max_epoch + 1):
-            epoch = EpochId(i)
+        i = 0
+        while not self._stopped and i < self._max_epoch:
+            epoch = EpochId(i + 1)
             self._run_callbacks_on_epoch_started(epoch)
             for j, batch in enumerate(batches):
                 batch_idx = BatchIndex(j)
@@ -137,6 +139,7 @@ class Runner(Generic[T]):
                 boutput = self._on_batch(epoch, batch_idx, batch)
                 self._run_callbacks_on_batch_finished(epoch, batch_idx, batch, boutput)
             self._run_callbacks_on_epoch_finished(epoch)
+            i += 1
         self._run_callbacks_on_finished()
 
     def resume(self, repeat_last_batch: bool = False) -> None:
@@ -185,6 +188,9 @@ class Runner(Generic[T]):
         self._emit(Event.FINISHED, state)
         state["running"] = False
 
+    def stop(self) -> None:
+        self._stopped = True
+
     def _emit(self, event: Event, state: dict) -> None:
         for callback in self._callbacks[event]:
             if not state["running"]:
@@ -211,8 +217,10 @@ class Runner(Generic[T]):
             cb(e, bi, b, bo)
 
     def _run_callbacks_on_epoch_finished(self, e: EpochId) -> None:
-        for cb in self._callbacks_on_epoch_finished:
-            cb(e)
+        i = 0
+        while not self._stopped and i < len(self._callbacks_on_epoch_finished):
+            self._callbacks_on_epoch_finished[i](e)
+            i += 1
 
     def _run_callbacks_on_finished(self) -> None:
         for cb in self._callbacks_on_finished:

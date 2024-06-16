@@ -247,3 +247,21 @@ class SumReducer(LambdaReducer[OT, RT]):
 
     def __init__(self, value: Callable[[OT], RT]) -> None:
         super().__init__(lambda x, y: x + y, value)  # type: ignore
+
+
+class EarlyStopper(Attachment):
+    def __init__(
+        self, should_reduce_patience: Callable[[EpochId], bool], patience: int
+    ) -> None:
+        self._should_reduce_patience = should_reduce_patience
+        self._curr_patience = patience
+
+    def attach_on(self, runner: Runner[OT]) -> None:
+        self._runner = runner
+        runner.on_epoch_finished(self._maybe_stop_early)
+
+    def _maybe_stop_early(self, e: EpochId) -> None:
+        if self._should_reduce_patience(e):
+            self._curr_patience -= 1
+        if self._curr_patience < 0:
+            self._runner.stop()

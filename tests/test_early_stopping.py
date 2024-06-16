@@ -1,23 +1,43 @@
-from rnnr.callbacks import maybe_stop_early
+from rnnr import Runner
+from rnnr.attachments import EarlyStopper
 
 
-def test_ok(runner):
-    patience, counter, check, state = 7, "cnt", "check", {"running": True}
-    callback = maybe_stop_early(patience, check=check, counter=counter)
+def test_correct():
+    dev_scores = [0.7, 0.4, 0.3, 0.8, 0.9]
+    current_best = -float("inf")
 
-    for i in range(patience):
-        state[check] = False
-        callback(state)
-        assert state["running"]
-        assert state[counter] == i + 1
+    def should_reduce_patience(epoch: int) -> bool:
+        nonlocal current_best
+        if dev_scores[epoch - 1] > current_best:
+            current_best = dev_scores[epoch - 1]
+            return False
+        return True
 
-    state[check] = True
-    callback(state)
-    assert state["running"]
-    assert state[counter] == 0
+    runner = Runner(lambda e, bi, b: b, max_epoch=5)
+    call_hist = []
 
-    for i in range(patience + 1):
-        state[check] = False
-        callback(state)
-    assert not state["running"]
-    assert state[counter] == patience + 1
+    @runner.on_epoch_started
+    def on_epoch_started(epoch: int) -> None:
+        call_hist.append(("on_epoch_started", (epoch,)))
+
+    @runner.on_epoch_finished
+    def on_epoch_finished(epoch: int) -> None:
+        call_hist.append(("on_epoch_finished", (epoch,)))
+
+    @runner.on_finished
+    def on_finished() -> None:
+        call_hist.append(("on_finished", ()))
+
+    EarlyStopper(should_reduce_patience, patience=1).attach_on(runner)
+
+    runner.run(range(1))
+
+    assert call_hist == [
+        ("on_epoch_started", (1,)),
+        ("on_epoch_finished", (1,)),
+        ("on_epoch_started", (2,)),
+        ("on_epoch_finished", (2,)),
+        ("on_epoch_started", (3,)),
+        ("on_epoch_finished", (3,)),
+        ("on_finished", ()),
+    ]
