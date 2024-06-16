@@ -37,7 +37,7 @@ def test_correct():
     ] + [("on_finished", ())]
 
 
-def test_can_recover_patience():
+def test_can_reset_patience():
     dev_scores = [0.7, 0.4, 0.8, 0.6, 0.65, 0.75]
     current_best = -float("inf")
 
