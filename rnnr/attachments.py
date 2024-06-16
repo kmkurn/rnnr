@@ -255,16 +255,19 @@ class EarlyStopper(Attachment):
     ) -> None:
         self._should_reduce_patience = should_reduce_patience
         self._orig_patience = patience
-        self._curr_patience = patience
 
     def attach_on(self, runner: Runner[OT]) -> None:
         self._runner = runner
+        runner.on_started(self._reset)
         runner.on_epoch_finished(self._maybe_stop_early)
+
+    def _reset(self) -> None:
+        self._curr_patience = self._orig_patience
 
     def _maybe_stop_early(self, e: EpochId) -> None:
         if self._should_reduce_patience(e):
             self._curr_patience -= 1
         else:
-            self._curr_patience = self._orig_patience
+            self._reset()
         if self._curr_patience < 0:
             self._runner.stop()
