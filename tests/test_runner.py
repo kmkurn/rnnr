@@ -7,71 +7,79 @@ import pytest
 from rnnr import Event, Runner
 
 
-def test_run_with_callbacks():
-    call_hist = []
-
+def test_run_with_callbacks(call_tracker):
+    @call_tracker.track_args
     def on_batch(epoch: int, batch_idx: int, batch: int) -> Tuple[int, int]:
-        call_hist.append(("on_batch", (epoch, batch_idx, batch)))
         return epoch, batch_idx
 
     max_epoch = 2
     runner = Runner(on_batch, max_epoch)
 
     @runner.on_started
+    @call_tracker.track_args
     def on_started1() -> None:
-        call_hist.append(("on_started1", ()))
+        pass
 
     @runner.on_started
+    @call_tracker.track_args
     def on_started2() -> None:
-        call_hist.append(("on_started2", ()))
+        pass
 
     @runner.on_epoch_started
+    @call_tracker.track_args
     def on_epoch_started1(epoch: int) -> None:
-        call_hist.append(("on_epoch_started1", (epoch,)))
+        pass
 
     @runner.on_epoch_started
+    @call_tracker.track_args
     def on_epoch_started2(epoch: int) -> None:
-        call_hist.append(("on_epoch_started2", (epoch,)))
+        pass
 
     @runner.on_batch_started
+    @call_tracker.track_args
     def on_batch_started1(epoch: int, batch_idx: int, batch: int) -> int:
-        call_hist.append(("on_batch_started1", (epoch, batch_idx, batch)))
         return batch + 1
 
     @runner.on_batch_started
+    @call_tracker.track_args
     def on_batch_started2(epoch: int, batch_idx: int, batch: int) -> int:
-        call_hist.append(("on_batch_started2", (epoch, batch_idx, batch)))
         return batch ** 2
 
     @runner.on_batch_finished
+    @call_tracker.track_args
     def on_batch_finished1(epoch: int, batch_idx: int, batch: int, output: int) -> None:
-        call_hist.append(("on_batch_finished1", (epoch, batch_idx, batch, output)))
+        pass
 
     @runner.on_batch_finished
+    @call_tracker.track_args
     def on_batch_finished2(epoch: int, batch_idx: int, batch: int, output: int) -> None:
-        call_hist.append(("on_batch_finished2", (epoch, batch_idx, batch, output)))
+        pass
 
     @runner.on_epoch_finished
+    @call_tracker.track_args
     def on_epoch_finished1(epoch: int) -> None:
-        call_hist.append(("on_epoch_finished1", (epoch,)))
+        pass
 
     @runner.on_epoch_finished
+    @call_tracker.track_args
     def on_epoch_finished2(epoch: int) -> None:
-        call_hist.append(("on_epoch_finished2", (epoch,)))
+        pass
 
     @runner.on_finished
+    @call_tracker.track_args
     def on_finished1() -> None:
-        call_hist.append(("on_finished1", ()))
+        pass
 
     @runner.on_finished
+    @call_tracker.track_args
     def on_finished2() -> None:
-        call_hist.append(("on_finished2", ()))
+        pass
 
     batches = [3, 5]
 
     runner.run(batches)
 
-    assert call_hist == [
+    assert call_tracker.history == [
         ("on_started1", ()),
         ("on_started2", ()),
         # Epoch 1
