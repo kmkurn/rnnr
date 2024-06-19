@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import timedelta
-from typing import Any, Callable, Generic, Optional, Type, TypeVar
 import abc
 import logging
 import time
+from datetime import timedelta
+from typing import Any, Callable, Generic, Optional, Type, TypeVar
 
 from tqdm import tqdm
 
 from .event import Event
-from .runner import BatchIndex, EpochId, Runner
+from .runner import BatchIndex, EpochId, Runner, StopFn
 
 OT = TypeVar("OT")
 RT = TypeVar("RT")
@@ -257,17 +257,16 @@ class EarlyStopper(Attachment):
         self._orig_patience = patience
 
     def attach_on(self, runner: Runner[OT]) -> None:
-        self._runner = runner
         runner.on_started(self._reset)
         runner.on_epoch_finished(self._maybe_stop_early)
 
     def _reset(self) -> None:
         self._curr_patience = self._orig_patience
 
-    def _maybe_stop_early(self, e: EpochId) -> None:
+    def _maybe_stop_early(self, e: EpochId, stop: StopFn) -> None:
         if self._should_reduce_patience(e):
             self._curr_patience -= 1
         else:
             self._reset()
         if self._curr_patience < 0:
-            self._runner.stop()
+            stop()

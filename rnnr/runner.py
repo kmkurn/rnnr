@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import Any, Callable, Dict, Generic, Iterable, List, NewType, TypeVar
+from inspect import signature
+from typing import Any, Callable, Dict, Generic, Iterable, List, NewType, TypeVar, Union, cast
 
 from .event import Event
 
@@ -65,9 +66,11 @@ class Runner(Generic[T]):
         self._callbacks_on_batch_finished: List[
             Callable[[EpochId, BatchIndex, Any, T], None]
         ] = []
-        self._callbacks_on_epoch_finished: List[Callable[[EpochId], None]] = []
+        self._callbacks_on_epoch_finished: List[
+            Union[Callable[[EpochId], None], Callable[[EpochId, "StopFn"], None]]
+        ] = []
         self._callbacks_on_finished: List[Callable[[], None]] = []
-        self._stopped = False
+        self._stopped = False  # TODO move this in on_started (add a test for it too)
 
     def on_started(self, cb: Callable[[], None]):
         self._callbacks_on_started.append(cb)
@@ -85,7 +88,9 @@ class Runner(Generic[T]):
         self._callbacks_on_batch_finished.append(cb)
         return cb
 
-    def on_epoch_finished(self, cb: Callable[[EpochId], None]):
+    def on_epoch_finished(
+        self, cb: Union[Callable[[EpochId], None], Callable[[EpochId, "StopFn"], None]],
+    ):
         self._callbacks_on_epoch_finished.append(cb)
         return cb
 
@@ -188,9 +193,6 @@ class Runner(Generic[T]):
         self._emit(Event.FINISHED, state)
         state["running"] = False
 
-    def stop(self) -> None:
-        self._stopped = True
-
     def _emit(self, event: Event, state: dict) -> None:
         for callback in self._callbacks[event]:
             if not state["running"]:
@@ -219,9 +221,23 @@ class Runner(Generic[T]):
     def _run_callbacks_on_epoch_finished(self, e: EpochId) -> None:
         i = 0
         while not self._stopped and i < len(self._callbacks_on_epoch_finished):
-            self._callbacks_on_epoch_finished[i](e)
+            cb = self._callbacks_on_epoch_finished[i]
+            nargs = len(signature(cb).parameters)
+            if nargs == 2:
+                cb = cast(Callable[[EpochId, "StopFn"], None], cb)
+                cb(e, self._stop)
+            elif nargs == 1:
+                cb = cast(Callable[[EpochId], None], cb)
+                cb(e)
+            # TODO test for nargs not in (1, 2)
             i += 1
 
     def _run_callbacks_on_finished(self) -> None:
         for cb in self._callbacks_on_finished:
             cb()
+
+    def _stop(self) -> None:
+        self._stopped = True
+
+
+StopFn = Callable[[], None]
