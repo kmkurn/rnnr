@@ -132,6 +132,27 @@ def test_on_epoch_finished_wrong_number_of_arguments():
         runner.run(range(10))
 
 
+def test_run_after_stopped(call_tracker):
+    def on_batch(e, bi, b):
+        pass
+
+    runner = Runner(on_batch, max_epoch=2)
+
+    @runner.on_epoch_started
+    @call_tracker.track_args
+    def on_epoch_started(e):
+        pass
+
+    @runner.on_epoch_finished
+    def on_epoch_finished(e, stop):
+        stop()
+
+    runner.run([])
+    runner.run([])
+
+    assert call_tracker.history == [("on_epoch_started", (1,)), ("on_epoch_started", (1,))]
+
+
 @pytest.mark.skip
 class TestStop:
     def test_on_batch(self, runner):

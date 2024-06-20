@@ -70,7 +70,7 @@ class Runner(Generic[T]):
             Union[Callable[[EpochId], None], Callable[[EpochId, "StopFn"], None]]
         ] = []
         self._callbacks_on_finished: List[Callable[[], None]] = []
-        self._stopped = False  # TODO move this in on_started (add a test for it too)
+        self.on_started(self._reset)
 
     def on_started(self, cb: Callable[[], None]):
         self._callbacks_on_started.append(cb)
@@ -238,6 +238,9 @@ class Runner(Generic[T]):
     def _run_callbacks_on_finished(self) -> None:
         for cb in self._callbacks_on_finished:
             cb()
+
+    def _reset(self) -> None:
+        self._stopped = False
 
     def _stop(self) -> None:
         self._stopped = True
