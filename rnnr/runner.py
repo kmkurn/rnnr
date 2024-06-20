@@ -229,7 +229,10 @@ class Runner(Generic[T]):
             elif nargs == 1:
                 cb = cast(Callable[[EpochId], None], cb)
                 cb(e)
-            # TODO test for nargs not in (1, 2)
+            else:
+                raise TypeError(
+                    f"expected {cb.__name__}() to accept 1 or 2 arguments but got {nargs}"
+                )
             i += 1
 
     def _run_callbacks_on_finished(self) -> None:

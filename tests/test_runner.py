@@ -118,6 +118,20 @@ def test_run_with_callbacks(call_tracker):
     ]
 
 
+def test_on_epoch_finished_wrong_number_of_arguments():
+    def on_batch(epoch, batch_idx, batch):
+        pass
+
+    runner = Runner(on_batch)
+
+    @runner.on_epoch_finished
+    def on_epoch_finished():
+        pass
+
+    with pytest.raises(TypeError):
+        runner.run(range(10))
+
+
 @pytest.mark.skip
 class TestStop:
     def test_on_batch(self, runner):
