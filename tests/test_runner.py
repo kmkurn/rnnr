@@ -154,66 +154,6 @@ def test_run_after_stopped(call_tracker):
 
 
 @pytest.mark.skip
-class TestStop:
-    def test_on_batch(self, runner):
-        mock_escallback = Mock()
-        mock_efcallback = Mock()
-        n_calls = 0
-        batches = range(10)
-
-        def bcallback(state):
-            nonlocal n_calls
-            n_calls += 1
-            if state["batch"] == 3:
-                state["running"] = False
-
-        runner.on(Event.EPOCH_STARTED, mock_escallback)
-        runner.on(Event.BATCH, bcallback)
-        runner.on(Event.EPOCH_FINISHED, mock_efcallback)
-        runner.run(batches, max_epoch=2)
-
-        assert mock_escallback.call_count == 1
-        assert mock_efcallback.call_count == 0
-        assert n_calls == 4
-        assert runner.state["n_iters"] == 4
-        assert runner.state["epoch"] == 1
-        assert runner.state["batch"] == 3
-
-    def test_on_epoch_started(self, runner):
-        mock_efcallback = Mock()
-        mock_bcallback = Mock()
-
-        class MockBatches:
-            n = 0
-
-            def __iter__(self):
-                self.n = 0
-                return self
-
-            def __next__(self):
-                res = self.n
-                self.n += 1
-                if self.n >= 10:
-                    raise StopIteration
-                return res
-
-        batches = MockBatches()
-
-        def escallback(state):
-            if state["epoch"] == 1:
-                state["running"] = False
-
-        runner.on(Event.EPOCH_STARTED, escallback)
-        runner.on(Event.BATCH, mock_bcallback)
-        runner.on(Event.EPOCH_FINISHED, mock_efcallback)
-        runner.run(batches, max_epoch=7)
-
-        assert mock_efcallback.call_count == 0
-        assert mock_bcallback.call_count == 0
-        assert batches.n == 0
-
-
-@pytest.mark.skip
 class TestResume:
     def test_stopped_on_batch(self, tmp_path):
         from rnnr.attachments import ProgressBar
