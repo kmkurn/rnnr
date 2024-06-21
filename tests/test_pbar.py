@@ -1,23 +1,71 @@
 from unittest.mock import MagicMock, call
 
 import pytest
-from rnnr import Event
+from rnnr import Event, Runner
 from rnnr.attachments import ProgressBar
 from tqdm import tqdm
 
 
-# TODO update this test
-def test_ok():
+def test_ok(call_tracker):
+    history = []
+
+    def on_batch(e, bi, b):
+        history.append("B")
+
+    runner = Runner(on_batch, max_epoch=1)
+
+    @runner.on_started
+    def on_started():
+        history.append("S")
+
+    @runner.on_epoch_started
+    def on_epoch_started(e):
+        history.append("ES")
+
+    @runner.on_batch_started
+    def on_batch_started(e, bi, b):
+        history.append("BS")
+
+    @runner.on_batch_finished
+    def on_batch_finished(e, bi, b, o):
+        history.append("BF")
+
+    @runner.on_epoch_finished
+    def on_epoch_finished(e):
+        history.append("EF")
+
+    @runner.on_finished
+    def on_finished():
+        history.append("F")
+
     batches = range(10)
-    mock_tqdm_cls = MagicMock(spec=tqdm)
 
-    ProgressBar(tqdm_cls=mock_tqdm_cls).attach_on(runner)
+    class tracked_tqdm(tqdm):
+        def __init__(self, iterable):
+            history.append("TTI")
+            assert iterable == batches
+            super().__init__(iterable)
+
+        def update(self, size):
+            history.append("TTU")
+            assert size == 1
+            return super().update(size)
+
+        def close(self):
+            history.append("TTC")
+            return super().close()
+
+        def set_postfix(self, *args, **kwargs):
+            assert False
+
+    ProgressBar(tqdm_cls=tracked_tqdm).attach_on(runner)
     runner.run(batches)
+    expected = ["S", "ES", "TTI"]
+    for _ in batches:
+        expected.extend(["BS", "B", "BF", "TTU"])
+    expected.extend(["TTC", "EF", "F"])
 
-    mock_tqdm_cls.assert_called_once_with(batches, initial=0)
-    assert not mock_tqdm_cls.return_value.set_postfix.called
-    assert mock_tqdm_cls.return_value.update.mock_calls == [call(1) for b in batches]
-    mock_tqdm_cls.return_value.close.assert_called_once_with()
+    assert history == expected
 
 
 @pytest.mark.skip
