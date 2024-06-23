@@ -41,10 +41,10 @@ def test_ok():
     batches = range(10)
 
     class tracked_tqdm(tqdm):
-        def __init__(self, iterable):
+        def __init__(self, total=None, **kwargs):
             history.append("TTI")
-            assert iterable == batches
-            super().__init__(iterable)
+            assert total == len(batches)
+            super().__init__(total=total)
 
         def update(self, size):
             history.append("TTU")
@@ -58,7 +58,7 @@ def test_ok():
         def set_postfix(self, *args, **kwargs):
             assert False
 
-    ProgressBar(tqdm_cls=tracked_tqdm).attach_on(runner)
+    ProgressBar(len(batches), tqdm_cls=tracked_tqdm).attach_on(runner)
     runner.run(batches)
     expected = ["S", "ES", "TTI"]
     for _ in batches:

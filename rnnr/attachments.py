@@ -71,7 +71,7 @@ class EpochTimer(Attachment):  # pragma: no cover
             )
 
 
-class ProgressBar(Attachment):
+class ProgressBar(Attachment[OT]):
     """An attachment to display a progress bar.
 
     The progress bar is implemented using `tqdm`_.
@@ -100,6 +100,7 @@ class ProgressBar(Attachment):
 
     def __init__(
         self,
+        total: int,
         *,
         n_items: str = "n_items",
         stats: Optional[str] = None,
@@ -109,6 +110,7 @@ class ProgressBar(Attachment):
         if tqdm_cls is None:  # pragma: no cover
             tqdm_cls = tqdm
 
+        self._total = total
         self._tqdm_cls = tqdm_cls
         self._n_items = n_items
         self._stats = stats
@@ -117,25 +119,23 @@ class ProgressBar(Attachment):
         self._pbar: tqdm
 
     def attach_on(self, runner: Runner) -> None:
-        runner.on(Event._PBAR_CREATED, self._create)
-        runner.on(Event._PBAR_UPDATED, self._update)
-        runner.on(Event._PBAR_CLOSED, self._close)
+        runner.on_epoch_started(self._create)
+        runner.on_batch_finished(self._update)
+        runner.on_epoch_finished(self._close)
 
-    def _create(self, state: dict) -> None:
-        n_items_so_far = state.get(self._n_items_so_far, 0)
-        self._pbar = self._tqdm_cls(state["batches"], initial=n_items_so_far, **self._kwargs)
-        state[self._n_items_so_far] = n_items_so_far
+    def _create(self, e: EpochId) -> None:
+        self._pbar = self._tqdm_cls(total=self._total)
 
-    def _update(self, state: dict) -> None:
+    def _update(self, e: EpochId, i: BatchIndex, b: Any, o: OT) -> None:
         if self._stats is not None:
             self._pbar.set_postfix(**state[self._stats])
-        n_items = state.get(self._n_items, 1)
+        n_items = 1
         self._pbar.update(n_items)
-        state[self._n_items_so_far] += n_items
+        # state[self._n_items_so_far] += n_items
 
-    def _close(self, state: dict) -> None:
+    def _close(self, e: EpochId) -> None:
         self._pbar.close()
-        state.pop(self._n_items_so_far)
+        # state.pop(self._n_items_so_far)
 
 
 class LambdaReducer(Attachment[OT], Generic[OT, RT]):
