@@ -121,7 +121,7 @@ class ProgressBar(Attachment[OT]):
     def attach_on(self, runner: Runner) -> None:
         runner.on_epoch_started(self._create)
         runner.on_batch_finished(self._update)
-        runner.on_epoch_finished(self._close)
+        runner._callbacks_on_epoch_finished.insert(0, self._close)
 
     def _create(self, e: EpochId) -> None:
         self._pbar = self._tqdm_cls(total=self._total)
@@ -131,11 +131,9 @@ class ProgressBar(Attachment[OT]):
             self._pbar.set_postfix(**state[self._stats])
         n_items = 1
         self._pbar.update(n_items)
-        # state[self._n_items_so_far] += n_items
 
     def _close(self, e: EpochId) -> None:
         self._pbar.close()
-        # state.pop(self._n_items_so_far)
 
 
 class LambdaReducer(Attachment[OT], Generic[OT, RT]):
