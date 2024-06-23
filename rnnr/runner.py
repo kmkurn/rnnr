@@ -16,8 +16,6 @@ from collections import defaultdict
 from inspect import signature
 from typing import Any, Callable, Dict, Generic, Iterable, List, NewType, TypeVar, Union, cast
 
-from tqdm import tqdm
-
 from .event import Event
 
 Callback = Callable[[dict], None]

@@ -1,15 +1,12 @@
-from unittest.mock import MagicMock, call
-
-import pytest
-from rnnr import Event, Runner
+from rnnr import Runner
 from rnnr.attachments import ProgressBar
 from tqdm import tqdm
 
 
-def test_ok():
+def test_correct_call_order():
     history = []
 
-    def on_batch(e, bi, b):
+    def on_batch(e, i, b):
         history.append("B")
 
     runner = Runner(on_batch, max_epoch=1)
@@ -23,28 +20,19 @@ def test_ok():
         history.append("ES")
 
     @runner.on_batch_started
-    def on_batch_started(e, bi, b):
+    def on_batch_started(e, i, b):
         history.append("BS")
 
     @runner.on_batch_finished
-    def on_batch_finished(e, bi, b, o):
+    def on_batch_finished(e, i, b, o):
         history.append("BF")
-
-    @runner.on_epoch_finished
-    def on_epoch_finished(e):
-        history.append("EF")
-
-    @runner.on_finished
-    def on_finished():
-        history.append("F")
 
     batches = range(10)
 
     class tracked_tqdm(tqdm):
-        def __init__(self, total=None, **kwargs):
+        def __init__(self, *args, **kwargs):
             history.append("TTI")
-            assert total == len(batches)
-            super().__init__(total=total)
+            super().__init__(*args, **kwargs)
 
         def update(self, size):
             history.append("TTU")
@@ -56,9 +44,19 @@ def test_ok():
             return super().close()
 
         def set_postfix(self, *args, **kwargs):
-            assert False
+            assert args == ()
+            assert kwargs == {}
 
-    ProgressBar(len(batches), tqdm_cls=tracked_tqdm).attach_on(runner)
+    ProgressBar(make_pbar=lambda _: tracked_tqdm(batches)).attach_on(runner)
+
+    @runner.on_epoch_finished
+    def on_epoch_finished(e):
+        history.append("EF")
+
+    @runner.on_finished
+    def on_finished():
+        history.append("F")
+
     runner.run(batches)
     expected = ["S", "ES", "TTI"]
     for _ in batches:
@@ -68,63 +66,47 @@ def test_ok():
     assert history == expected
 
 
-@pytest.mark.skip
-def test_default_n_items(runner):
+def test_num_items():
+    def on_batch(e, i, b):
+        pass
+
+    runner = Runner(on_batch, max_epoch=1)
     batches = [list("foo"), list("quux")]
-    mock_tqdm_cls = MagicMock(spec=tqdm)
+    history = []
 
-    @runner.on(Event.BATCH)
-    def on_batch(state):
-        state["n_items"] = len(state["batch"])
+    class update_args_tracked_tqdm(tqdm):
+        def update(self, n):
+            history.append(n)
+            super().update(n)
 
-    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls)
-    pbar.attach_on(runner)
+    ProgressBar(
+        make_pbar=lambda _: update_args_tracked_tqdm(batches), get_num_items=len
+    ).attach_on(runner)
+
     runner.run(batches)
 
-    assert mock_tqdm_cls.return_value.update.mock_calls == [call(len(b)) for b in batches]
+    assert history == [len(b) for b in batches]
 
 
-@pytest.mark.skip
-def test_n_items(runner):
-    batches = [list("foo"), list("quux")]
-    mock_tqdm_cls = MagicMock(spec=tqdm)
+def test_stats():
+    def on_batch(e, i, b):
+        return b ** 2
 
-    @runner.on(Event.BATCH)
-    def on_batch(state):
-        state["foo"] = len(state["batch"])
+    runner = Runner(on_batch, max_epoch=1)
+    history = []
 
-    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, n_items="foo")
-    pbar.attach_on(runner)
-    runner.run(batches)
+    class set_postfix_args_tracked_tqdm(tqdm):
+        def set_postfix(self, **kwargs):
+            history.append(kwargs)
+            return super().set_postfix(**kwargs)
 
-    assert mock_tqdm_cls.return_value.update.mock_calls == [call(len(b)) for b in batches]
-
-
-@pytest.mark.skip
-def test_stats(runner):
     batches = range(10)
-    mock_tqdm_cls = MagicMock(spec=tqdm)
 
-    @runner.on(Event.BATCH)
-    def on_batch(state):
-        state["stats"] = {"loss": state["batch"] ** 2}
+    ProgressBar(
+        make_pbar=lambda _: set_postfix_args_tracked_tqdm(batches),
+        get_stats=lambda o: {"loss": o},
+    ).attach_on(runner)
 
-    pbar = ProgressBar(tqdm_cls=mock_tqdm_cls, stats="stats")
-    pbar.attach_on(runner)
     runner.run(batches)
 
-    assert mock_tqdm_cls.return_value.set_postfix.mock_calls == [
-        call(loss=b ** 2) for b in batches
-    ]
-
-
-@pytest.mark.skip
-def test_with_kwargs(runner):
-    batches = range(10)
-    mock_tqdm_cls = MagicMock(spec=tqdm)
-    kwargs = {"foo": "bar", "baz": "quux"}
-
-    ProgressBar(tqdm_cls=mock_tqdm_cls, **kwargs).attach_on(runner)
-    runner.run(batches)
-
-    mock_tqdm_cls.assert_called_once_with(batches, initial=0, **kwargs)
+    assert history == [{"loss": b ** 2} for b in batches]

@@ -16,7 +16,7 @@ import abc
 import logging
 import time
 from datetime import timedelta
-from typing import Any, Callable, Generic, Optional, Type, TypeVar
+from typing import Any, Callable, Dict, Generic, Optional, TypeVar
 
 from tqdm import tqdm
 
@@ -96,41 +96,34 @@ class ProgressBar(Attachment[OT]):
     .. _tqdm: https://github.com/tqdm/tqdm
     """
 
-    _n_items_so_far = "_pbar_n_items_so_far"
-
     def __init__(
         self,
-        total: int,
-        *,
-        n_items: str = "n_items",
-        stats: Optional[str] = None,
-        tqdm_cls: Optional[Type[tqdm]] = None,
-        **kwargs,
+        make_pbar: Callable[[EpochId], tqdm],
+        get_num_items: Optional[Callable[[Any], int]] = None,
+        get_stats: Optional[Callable[[OT], Dict[str, Any]]] = None,
     ) -> None:
-        if tqdm_cls is None:  # pragma: no cover
-            tqdm_cls = tqdm
+        if get_num_items is None:
+            get_num_items = lambda _: 1
+        if get_stats is None:
+            get_stats = lambda _: {}
 
-        self._total = total
-        self._tqdm_cls = tqdm_cls
-        self._n_items = n_items
-        self._stats = stats
-        self._kwargs = kwargs
+        self._make_pbar = make_pbar
+        self._get_n = get_num_items
+        self._get_stats = get_stats
 
         self._pbar: tqdm
 
     def attach_on(self, runner: Runner) -> None:
         runner.on_epoch_started(self._create)
         runner.on_batch_finished(self._update)
-        runner._callbacks_on_epoch_finished.insert(0, self._close)
+        runner.on_epoch_finished(self._close)
 
     def _create(self, e: EpochId) -> None:
-        self._pbar = self._tqdm_cls(total=self._total)
+        self._pbar = self._make_pbar(e)
 
     def _update(self, e: EpochId, i: BatchIndex, b: Any, o: OT) -> None:
-        if self._stats is not None:
-            self._pbar.set_postfix(**state[self._stats])
-        n_items = 1
-        self._pbar.update(n_items)
+        self._pbar.set_postfix(**self._get_stats(o))
+        self._pbar.update(self._get_n(b))
 
     def _close(self, e: EpochId) -> None:
         self._pbar.close()
