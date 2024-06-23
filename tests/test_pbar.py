@@ -6,7 +6,7 @@ from rnnr.attachments import ProgressBar
 from tqdm import tqdm
 
 
-def test_ok(call_tracker):
+def test_ok():
     history = []
 
     def on_batch(e, bi, b):
