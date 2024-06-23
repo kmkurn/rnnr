@@ -18,6 +18,8 @@ from typing import Any, Callable, Dict, Generic, Iterable, List, NewType, TypeVa
 
 from .event import Event
 
+from tqdm import tqdm
+
 Callback = Callable[[dict], None]
 EpochId = NewType("EpochId", int)
 BatchIndex = NewType("BatchIndex", int)
@@ -97,6 +99,13 @@ class Runner(Generic[T]):
     def on_finished(self, cb: Callable[[], None]):
         self._callbacks_on_finished.append(cb)
         return cb
+
+    # TODO rename this method
+    def ensure_progress_bar_closed(self, pbar: tqdm) -> None:
+        def close_pbar(e: EpochId) -> None:
+            pbar.close()
+
+        self._callbacks_on_epoch_finished.insert(0, close_pbar)
 
     def on(self, event: Event, callbacks=None):
         """Add single/multiple callback(s) to listen to an event.
