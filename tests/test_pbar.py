@@ -66,17 +66,16 @@ def test_correct_call_order():
     assert history == expected
 
 
-def test_num_items():
+def test_num_items(call_tracker):
     def on_batch(e, i, b):
         pass
 
     runner = Runner(on_batch, max_epoch=1)
     batches = [list("foo"), list("quux")]
-    history = []
 
     class update_args_tracked_tqdm(tqdm):
+        @call_tracker.track_args
         def update(self, n):
-            history.append(n)
             super().update(n)
 
     ProgressBar(
@@ -85,7 +84,7 @@ def test_num_items():
 
     runner.run(batches)
 
-    assert history == [len(b) for b in batches]
+    assert [args[1] for _, args in call_tracker.history] == [len(b) for b in batches]
 
 
 def test_stats():
