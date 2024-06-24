@@ -3,17 +3,10 @@ from rnnr.attachments import EarlyStopper
 
 
 def test_correct(call_tracker):
-    dev_scores = [0.7, 0.4, 0.3, 0.8, 0.9]
-    current_best = -float("inf")
+    def on_batch(e, i, b):
+        pass
 
-    def should_reduce_patience(epoch: int) -> bool:
-        nonlocal current_best
-        if dev_scores[epoch - 1] > current_best:
-            current_best = dev_scores[epoch - 1]
-            return False
-        return True
-
-    runner = Runner(lambda e, i, b: b, max_epoch=5)
+    runner = Runner(on_batch, max_epoch=5)
 
     @runner.on_epoch_started
     @call_tracker.track_args
@@ -29,6 +22,16 @@ def test_correct(call_tracker):
     @call_tracker.track_args
     def on_finished() -> None:
         pass
+
+    dev_scores = [0.7, 0.4, 0.3, 0.8, 0.9]
+    current_best = -float("inf")
+
+    def should_reduce_patience(epoch: int) -> bool:
+        nonlocal current_best
+        if dev_scores[epoch - 1] > current_best:
+            current_best = dev_scores[epoch - 1]
+            return False
+        return True
 
     EarlyStopper(should_reduce_patience, patience=1).attach_on(runner)
 
@@ -40,17 +43,10 @@ def test_correct(call_tracker):
 
 
 def test_can_reset_patience(call_tracker):
-    dev_scores = [0.7, 0.4, 0.8, 0.6, 0.65, 0.75]
-    current_best = -float("inf")
+    def on_batch(e, i, b):
+        pass
 
-    def should_reduce_patience(epoch: int) -> bool:
-        nonlocal current_best
-        if dev_scores[epoch - 1] > current_best:
-            current_best = dev_scores[epoch - 1]
-            return False
-        return True
-
-    runner = Runner(lambda e, i, b: b, max_epoch=6)
+    runner = Runner(on_batch, max_epoch=6)
 
     @runner.on_epoch_started
     @call_tracker.track_args
@@ -66,6 +62,16 @@ def test_can_reset_patience(call_tracker):
     @call_tracker.track_args
     def on_finished() -> None:
         pass
+
+    dev_scores = [0.7, 0.4, 0.8, 0.6, 0.65, 0.75]
+    current_best = -float("inf")
+
+    def should_reduce_patience(epoch: int) -> bool:
+        nonlocal current_best
+        if dev_scores[epoch - 1] > current_best:
+            current_best = dev_scores[epoch - 1]
+            return False
+        return True
 
     EarlyStopper(should_reduce_patience, patience=1).attach_on(runner)
 
