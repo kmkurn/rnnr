@@ -119,7 +119,7 @@ def test_run_with_callbacks(call_tracker):
 
 
 def test_on_epoch_finished_wrong_number_of_arguments():
-    def on_batch(epoch, batch_idx, batch):
+    def on_batch(e, i, b):
         pass
 
     runner = Runner(on_batch)
@@ -133,7 +133,7 @@ def test_on_epoch_finished_wrong_number_of_arguments():
 
 
 def test_run_after_stopped(call_tracker):
-    def on_batch(e, bi, b):
+    def on_batch(e, i, b):
         pass
 
     runner = Runner(on_batch, max_epoch=2)
