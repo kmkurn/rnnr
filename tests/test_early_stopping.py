@@ -13,7 +13,7 @@ def test_correct(call_tracker):
             return False
         return True
 
-    runner = Runner(lambda e, bi, b: b, max_epoch=5)
+    runner = Runner(lambda e, i, b: b, max_epoch=5)
 
     @runner.on_epoch_started
     @call_tracker.track_args
@@ -50,7 +50,7 @@ def test_can_reset_patience(call_tracker):
             return False
         return True
 
-    runner = Runner(lambda e, bi, b: b, max_epoch=6)
+    runner = Runner(lambda e, i, b: b, max_epoch=6)
 
     @runner.on_epoch_started
     @call_tracker.track_args
