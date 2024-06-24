@@ -5,7 +5,7 @@ from rnnr.attachments import SumReducer
 
 def test_correct():
     outputs = [4, 2, 1, 5, 6]
-    runner = Runner(lambda e, i, b: outputs[b])
+    runner = Runner(lambda e, i, b: outputs[b], max_epoch=1)
     r = SumReducer(value=lambda x: x / 2)
     r.attach_on(runner)
     runner.run(range(len(outputs)))
