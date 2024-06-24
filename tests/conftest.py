@@ -24,3 +24,11 @@ def call_tracker():
             return wrapper
 
     return CallTracker()
+
+
+@pytest.fixture
+def do_nothing():
+    def _do_nothing(*args, **kwargs):
+        pass
+
+    return _do_nothing

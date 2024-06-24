@@ -2,11 +2,8 @@ from rnnr import Runner
 from rnnr.attachments import EarlyStopper
 
 
-def test_correct(call_tracker):
-    def on_batch(e, i, b):
-        pass
-
-    runner = Runner(on_batch, max_epoch=5)
+def test_correct(do_nothing, call_tracker):
+    runner = Runner(on_batch=do_nothing, max_epoch=5)
 
     @runner.on_epoch_started
     @call_tracker.track_args
@@ -42,11 +39,8 @@ def test_correct(call_tracker):
     ] + [("on_finished", ())]
 
 
-def test_can_reset_patience(call_tracker):
-    def on_batch(e, i, b):
-        pass
-
-    runner = Runner(on_batch, max_epoch=6)
+def test_can_reset_patience(do_nothing, call_tracker):
+    runner = Runner(on_batch=do_nothing, max_epoch=6)
 
     @runner.on_epoch_started
     @call_tracker.track_args

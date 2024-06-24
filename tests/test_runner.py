@@ -118,11 +118,8 @@ def test_run_with_callbacks(call_tracker):
     ]
 
 
-def test_on_epoch_finished_wrong_number_of_arguments():
-    def on_batch(e, i, b):
-        pass
-
-    runner = Runner(on_batch)
+def test_on_epoch_finished_wrong_number_of_arguments(do_nothing):
+    runner = Runner(on_batch=do_nothing)
 
     @runner.on_epoch_finished
     def on_epoch_finished():
@@ -132,11 +129,8 @@ def test_on_epoch_finished_wrong_number_of_arguments():
         runner.run(range(10))
 
 
-def test_run_after_stopped(call_tracker):
-    def on_batch(e, i, b):
-        pass
-
-    runner = Runner(on_batch, max_epoch=2)
+def test_run_after_stopped(do_nothing, call_tracker):
+    runner = Runner(on_batch=do_nothing, max_epoch=2)
 
     @runner.on_epoch_started
     @call_tracker.track_args
