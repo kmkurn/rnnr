@@ -1,15 +1,21 @@
+import pytest
+
 from rnnr import Runner
 from rnnr.attachments import ProgressBar
 from tqdm import tqdm
 
 
-def test_correct_call_order():
+@pytest.mark.parametrize("attach_time", ["early", "late"])
+def test_correct_call_order(attach_time):
     history = []
 
     def on_batch(e, i, b):
         history.append("B")
 
     runner = Runner(on_batch, max_epoch=1)
+    batches = range(10)
+    if attach_time == "early":
+        ProgressBar(make_pbar=lambda _: tracked_tqdm(batches)).attach_on(runner)
 
     @runner.on_started
     def on_started():
@@ -53,8 +59,8 @@ def test_correct_call_order():
             assert args == ()
             assert kwargs == {}
 
-    batches = range(10)
-    ProgressBar(make_pbar=lambda _: tracked_tqdm(batches)).attach_on(runner)
+    if attach_time == "late":
+        ProgressBar(make_pbar=lambda _: tracked_tqdm(batches)).attach_on(runner)
     runner.run(batches)
     expected = ["S", "ES", "TTI"]
     for _ in batches:

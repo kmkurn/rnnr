@@ -114,8 +114,8 @@ class ProgressBar(Attachment[OT]):
         self._pbar: tqdm
 
     def attach_on(self, runner: Runner[OT]) -> None:
-        runner.on_epoch_started(self._create)
-        runner.on_batch_finished(self._update)
+        runner.set_last_on_epoch_started(self._create)
+        runner.set_last_on_batch_finished(self._update)
         runner.set_first_on_epoch_finished(self._close)
 
     def _create(self, e: EpochId) -> None:

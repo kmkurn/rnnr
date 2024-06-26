@@ -14,7 +14,19 @@
 
 from collections import defaultdict
 from inspect import signature
-from typing import Any, Callable, Dict, Generic, Iterable, List, NewType, TypeVar, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    NewType,
+    Optional,
+    TypeVar,
+    Union,
+    cast,
+)
 
 from .event import Event
 
@@ -70,6 +82,10 @@ class Runner(Generic[T]):
             Union[Callable[[EpochId], None], Callable[[EpochId, "StopFn"], None]]
         ] = []
         self._callbacks_on_finished: List[Callable[[], None]] = []
+        self._last_cb_on_epoch_started: Optional[Callable[[EpochId], None]] = None
+        self._last_cb_on_batch_finished: Optional[
+            Callable[[EpochId, BatchIndex, Any, T], None]
+        ] = None
         self.on_started(self._reset)
 
     def on_started(self, cb: Callable[[], None]):
@@ -97,6 +113,14 @@ class Runner(Generic[T]):
     def on_finished(self, cb: Callable[[], None]):
         self._callbacks_on_finished.append(cb)
         return cb
+
+    def set_last_on_epoch_started(self, callback: Callable[[EpochId], None]) -> None:
+        self._last_cb_on_epoch_started = callback
+
+    def set_last_on_batch_finished(
+        self, callback: Callable[[EpochId, BatchIndex, Any, T], None]
+    ) -> None:
+        self._last_cb_on_batch_finished = callback
 
     def set_first_on_epoch_finished(
         self, callback: Union[Callable[[EpochId], None], Callable[[EpochId, "StopFn"], None]]
@@ -211,17 +235,19 @@ class Runner(Generic[T]):
     def _run_callbacks_on_epoch_started(self, e: EpochId) -> None:
         for cb in self._callbacks_on_epoch_started:
             cb(e)
+        if self._last_cb_on_epoch_started is not None:
+            self._last_cb_on_epoch_started(e)
 
     def _run_callbacks_on_batch_started(self, e: EpochId, bi: BatchIndex, b: Any) -> Any:
         for cb in self._callbacks_on_batch_started:
             b = cb(e, bi, b)
         return b
 
-    def _run_callbacks_on_batch_finished(
-        self, e: EpochId, bi: BatchIndex, b: Any, bo: T
-    ) -> None:
+    def _run_callbacks_on_batch_finished(self, e: EpochId, i: BatchIndex, b: Any, o: T) -> None:
         for cb in self._callbacks_on_batch_finished:
-            cb(e, bi, b, bo)
+            cb(e, i, b, o)
+        if self._last_cb_on_batch_finished is not None:
+            self._last_cb_on_batch_finished(e, i, b, o)
 
     def _run_callbacks_on_epoch_finished(self, e: EpochId) -> None:
         i = 0
