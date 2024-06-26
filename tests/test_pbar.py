@@ -13,6 +13,25 @@ def test_correct_call_order(attach_time):
         history.append("B")
 
     runner = Runner(on_batch, max_epoch=1)
+
+    class tracked_tqdm(tqdm):
+        def __init__(self, *args, **kwargs):
+            history.append("TTI")
+            super().__init__(*args, **kwargs)
+
+        def update(self, size):
+            history.append("TTU")
+            assert size == 1
+            return super().update(size)
+
+        def close(self):
+            history.append("TTC")
+            return super().close()
+
+        def set_postfix(self, *args, **kwargs):
+            assert args == ()
+            assert kwargs == {}
+
     batches = range(10)
     if attach_time == "early":
         ProgressBar(make_pbar=lambda _: tracked_tqdm(batches)).attach_on(runner)
@@ -40,24 +59,6 @@ def test_correct_call_order(attach_time):
     @runner.on_finished
     def on_finished():
         history.append("F")
-
-    class tracked_tqdm(tqdm):
-        def __init__(self, *args, **kwargs):
-            history.append("TTI")
-            super().__init__(*args, **kwargs)
-
-        def update(self, size):
-            history.append("TTU")
-            assert size == 1
-            return super().update(size)
-
-        def close(self):
-            history.append("TTC")
-            return super().close()
-
-        def set_postfix(self, *args, **kwargs):
-            assert args == ()
-            assert kwargs == {}
 
     if attach_time == "late":
         ProgressBar(make_pbar=lambda _: tracked_tqdm(batches)).attach_on(runner)
