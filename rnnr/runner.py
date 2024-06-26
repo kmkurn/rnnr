@@ -238,9 +238,9 @@ class Runner(Generic[T]):
         if self._last_cb_on_epoch_started is not None:
             self._last_cb_on_epoch_started(e)
 
-    def _run_callbacks_on_batch_started(self, e: EpochId, bi: BatchIndex, b: Any) -> Any:
+    def _run_callbacks_on_batch_started(self, e: EpochId, i: BatchIndex, b: Any) -> Any:
         for cb in self._callbacks_on_batch_started:
-            b = cb(e, bi, b)
+            b = cb(e, i, b)
         return b
 
     def _run_callbacks_on_batch_finished(self, e: EpochId, i: BatchIndex, b: Any, o: T) -> None:
