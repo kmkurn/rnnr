@@ -27,7 +27,13 @@ def test_correct_call_order():
     def on_batch_finished(e, i, b, o):
         history.append("BF")
 
-    batches = range(10)
+    @runner.on_epoch_finished
+    def on_epoch_finished(e):
+        history.append("EF")
+
+    @runner.on_finished
+    def on_finished():
+        history.append("F")
 
     class tracked_tqdm(tqdm):
         def __init__(self, *args, **kwargs):
@@ -47,16 +53,8 @@ def test_correct_call_order():
             assert args == ()
             assert kwargs == {}
 
+    batches = range(10)
     ProgressBar(make_pbar=lambda _: tracked_tqdm(batches)).attach_on(runner)
-
-    @runner.on_epoch_finished
-    def on_epoch_finished(e):
-        history.append("EF")
-
-    @runner.on_finished
-    def on_finished():
-        history.append("F")
-
     runner.run(batches)
     expected = ["S", "ES", "TTI"]
     for _ in batches:

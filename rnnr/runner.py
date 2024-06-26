@@ -98,6 +98,11 @@ class Runner(Generic[T]):
         self._callbacks_on_finished.append(cb)
         return cb
 
+    def set_first_on_epoch_finished(
+        self, callback: Union[Callable[[EpochId], None], Callable[[EpochId, "StopFn"], None]]
+    ) -> None:
+        self._callbacks_on_epoch_finished.insert(0, callback)
+
     def on(self, event: Event, callbacks=None):
         """Add single/multiple callback(s) to listen to an event.
 
