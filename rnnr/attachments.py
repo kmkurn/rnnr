@@ -40,7 +40,7 @@ class Attachment(abc.ABC, Generic[OT]):
         pass
 
 
-class EpochTimer(Attachment):  # pragma: no cover
+class EpochTimer(Attachment[OT]):
     """An attachment to time epoch.
 
     Epochs are only timed when ``state['max_epoch']`` is greater than 1. At the start and
@@ -50,8 +50,11 @@ class EpochTimer(Attachment):  # pragma: no cover
     logger = logging.getLogger(f"{__name__}.epoch_timer")
     _epoch_start_time = "_epoch_start_time"
 
-    def attach_on(self, runner: Runner) -> None:
-        runner.on(Event._ETIMER_STARTED, self._start)
+    def __init__(self, start_fmt, finish_fmt):
+        pass
+
+    def attach_on(self, runner: Runner[OT]) -> None:
+        runner.set_first_on_epoch_started(self._start)
         runner.on(Event._ETIMER_FINISHED, self._finish)
 
     def _start(self, state):
