@@ -1,18 +1,29 @@
 from typing import Tuple
+import logging
 import pickle
 
 import pytest
 
 from rnnr import Event, Runner
+from rnnr.runner import EpochTimer
 
 
-def test_run_with_callbacks(call_tracker):
+def test_run_with_callbacks(call_tracker, use_epoch_timer):
+    class AppendToHistoryHandler(logging.Handler):
+        def emit(self, record):
+            call_tracker.history.append(record.getMessage())
+
+    logger = logging.getLogger("rnnr.runner.epoch_timer")
+    logger.setLevel(logging.INFO)
+    logger.addHandler(AppendToHistoryHandler())
+
     @call_tracker.track_args
     def on_batch(epoch: int, batch_idx: int, batch: int) -> Tuple[int, int]:
         return epoch, batch_idx
 
     max_epoch = 2
     runner = Runner(on_batch, max_epoch)
+    runner.epoch_timer = EpochTimer(start_fmt="ETS {epoch}", finish_fmt="ETF {epoch}")
 
     @runner.on_started
     @call_tracker.track_args
@@ -81,7 +92,7 @@ def test_run_with_callbacks(call_tracker):
     assert call_tracker.history == [
         ("on_started1", ()),
         ("on_started2", ()),
-        # Epoch 1
+        "ETS 1",
         ("on_epoch_started1", (1,)),
         ("on_epoch_started2", (1,)),
         ("on_batch_started1", (1, 0, batches[0])),
@@ -96,7 +107,8 @@ def test_run_with_callbacks(call_tracker):
         ("on_batch_finished2", (1, 1, (batches[1] + 1) ** 2, (1, 1))),
         ("on_epoch_finished1", (1,)),
         ("on_epoch_finished2", (1,)),
-        # Epoch 2
+        "ETF 1",
+        "ETS 2",
         ("on_epoch_started1", (2,)),
         ("on_epoch_started2", (2,)),
         ("on_batch_started1", (2, 0, batches[0])),
@@ -111,7 +123,7 @@ def test_run_with_callbacks(call_tracker):
         ("on_batch_finished2", (2, 1, (batches[1] + 1) ** 2, (2, 1))),
         ("on_epoch_finished1", (2,)),
         ("on_epoch_finished2", (2,)),
-        # Finish
+        "ETF 2",
         ("on_finished1", ()),
         ("on_finished2", ()),
     ]

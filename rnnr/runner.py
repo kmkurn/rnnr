@@ -295,4 +295,14 @@ class Runner(Generic[T]):
         self._stopped = True
 
 
+class EpochTimer:
+    def __init__(
+        self,
+        start_fmt: str = "Starting epoch {epoch}/{max_epoch}",
+        finish_fmt: str = "Epoch {epoch}/{max_epoch} done in {elapsed}",
+    ) -> None:
+        self._start_fmt = start_fmt
+        self._finish_fmt = finish_fmt
+
+
 StopFn = Callable[[], None]
