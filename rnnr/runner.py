@@ -86,7 +86,14 @@ class Runner(Generic[T]):
         self._last_cb_on_batch_finished: Optional[
             Callable[[EpochId, BatchIndex, Any, T], None]
         ] = None
+        self._last_cb_on_epoch_finished: Optional[
+            Union[Callable[[EpochId], None], Callable[[EpochId, "StopFn"], None]]
+        ] = None
         self.on_started(self._reset)
+
+    @property
+    def max_epoch(self) -> int:
+        return self._max_epoch
 
     def on_started(self, cb: Callable[[], None]):
         self._callbacks_on_started.append(cb)
@@ -114,6 +121,9 @@ class Runner(Generic[T]):
         self._callbacks_on_finished.append(cb)
         return cb
 
+    def set_first_on_epoch_started(self, callback: Callable[[EpochId], None]) -> None:
+        self._callbacks_on_epoch_started.insert(0, callback)
+
     def set_last_on_epoch_started(self, callback: Callable[[EpochId], None]) -> None:
         self._last_cb_on_epoch_started = callback
 
@@ -126,6 +136,11 @@ class Runner(Generic[T]):
         self, callback: Union[Callable[[EpochId], None], Callable[[EpochId, "StopFn"], None]]
     ) -> None:
         self._callbacks_on_epoch_finished.insert(0, callback)
+
+    def set_last_on_epoch_finished(
+        self, callback: Union[Callable[[EpochId], None], Callable[[EpochId, "StopFn"], None]]
+    ) -> None:
+        self._last_cb_on_epoch_finished = callback
 
     def on(self, event: Event, callbacks=None):
         """Add single/multiple callback(s) to listen to an event.
@@ -265,6 +280,9 @@ class Runner(Generic[T]):
                     f"expected {cb.__name__}() to accept 1 or 2 arguments but got {nargs}"
                 )
             i += 1
+        if self._last_cb_on_epoch_finished is not None:
+            # TODO handle nargs>=2
+            self._last_cb_on_epoch_finished(e)  # type: ignore
 
     def _run_callbacks_on_finished(self) -> None:
         for cb in self._callbacks_on_finished:

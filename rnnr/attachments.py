@@ -47,31 +47,29 @@ class EpochTimer(Attachment[OT]):
     end of every epoch, logging messages are written with log level of INFO.
     """
 
-    logger = logging.getLogger(f"{__name__}.epoch_timer")
-    _epoch_start_time = "_epoch_start_time"
+    _logger = logging.getLogger(f"{__name__}.epoch_timer")
 
-    def __init__(self, start_fmt, finish_fmt):
-        pass
+    def __init__(
+        self,
+        start_fmt: str = "Starting epoch %d/%d",
+        finish_fmt: str = "Epoch %d/%d done in %s",
+    ) -> None:
+        self._start_fmt = start_fmt
+        self._finish_fmt = finish_fmt
 
     def attach_on(self, runner: Runner[OT]) -> None:
-        runner.set_first_on_epoch_started(self._start)
-        runner.on(Event._ETIMER_FINISHED, self._finish)
+        if runner.max_epoch > 1:
+            self._max_epoch = runner.max_epoch
+            runner.set_first_on_epoch_started(self._start)
+            runner.set_last_on_epoch_finished(self._finish)
 
-    def _start(self, state):
-        if state["max_epoch"] > 1:
-            if self._epoch_start_time not in state:
-                state[self._epoch_start_time] = time.time()
-                msg = "Starting epoch %d/%d"
-            else:
-                msg = "Resuming epoch %d/%d"
-            self.logger.info(msg, state["epoch"], state["max_epoch"])
+    def _start(self, e: EpochId):
+        self._start_time = time.time()
+        self._logger.info(self._start_fmt, e, self._max_epoch)
 
-    def _finish(self, state):
-        if state["max_epoch"] > 1:
-            elapsed = timedelta(seconds=time.time() - state.pop(self._epoch_start_time))
-            self.logger.info(
-                "Epoch %d/%d done in %s", state["epoch"], state["max_epoch"], elapsed
-            )
+    def _finish(self, e: EpochId):
+        elapsed = timedelta(seconds=time.time() - self._start_time)
+        self._logger.info(self._finish_fmt, e, self._max_epoch, elapsed)
 
 
 class ProgressBar(Attachment[OT]):
