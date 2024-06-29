@@ -14,8 +14,7 @@ def test_correct_call_order(attach_time, max_epoch):
 
     class AppendToHistoryHandler(logging.Handler):
         def emit(self, record):
-            s = record.getMessage()
-            history.append(s[: s.index(";")])
+            history.append(record.getMessage())
 
     logger.addHandler(AppendToHistoryHandler())
 
@@ -24,7 +23,7 @@ def test_correct_call_order(attach_time, max_epoch):
 
     runner = Runner(on_batch, max_epoch)
     if attach_time == "early":
-        EpochTimer(start_fmt="ETS %d;%d", finish_fmt="ETF %d;%d%s").attach_on(runner)
+        EpochTimer(start_fmt="ETS {epoch}", finish_fmt="ETF {epoch}").attach_on(runner)
 
     @runner.on_started
     def on_started():
@@ -51,7 +50,7 @@ def test_correct_call_order(attach_time, max_epoch):
         history.append("F")
 
     if attach_time == "late":
-        EpochTimer(start_fmt="ETS %d;%d", finish_fmt="ETF %d;%d%s").attach_on(runner)
+        EpochTimer(start_fmt="ETS {epoch}", finish_fmt="ETF {epoch}").attach_on(runner)
     runner.run(range(1))
     if max_epoch == 1:
         expected = ["S", "ES", "BS", "B", "BF", "EF", "F"]

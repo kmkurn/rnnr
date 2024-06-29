@@ -51,8 +51,8 @@ class EpochTimer(Attachment[OT]):
 
     def __init__(
         self,
-        start_fmt: str = "Starting epoch %d/%d",
-        finish_fmt: str = "Epoch %d/%d done in %s",
+        start_fmt: str = "Starting epoch {epoch}/{max_epoch}",
+        finish_fmt: str = "Epoch {epoch}/{max_epoch} done in {elapsed}",
     ) -> None:
         self._start_fmt = start_fmt
         self._finish_fmt = finish_fmt
@@ -65,11 +65,13 @@ class EpochTimer(Attachment[OT]):
 
     def _start(self, e: EpochId):
         self._start_time = time.time()
-        self._logger.info(self._start_fmt, e, self._max_epoch)
+        msg = self._start_fmt.format(epoch=e, max_epoch=self._max_epoch)
+        self._logger.info(msg)
 
     def _finish(self, e: EpochId):
         elapsed = timedelta(seconds=time.time() - self._start_time)
-        self._logger.info(self._finish_fmt, e, self._max_epoch, elapsed)
+        msg = self._finish_fmt.format(epoch=e, max_epoch=self._max_epoch, elapsed=elapsed)
+        self._logger.info(msg)
 
 
 class ProgressBar(Attachment[OT]):
