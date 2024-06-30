@@ -4,6 +4,7 @@ import pickle
 import pytest
 
 from rnnr import EpochId, Event, Runner
+from rnnr.epoch_timer import EpochTimer
 
 
 # TODO change epoch type to EpochId
@@ -16,15 +17,15 @@ def test_run_with_callbacks(call_tracker, use_epoch_timer):
     max_epoch = 2
     runner = Runner(on_batch, max_epoch)
 
-    class FakeEpochTimer:
+    class TrackedEpochTimer(EpochTimer):
         def start_epoch(self, e: EpochId) -> None:
             call_tracker.history.append(("ETS", (e,)))
 
-        def end_epoch(self, e: EpochId) -> None:
+        def finish_epoch(self, e: EpochId) -> None:
             call_tracker.history.append(("ETF", (e,)))
 
     if use_epoch_timer:
-        runner.epoch_timer = FakeEpochTimer()
+        runner.epoch_timer = TrackedEpochTimer()
 
     @runner.on_started
     @call_tracker.track_args

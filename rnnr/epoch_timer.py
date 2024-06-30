@@ -14,7 +14,7 @@ class EpochTimer(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def end_epoch(self, e: EpochId) -> None:
+    def finish_epoch(self, e: EpochId) -> None:
         pass
 
 
@@ -22,7 +22,7 @@ class NoopEpochTimer(EpochTimer):
     def start_epoch(self, e: EpochId) -> None:
         pass
 
-    def end_epoch(self, e: EpochId) -> None:
+    def finish_epoch(self, e: EpochId) -> None:
         pass
 
 

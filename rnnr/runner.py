@@ -190,7 +190,7 @@ class Runner(Generic[T]):
                 boutput = self._on_batch(epoch, batch_idx, batch)
                 self._run_callbacks_on_batch_finished(epoch, batch_idx, batch, boutput)
             self._run_callbacks_on_epoch_finished(epoch)
-            self.epoch_timer.end_epoch(epoch)
+            self.epoch_timer.finish_epoch(epoch)
             i += 1
         self._run_callbacks_on_finished()
 
