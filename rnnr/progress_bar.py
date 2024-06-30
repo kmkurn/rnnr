@@ -1,0 +1,2 @@
+class EpochProgressBar:
+    pass

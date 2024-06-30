@@ -1,10 +1,11 @@
 import pickle
 from contextlib import contextmanager
-from typing import Iterator, Tuple
+from typing import Callable, Iterator, Tuple
 
 import pytest
 from rnnr import BatchIndex, EpochId, Event, Runner
 from rnnr.epoch_timer import EpochTimer
+from rnnr.progress_bar import EpochProgressBar
 
 
 @pytest.mark.parametrize("use_epoch_timer", [False, True])
@@ -25,6 +26,16 @@ def test_run_with_callbacks(call_tracker, use_epoch_timer):
 
     if use_epoch_timer:
         runner.epoch_timer = TrackedEpochTimer()
+
+    class TrackedEpochProgressBar(EpochProgressBar):
+        @contextmanager
+        def __call__(self, e: EpochId) -> Iterator[Callable[[int], None]]:
+            call_tracker.history.append(("EPBS", (e,)))
+            yield self._update
+            call_tracker.history.append(("EPBF", (e,)))
+
+        def _update(self, num: int) -> None:
+            call_tracker.history.append(("EPBU", (num,)))
 
     @runner.on_started
     @call_tracker.track_args
