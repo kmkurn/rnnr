@@ -13,8 +13,8 @@
 # limitations under the License.
 """rnnr: neural network runner"""
 
-__all__ = ["EpochId", "Event", "Runner"]
+__all__ = ["BatchIndex", "EpochId", "Event", "Runner"]
 __version__ = "0.4.0"
 
 from .event import Event
-from .runner import EpochId, Runner
+from .runner import BatchIndex, EpochId, Runner

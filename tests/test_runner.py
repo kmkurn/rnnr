@@ -3,16 +3,15 @@ from contextlib import contextmanager
 from typing import Iterator, Tuple
 
 import pytest
-from rnnr import EpochId, Event, Runner
+from rnnr import BatchIndex, EpochId, Event, Runner
 from rnnr.epoch_timer import EpochTimer
 
 
-# TODO change epoch type to EpochId
 @pytest.mark.parametrize("use_epoch_timer", [False, True])
 def test_run_with_callbacks(call_tracker, use_epoch_timer):
     @call_tracker.track_args
-    def on_batch(epoch: int, batch_idx: int, batch: int) -> Tuple[int, int]:
-        return epoch, batch_idx
+    def on_batch(e: EpochId, i: BatchIndex, batch: int) -> Tuple[int, int]:
+        return e, i
 
     max_epoch = 2
     runner = Runner(on_batch, max_epoch)
@@ -39,42 +38,42 @@ def test_run_with_callbacks(call_tracker, use_epoch_timer):
 
     @runner.on_epoch_started
     @call_tracker.track_args
-    def on_epoch_started1(epoch: int) -> None:
+    def on_epoch_started1(e: EpochId) -> None:
         pass
 
     @runner.on_epoch_started
     @call_tracker.track_args
-    def on_epoch_started2(epoch: int) -> None:
+    def on_epoch_started2(e: EpochId) -> None:
         pass
 
     @runner.on_batch_started
     @call_tracker.track_args
-    def on_batch_started1(epoch: int, batch_idx: int, batch: int) -> int:
+    def on_batch_started1(e: EpochId, i: BatchIndex, batch: int) -> int:
         return batch + 1
 
     @runner.on_batch_started
     @call_tracker.track_args
-    def on_batch_started2(epoch: int, batch_idx: int, batch: int) -> int:
+    def on_batch_started2(e: EpochId, i: BatchIndex, batch: int) -> int:
         return batch ** 2
 
     @runner.on_batch_finished
     @call_tracker.track_args
-    def on_batch_finished1(epoch: int, batch_idx: int, batch: int, output: int) -> None:
+    def on_batch_finished1(e: EpochId, i: BatchIndex, batch: int, output: int) -> None:
         pass
 
     @runner.on_batch_finished
     @call_tracker.track_args
-    def on_batch_finished2(epoch: int, batch_idx: int, batch: int, output: int) -> None:
+    def on_batch_finished2(e: EpochId, i: BatchIndex, batch: int, output: int) -> None:
         pass
 
     @runner.on_epoch_finished
     @call_tracker.track_args
-    def on_epoch_finished1(epoch: int) -> None:
+    def on_epoch_finished1(e: EpochId) -> None:
         pass
 
     @runner.on_epoch_finished
     @call_tracker.track_args
-    def on_epoch_finished2(epoch: int) -> None:
+    def on_epoch_finished2(e: EpochId) -> None:
         pass
 
     @runner.on_finished
