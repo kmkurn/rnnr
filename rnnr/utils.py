@@ -1,19 +1,22 @@
 import abc
 import time
 from datetime import timedelta
+from typing import Generic, TypeVar
+
+T = TypeVar("T")
 
 
-class Timer(abc.ABC):
+class Timer(abc.ABC, Generic[T]):
     @abc.abstractmethod
     def start(self) -> None:
         pass
 
     @abc.abstractmethod
-    def end(self) -> timedelta:
+    def end(self) -> T:
         pass
 
 
-class DefaultTimer(Timer):
+class DefaultTimer(Timer[timedelta]):
     def __init__(self) -> None:
         self.start()
 
