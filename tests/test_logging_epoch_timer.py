@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from rnnr import EpochId
 from rnnr.epoch_timer import LoggingEpochTimer
+from rnnr.utils import Timer
 
 
 def test_correct():
@@ -16,7 +17,7 @@ def test_correct():
 
     logger.addHandler(AppendToHistoryHandler())
 
-    class FakeTimer:
+    class FakeTimer(Timer):
         def __init__(self):
             self.started = False
 

@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from typing import Iterator, Optional
 
 from .runner import EpochId
-from .utils import Timer
+from .utils import DefaultTimer, Timer
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ class NoopEpochTimer(EpochTimer):
 class LoggingEpochTimer(EpochTimer):
     def __init__(self, timer: Optional[Timer] = None) -> None:
         if timer is None:
-            timer = Timer()
+            timer = DefaultTimer()
         self._timer = timer
 
     @contextmanager
