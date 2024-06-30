@@ -89,7 +89,7 @@ class Runner(Generic[T]):
         self._last_cb_on_epoch_finished: Optional[
             Union[Callable[[EpochId], None], Callable[[EpochId, "StopFn"], None]]
         ] = None
-        self.epoch_timer: Optional[EpochTimer] = None
+        self.epoch_timer: EpochTimer = NoopEpochTimer()
         self.on_started(self._reset)
 
     @property
@@ -182,8 +182,7 @@ class Runner(Generic[T]):
         i = 0
         while not self._stopped and i < self._max_epoch:
             epoch = EpochId(i + 1)
-            if self.epoch_timer is not None:
-                self.epoch_timer.start(epoch)
+            self.epoch_timer.start_epoch(epoch)
             self._run_callbacks_on_epoch_started(epoch)
             for j, batch in enumerate(batches):
                 batch_idx = BatchIndex(j)
@@ -191,8 +190,7 @@ class Runner(Generic[T]):
                 boutput = self._on_batch(epoch, batch_idx, batch)
                 self._run_callbacks_on_batch_finished(epoch, batch_idx, batch, boutput)
             self._run_callbacks_on_epoch_finished(epoch)
-            if self.epoch_timer is not None:
-                self.epoch_timer.end(epoch)
+            self.epoch_timer.end_epoch(epoch)
             i += 1
         self._run_callbacks_on_finished()
 
@@ -301,4 +299,4 @@ class Runner(Generic[T]):
 
 
 StopFn = Callable[[], None]
-from .epoch_timer import EpochTimer
+from .epoch_timer import EpochTimer, NoopEpochTimer

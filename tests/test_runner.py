@@ -3,11 +3,12 @@ import pickle
 
 import pytest
 
-from rnnr import Event, Runner
-from rnnr.epoch_timer import EpochTimer
+from rnnr import EpochId, Event, Runner
 
 
-def test_run_with_callbacks(call_tracker):
+# TODO change epoch type to EpochId
+@pytest.mark.parametrize("use_epoch_timer", [False, True])
+def test_run_with_callbacks(call_tracker, use_epoch_timer):
     @call_tracker.track_args
     def on_batch(epoch: int, batch_idx: int, batch: int) -> Tuple[int, int]:
         return epoch, batch_idx
@@ -15,14 +16,15 @@ def test_run_with_callbacks(call_tracker):
     max_epoch = 2
     runner = Runner(on_batch, max_epoch)
 
-    class FakeEpochTimer(EpochTimer):
-        def start(self, epoch: int) -> None:
-            call_tracker.history.append(("ETS", (epoch,)))
+    class FakeEpochTimer:
+        def start_epoch(self, e: EpochId) -> None:
+            call_tracker.history.append(("ETS", (e,)))
 
-        def end(self, epoch: int) -> None:
-            call_tracker.history.append(("ETF", (epoch,)))
+        def end_epoch(self, e: EpochId) -> None:
+            call_tracker.history.append(("ETF", (e,)))
 
-    runner.epoch_timer = FakeEpochTimer()
+    if use_epoch_timer:
+        runner.epoch_timer = FakeEpochTimer()
 
     @runner.on_started
     @call_tracker.track_args
@@ -87,45 +89,52 @@ def test_run_with_callbacks(call_tracker):
     batches = [3, 5]
 
     runner.run(batches)
+    expected = [("on_started1", ()), ("on_started2", ())]
+    if use_epoch_timer:
+        expected.append(("ETS", (1,)))
+    expected.extend(
+        [
+            ("on_epoch_started1", (1,)),
+            ("on_epoch_started2", (1,)),
+            ("on_batch_started1", (1, 0, batches[0])),
+            ("on_batch_started2", (1, 0, batches[0] + 1)),
+            ("on_batch", (1, 0, (batches[0] + 1) ** 2)),
+            ("on_batch_finished1", (1, 0, (batches[0] + 1) ** 2, (1, 0))),
+            ("on_batch_finished2", (1, 0, (batches[0] + 1) ** 2, (1, 0))),
+            ("on_batch_started1", (1, 1, batches[1])),
+            ("on_batch_started2", (1, 1, batches[1] + 1)),
+            ("on_batch", (1, 1, (batches[1] + 1) ** 2)),
+            ("on_batch_finished1", (1, 1, (batches[1] + 1) ** 2, (1, 1))),
+            ("on_batch_finished2", (1, 1, (batches[1] + 1) ** 2, (1, 1))),
+            ("on_epoch_finished1", (1,)),
+            ("on_epoch_finished2", (1,)),
+        ]
+    )
+    if use_epoch_timer:
+        expected.extend([("ETF", (1,)), ("ETS", (2,))])
+    expected.extend(
+        [
+            ("on_epoch_started1", (2,)),
+            ("on_epoch_started2", (2,)),
+            ("on_batch_started1", (2, 0, batches[0])),
+            ("on_batch_started2", (2, 0, batches[0] + 1)),
+            ("on_batch", (2, 0, (batches[0] + 1) ** 2)),
+            ("on_batch_finished1", (2, 0, (batches[0] + 1) ** 2, (2, 0))),
+            ("on_batch_finished2", (2, 0, (batches[0] + 1) ** 2, (2, 0))),
+            ("on_batch_started1", (2, 1, batches[1])),
+            ("on_batch_started2", (2, 1, batches[1] + 1)),
+            ("on_batch", (2, 1, (batches[1] + 1) ** 2)),
+            ("on_batch_finished1", (2, 1, (batches[1] + 1) ** 2, (2, 1))),
+            ("on_batch_finished2", (2, 1, (batches[1] + 1) ** 2, (2, 1))),
+            ("on_epoch_finished1", (2,)),
+            ("on_epoch_finished2", (2,)),
+        ]
+    )
+    if use_epoch_timer:
+        expected.append(("ETF", (2,)))
+    expected.extend([("on_finished1", ()), ("on_finished2", ())])
 
-    assert call_tracker.history == [
-        ("on_started1", ()),
-        ("on_started2", ()),
-        ("ETS", (1,)),
-        ("on_epoch_started1", (1,)),
-        ("on_epoch_started2", (1,)),
-        ("on_batch_started1", (1, 0, batches[0])),
-        ("on_batch_started2", (1, 0, batches[0] + 1)),
-        ("on_batch", (1, 0, (batches[0] + 1) ** 2)),
-        ("on_batch_finished1", (1, 0, (batches[0] + 1) ** 2, (1, 0))),
-        ("on_batch_finished2", (1, 0, (batches[0] + 1) ** 2, (1, 0))),
-        ("on_batch_started1", (1, 1, batches[1])),
-        ("on_batch_started2", (1, 1, batches[1] + 1)),
-        ("on_batch", (1, 1, (batches[1] + 1) ** 2)),
-        ("on_batch_finished1", (1, 1, (batches[1] + 1) ** 2, (1, 1))),
-        ("on_batch_finished2", (1, 1, (batches[1] + 1) ** 2, (1, 1))),
-        ("on_epoch_finished1", (1,)),
-        ("on_epoch_finished2", (1,)),
-        ("ETF", (1,)),
-        ("ETS", (2,)),
-        ("on_epoch_started1", (2,)),
-        ("on_epoch_started2", (2,)),
-        ("on_batch_started1", (2, 0, batches[0])),
-        ("on_batch_started2", (2, 0, batches[0] + 1)),
-        ("on_batch", (2, 0, (batches[0] + 1) ** 2)),
-        ("on_batch_finished1", (2, 0, (batches[0] + 1) ** 2, (2, 0))),
-        ("on_batch_finished2", (2, 0, (batches[0] + 1) ** 2, (2, 0))),
-        ("on_batch_started1", (2, 1, batches[1])),
-        ("on_batch_started2", (2, 1, batches[1] + 1)),
-        ("on_batch", (2, 1, (batches[1] + 1) ** 2)),
-        ("on_batch_finished1", (2, 1, (batches[1] + 1) ** 2, (2, 1))),
-        ("on_batch_finished2", (2, 1, (batches[1] + 1) ** 2, (2, 1))),
-        ("on_epoch_finished1", (2,)),
-        ("on_epoch_finished2", (2,)),
-        ("ETF", (2,)),
-        ("on_finished1", ()),
-        ("on_finished2", ()),
-    ]
+    assert call_tracker.history == expected
 
 
 def test_on_epoch_finished_wrong_number_of_arguments(do_nothing):

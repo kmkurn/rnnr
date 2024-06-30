@@ -1,14 +1,14 @@
 import logging
+from datetime import timedelta
+
 import pytest
+from rnnr import EpochId
+from rnnr.epoch_timer import LoggingEpochTimer
 
-from rnnr import Runner
-from rnnr.attachments import EpochTimer
 
-
-@pytest.mark.parametrize("attach_time", ["early", "late"])
-@pytest.mark.parametrize("max_epoch", [1, 2])
-def test_correct_call_order(attach_time, max_epoch):
-    logger = logging.getLogger("rnnr.attachments.epoch_timer")
+@pytest.mark.parametrize("max_epoch", [1, 3])
+def test_correct(max_epoch):
+    logger = logging.getLogger("rnnr.epoch_timer")
     logger.setLevel(logging.INFO)
     history = []
 
@@ -17,62 +17,24 @@ def test_correct_call_order(attach_time, max_epoch):
             history.append(record.getMessage())
 
     logger.addHandler(AppendToHistoryHandler())
+    timer_started = False
 
-    def on_batch(e, i, b):
-        history.append("B")
+    class FakeTimer:
+        def start(self):
+            nonlocal timer_started
+            timer_started = True
 
-    runner = Runner(on_batch, max_epoch)
-    if attach_time == "early":
-        EpochTimer(start_fmt="ETS {epoch}", finish_fmt="ETF {epoch}").attach_on(runner)
+        def end(self):
+            return timedelta(hours=2, minutes=32, seconds=18)
 
-    @runner.on_started
-    def on_started():
-        history.append("S")
+    epoch_timer = LoggingEpochTimer(max_epoch, FakeTimer())
+    epoch_timer.start_epoch(EpochId(1))
+    assert timer_started
 
-    @runner.on_epoch_started
-    def on_epoch_started(e):
-        history.append("ES")
-
-    @runner.on_batch_started
-    def on_batch_started(e, i, b):
-        history.append("BS")
-
-    @runner.on_batch_finished
-    def on_batch_finished(e, i, b, o):
-        history.append("BF")
-
-    @runner.on_epoch_finished
-    def on_epoch_finished(e):
-        history.append("EF")
-
-    @runner.on_finished
-    def on_finished():
-        history.append("F")
-
-    if attach_time == "late":
-        EpochTimer(start_fmt="ETS {epoch}", finish_fmt="ETF {epoch}").attach_on(runner)
-    runner.run(range(1))
-    if max_epoch == 1:
-        expected = ["S", "ES", "BS", "B", "BF", "EF", "F"]
-    else:
-        assert max_epoch == 2
-        expected = [
-            "S",
-            "ETS 1",
-            "ES",
-            "BS",
-            "B",
-            "BF",
-            "EF",
-            "ETF 1",
-            "ETS 2",
-            "ES",
-            "BS",
-            "B",
-            "BF",
-            "EF",
-            "ETF 2",
-            "F",
-        ]
-
+    epoch_timer.finish_epoch(EpochId(2))
+    expected = ["Epoch 1/3 started", "Epoch 2/3 finished in 2:32:18"] if max_epoch == 3 else []
     assert history == expected
+
+
+def test_default_timer():
+    LoggingEpochTimer(max_epoch=3).start_epoch(EpochId(1))
