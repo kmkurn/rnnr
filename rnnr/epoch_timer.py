@@ -1,6 +1,7 @@
 import abc
 import logging
-from typing import Optional
+from contextlib import contextmanager
+from typing import Iterator, Optional
 
 from .runner import EpochId
 from .utils import Timer
@@ -9,35 +10,27 @@ logger = logging.getLogger(__name__)
 
 
 class EpochTimer(abc.ABC):
+    @contextmanager
     @abc.abstractmethod
-    def start_epoch(self, e: EpochId) -> None:
-        pass
-
-    @abc.abstractmethod
-    def finish_epoch(self, e: EpochId) -> None:
+    def __call__(self, e: EpochId) -> Iterator[None]:
         pass
 
 
 class NoopEpochTimer(EpochTimer):
-    def start_epoch(self, e: EpochId) -> None:
-        pass
-
-    def finish_epoch(self, e: EpochId) -> None:
-        pass
+    @contextmanager
+    def __call__(self, e: EpochId) -> Iterator[None]:
+        yield
 
 
 class LoggingEpochTimer(EpochTimer):
-    def __init__(self, max_epoch: int, timer: Optional[Timer] = None) -> None:
+    def __init__(self, timer: Optional[Timer] = None) -> None:
         if timer is None:
             timer = Timer()
-        self._max_epoch = max_epoch
         self._timer = timer
 
-    def start_epoch(self, e: EpochId) -> None:
+    @contextmanager
+    def __call__(self, e: EpochId) -> Iterator[None]:
         self._timer.start()
-        if self._max_epoch > 1:
-            logger.info("Epoch %d/%d started", e, self._max_epoch)
-
-    def finish_epoch(self, e: EpochId) -> None:
-        if self._max_epoch > 1:
-            logger.info("Epoch %d/%d finished in %s", e, self._max_epoch, self._timer.end())
+        logger.info("Epoch %d started", e)
+        yield
+        logger.info("Epoch %d finished in %s", e, self._timer.end())

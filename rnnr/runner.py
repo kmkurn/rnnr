@@ -182,15 +182,14 @@ class Runner(Generic[T]):
         i = 0
         while not self._stopped and i < self._max_epoch:
             epoch = EpochId(i + 1)
-            self.epoch_timer.start_epoch(epoch)
-            self._run_callbacks_on_epoch_started(epoch)
-            for j, batch in enumerate(batches):
-                batch_idx = BatchIndex(j)
-                batch = self._run_callbacks_on_batch_started(epoch, batch_idx, batch)
-                boutput = self._on_batch(epoch, batch_idx, batch)
-                self._run_callbacks_on_batch_finished(epoch, batch_idx, batch, boutput)
-            self._run_callbacks_on_epoch_finished(epoch)
-            self.epoch_timer.finish_epoch(epoch)
+            with self.epoch_timer(epoch):
+                self._run_callbacks_on_epoch_started(epoch)
+                for j, batch in enumerate(batches):
+                    batch_idx = BatchIndex(j)
+                    batch = self._run_callbacks_on_batch_started(epoch, batch_idx, batch)
+                    boutput = self._on_batch(epoch, batch_idx, batch)
+                    self._run_callbacks_on_batch_finished(epoch, batch_idx, batch, boutput)
+                self._run_callbacks_on_epoch_finished(epoch)
             i += 1
         self._run_callbacks_on_finished()
 
