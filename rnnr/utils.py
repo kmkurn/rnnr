@@ -35,24 +35,22 @@ class ProgressBar(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def done(self) -> None:
+    def finish(self) -> None:
         raise NotImplementedError
 
-
-class ProgressBarWithStats(ProgressBar):
     @abc.abstractmethod
     def show_stats(self, stats: Mapping[str, Union[int, float]]) -> None:
         raise NotImplementedError
 
 
-class TqdmProgressBar(ProgressBarWithStats):
+class TqdmProgressBar(ProgressBar):
     def __init__(self, tqdm_instance: tqdm) -> None:
         self._tqdm = tqdm_instance
 
     def update(self, count: int) -> None:
         self._tqdm.update(count)
 
-    def done(self) -> None:
+    def finish(self) -> None:
         self._tqdm.close()
 
     def show_stats(self, stats: Mapping[str, Union[int, float]]) -> None:

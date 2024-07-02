@@ -20,8 +20,8 @@ def test_update(mock_tqdm, pbar):
     mock_tqdm.update.assert_called_once_with(10)
 
 
-def test_done(mock_tqdm, pbar):
-    pbar.done()
+def test_finish(mock_tqdm, pbar):
+    pbar.finish()
     mock_tqdm.close.assert_called_once_with()
 
 
