@@ -5,26 +5,20 @@ from rnnr.utils import TqdmProgressBar
 from tqdm import tqdm
 
 
-@pytest.fixture
-def mock_tqdm():
-    return Mock(spec=tqdm)
-
-
-@pytest.fixture
-def pbar(mock_tqdm):
-    return TqdmProgressBar(mock_tqdm)
-
-
-def test_update(mock_tqdm, pbar):
-    pbar.update(10)
+@pytest.mark.parametrize("stats", [None, {"foo": 0.5}])
+def test_update(stats):
+    mock_tqdm = Mock(spec=tqdm)
+    pbar = TqdmProgressBar(mock_tqdm)
+    pbar.update(10, stats)
     mock_tqdm.update.assert_called_once_with(10)
+    if stats:
+        mock_tqdm.set_postfix.assert_called_once_with(stats)
+    else:
+        assert not mock_tqdm.set_postfix.called
 
 
-def test_finish(mock_tqdm, pbar):
+def test_finish():
+    mock_tqdm = Mock(spec=tqdm)
+    pbar = TqdmProgressBar(mock_tqdm)
     pbar.finish()
     mock_tqdm.close.assert_called_once_with()
-
-
-def test_show_stats(mock_tqdm, pbar):
-    pbar.show_stats({"foo": 0.5})
-    mock_tqdm.set_postfix.assert_called_once_with({"foo": 0.5})
