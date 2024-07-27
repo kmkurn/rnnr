@@ -5,15 +5,23 @@ from typing import Callable, Iterator
 from tqdm import tqdm
 
 from .batch import BatchOutput
+from .runner import EpochId
 
 
-class TqdmEpochLogger:
-    def __init__(self, tqdm_factory: Callable[[], tqdm]) -> None:
+class EpochProgressTracker(abc.ABC):
+    @abc.abstractmethod
+    @contextmanager
+    def start(self, e: EpochId) -> Iterator["BatchLogger"]:
+        raise NotImplementedError
+
+
+class TqdmEpochProgressTracker(EpochProgressTracker):
+    def __init__(self, tqdm_factory: Callable[[EpochId], tqdm]) -> None:
         self._tqdm_factory = tqdm_factory
 
     @contextmanager
-    def start(self) -> Iterator["BatchLogger"]:
-        tqdm_obj = self._tqdm_factory()
+    def start(self, e: EpochId) -> Iterator["TqdmBatchLogger"]:
+        tqdm_obj = self._tqdm_factory(e)
         yield TqdmBatchLogger(tqdm_obj)
         tqdm_obj.close()
 

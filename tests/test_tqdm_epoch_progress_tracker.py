@@ -1,8 +1,9 @@
 from unittest.mock import Mock
 
 import pytest
-from rnnr.epoch_logger import TqdmEpochLogger
+from rnnr import EpochId
 from rnnr.batch import BatchOutput
+from rnnr.progress_tracker import TqdmEpochProgressTracker
 from tqdm import tqdm
 
 
@@ -10,8 +11,13 @@ from tqdm import tqdm
 def test_log_one_batch(has_stats):
     stats = {"foo": 3, "bar": 7.5} if has_stats else None
     mock_tqdm_obj = Mock(spec=tqdm)
-    logger = TqdmEpochLogger(lambda: mock_tqdm_obj)
-    with logger.start() as log:
+
+    def tqdm_factory(e):
+        assert e == 1
+        return mock_tqdm_obj
+
+    tracker = TqdmEpochProgressTracker(tqdm_factory)
+    with tracker.start(EpochId(1)) as log:
         log(BatchOutput(0.23, stats))
         expected = {"loss": pytest.approx(0.23)}
         if stats:
