@@ -7,7 +7,7 @@ from rnnr.progress_tracker import TqdmEpochProgressTracker
 from tqdm import tqdm
 
 
-def test_log_one_batch():
+def test_log_batch_output():
     mock_tqdm_obj = Mock(spec=tqdm)
 
     def tqdm_factory(e):
